@@ -1,0 +1,18 @@
+object FLPMS_UtilityApp: TFLPMS_UtilityApp
+  Left = 886
+  Height = 538
+  Top = 322
+  Width = 768
+  Caption = 'FLPMS_UtilityApp'
+  ClientHeight = 538
+  ClientWidth = 768
+  LCLVersion = '2.0.6.0'
+  object PageControl1: TPageControl
+    Left = 0
+    Height = 538
+    Top = 0
+    Width = 768
+    Align = alClient
+    TabOrder = 0
+  end
+end
