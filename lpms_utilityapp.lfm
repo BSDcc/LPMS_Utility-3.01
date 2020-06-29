@@ -1,11 +1,13 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 514
+  Left = 695
   Height = 570
-  Top = 206
+  Top = 49
   Width = 890
   Caption = 'FLPMS_UtilityApp'
   ClientHeight = 570
   ClientWidth = 890
+  OnCreate = FormCreate
+  Position = poScreenCenter
   LCLVersion = '2.0.8.0'
   object PageControl1: TPageControl
     Left = 0
@@ -20,9 +22,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Log
+    ActivePage = SQL
     Align = alClient
-    TabIndex = 7
+    TabIndex = 5
     TabOrder = 1
     object Register: TTabSheet
       Caption = 'Register'
@@ -83,6 +85,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -327,6 +330,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 8
       end
       object btnRegister: TButton
@@ -438,6 +442,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 9
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -876,6 +881,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 7
       end
       object btnProcessF: TButton
@@ -1016,6 +1022,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1252,6 +1259,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 3
       end
       object btnProcessM: TButton
@@ -1579,6 +1587,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1810,6 +1819,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 13
       end
       object edtHostNameC: TEdit
@@ -1936,6 +1946,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -2394,10 +2405,11 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnCancelU: TButton
         Left = 715
         Height = 25
-        Top = 504
+        Top = 505
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 14
       end
       object btnUpgradeU: TButton
@@ -2463,6 +2475,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = ' Save'
         Checked = True
         TabOrder = 5
+        TabStop = True
       end
       object rbRestore: TRadioButton
         Left = 441
@@ -2745,6 +2758,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -3121,6 +3135,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 8
       end
       object btnProcessD: TButton
@@ -3327,6 +3342,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -3749,6 +3765,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 13
       end
       object btnProcessB: TButton
@@ -4132,6 +4149,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -4870,6 +4888,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
+        OnClick = btnCancelRClick
         TabOrder = 21
       end
       object btnProcessL: TButton
@@ -5210,8 +5229,44 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akLeft, akBottom]
         Caption = 'seconds'
         ParentColor = False
-        OnClick = Label43Click
       end
     end
+  end
+  object saAbout: TSplashAbout
+    PoweredBy.About.Description.Strings = (
+      'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
+    )
+    PoweredBy.About.Title = 'PoweredBy component'
+    PoweredBy.About.Height = 280
+    PoweredBy.About.Width = 400
+    PoweredBy.About.Font.Color = clNavy
+    PoweredBy.About.Font.Height = -13
+    PoweredBy.About.Font.Name = 'Arial'
+    PoweredBy.About.BackGroundColor = clWindow
+    PoweredBy.About.Version = '1.0.4.0'
+    PoweredBy.About.Authorname = 'Gordon Bamber'
+    PoweredBy.About.Organisation = 'Public Domain'
+    PoweredBy.About.AuthorEmail = 'minesadorada@charcodelvalle.com'
+    PoweredBy.About.ComponentName = 'PoweredBy component'
+    PoweredBy.About.LicenseType = abModifiedGPL
+    UserTitle = 'My Application'
+    ShowDescription = False
+    left = 392
+    top = 384
+  end
+  object SQLTran: TSQLTransaction
+    Active = False
+    left = 448
+    top = 384
+  end
+  object SQLQry1: TSQLQuery
+    FieldDefs = <>
+    Params = <>
+    left = 504
+    top = 384
+  end
+  object SQLDs1: TDataSource
+    left = 560
+    top = 384
   end
 end
