@@ -21,7 +21,7 @@ interface
 uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
    ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
-   DateTimePicker, LazFileUtils, sqldb, db, LCLType, Math,
+   DateTimePicker, LazFileUtils, sqldb, db, LCLType, Math, DOM,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry, mysql56conn;
@@ -256,10 +256,16 @@ type
       stProgressB: TStaticText;
       Upgrade: TTabSheet;
       procedure btnCancelRClick(Sender: TObject);
+      procedure btnLockDClick(Sender: TObject);
+      procedure btnProcessDClick(Sender: TObject);
+      procedure edtHostNameDChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure Image2Click(Sender: TObject);
+      procedure pgTabsChange(Sender: TObject);
+      procedure SQLQry1AfterOpen(DataSet: TDataSet);
 
 private  { Private Declarations }
+   CallHWND       : integer;       //
    ArchiveActive  : boolean;       //
    DateIsSet      : boolean;       //
    LockB_State    : boolean;       // Lock status of the Restore Tab
@@ -285,7 +291,6 @@ private  { Private Declarations }
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
-   PassPhrase     : string;        // Used by Inout Query
    Password       : string;        //
    Prefix         : string;        //
    RegPath        : string;        // Path to the local INI file - Not used on Winblows
@@ -302,6 +307,10 @@ private  { Private Declarations }
    ImportList     : TStringList;   //
    RespList       : TStringList;   //
    TableList      : TStringList;   //
+   ExportSet      : TDOMNode;      //
+   TableSet       : TDOMNode;      //
+   ThisNode       : TDOMNode;      //
+
 
 
 {$IFDEF WINDOWS}                   // Target is Winblows
@@ -324,19 +333,24 @@ private  { Private Declarations }
    {$ENDIF}
 {$ENDIF}
 
-   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
+   function DM_Put_DB(S1: string; RunType: integer) : boolean;
+   function DM_Open_Connection() : boolean;
+   function InputQueryM(ThisCap, Question : string; DispType: integer) : string;
+   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
 
 public   { Publlic Declartions}
-   DBPrefix       : string;        // The Database Prefix stored in the Registry
    DoRestore      : boolean;       //
    MultiCompany   : boolean;       //
    Proceed        : boolean;       //
+   DBPrefix       : string;        // The Database Prefix stored in the Registry
+   PassPhrase     : string;        // Used by Input Query
    RestoreHost    : string;        //
    RestorePass    : string;        //
    RestoreUser    : string;        //
    Result         : string;        //
    ThisDBPrefix   : string;        //
    ThisPass       : string;        //
+   ThisRes        : string;        // Result from InputQuery
 
 end;
 
@@ -344,13 +358,29 @@ end;
 // Global variables
 //------------------------------------------------------------------------------
 const
+   BUFFER_LEN         = 1024;
    CYPHER_ENC         = 0;
    CYPHER_DEC         = 1;
+   IM_UNREAD          = 1;
+   LINE_TABLE         = 0;
+   SERVER_DELIM       = '|';
+   TYPE_READ          = 1;
+   TYPE_WRITE         = 2;
+   TYPE_PLAIN         = 1;
+   TYPE_CODED         = 2;
+   TYPE_SELECT        = 1;
+   TYPE_OTHER         = 2;
+   TYPE_PASSWORD      = 1;
+   TYPE_TEXT          = 2;
+   TYPE_ARCHIVE       = 1;
+   TYPE_CURRENT       = 2;
 
 var
    FLPMS_UtilityApp: TFLPMS_UtilityApp;
 
 implementation
+
+   uses LPMS_InputQuery;
 
 {$R *.lfm}
 
@@ -469,8 +499,8 @@ begin
 
    RegIni.Destroy;
 
+{
 //--- Build the DB connection string
-
 
    SQLCon.HostName     := ServerName;
    SQLCon.UserName     := 'LPMSAdmin';
@@ -478,7 +508,7 @@ begin
    SQLTran.DataBase    := SQLCon;
    SQLQry1.Transaction := SQLTran;
    SQLDs1.DataSet      := SQLQry1;
-
+}
 
 end;
 
@@ -493,6 +523,159 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// A field on the SQL Page changed
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtHostNameDChange(Sender: TObject);
+var
+   FldCount : integer = 0;
+
+begin
+
+   if LockD_State = True then
+      Exit;
+
+//--- Check if the Process button can be enabled
+
+   if Trim(edtHostNameD.Text) <> '' then Inc(FldCount);
+   if Trim(edtUserNameD.Text) <> '' then Inc(FldCount);
+   if Trim(edtPasswordD.Text) <> '' then Inc(FldCount);
+   if Trim(edtPrefixD.Text)   <> '' then Inc(FldCount);
+   if Trim(edtSQLD.Text)      <> '' then Inc(FldCount);
+
+   if FldCount = 5 then
+      btnProcessD.Enabled := True
+   else
+      btnProcessD.Enabled := False;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Lock button on the SQL Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnLockDClick(Sender: TObject);
+var
+   Passwd : string;
+
+begin
+
+   if LockD_State = True then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then
+         LockD_State := False;
+
+   end else begin
+
+      LockD_State := True;
+
+      edtHostNameD.Clear();
+      edtUserNameD.Clear();
+      edtPasswordD.Clear();
+      edtPrefixD.Clear();
+      edtSQLD.Clear();
+
+   end;
+
+   pgTabsChange(Sender);
+
+end;
+
+//---------------------------------------------------------------------------
+// User click on the Process button on the SQL Page
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessDClick(Sender: TObject);
+var
+   S1 : string;
+
+begin
+
+//--- Keep track of the commands that are entered
+
+   if edtSQLD.Items.IndexOf(edtSQLD.Text) = -1 then
+      edtSQLD.Items.Insert(0,edtSQLD.Text);
+
+//--- Build the DB connection string
+
+   SQLCon.HostName     := edtHostNameD.Text;
+   SQLCon.UserName     := edtUserNameD.Text;
+   SQLCon.Password     := edtPasswordD.Text;
+   SQLCon.DatabaseName := edtPrefixD.Text + '_LPMS';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
+   SQLDs1.DataSet      := SQLQry1;
+
+//--- Open a connection to the datastore named in HostName
+
+   if DM_Open_Connection() = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+//--- Select the Database to use
+
+   S1 := 'USE ' + edtPrefixD.Text + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   SemaSQL := False;
+
+//--- Execute the SQL Statement
+
+   SQLQry1.Close();
+   SQLQry1.SQL.Text := edtSQLD.Text;
+
+   if ((LowerCase(Copy(edtSQLD.Text,1,6)) = 'select') or (LowerCase(Copy(edtSQLD.Text,1,4)) = 'show')) then
+      SQLQry1.Open()
+   else
+      SQLQry1.ExecSQL();
+
+end;
+
+//-===--------------------------------------------------------------------------
+// Executed after data was loaded from the DB - adjust column width
+//----===-----------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.SQLQry1AfterOpen(DataSet: TDataSet);
+var
+   idx1, idx2, idx3, Len, ThisTop, ThisLen : integer;
+   Str                                 : string;
+
+begin
+
+   ThisLen := DBGrid1.Columns.Count;
+
+   for idx1 := 0 to DBGrid1.Columns.Count - 1 do begin
+
+      Str := DBGrid1.Columns.Items[idx1].Title.Caption;
+      ThisTop := Length(Str) * 8;
+
+      SQLQry1.First;
+
+      for idx2 := 0 to SQLQry1.RecordCount - 1 do begin
+
+
+         Str := SQLQry1.Fields.FieldByNumber(idx1 + 1).AsString;
+         Len := Length(Str) * 8;
+
+         if Len > ThisTop then
+            ThisTop := Len;
+
+         SQLQry1.Next;
+         DBGrid1.Columns.Items[idx1].Width := ThisTop;
+
+      end;
+
+   end;
+
+end;
+
+//------------------------------------------------------------------------------
 // User clicked on the top right icon to show about information
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.Image2Click(Sender: TObject);
@@ -502,9 +685,564 @@ begin
 
 end;
 
+//------------------------------------------------------------------------------
+// User changed to a different Tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.pgTabsChange(Sender: TObject);
+const
+   NUM_VAL = 48;
+   TAB_0   = 0;
+   TAB_1   = 1;
+   TAB_2   = 2;
+   TAB_3   = 3;
+   TAB_4   = 4;
+   TAB_SQL   = 5;
+   TAB_6   = 6;
+   TAB_7   = 7;
+
+var
+   idx          : integer;
+   ThisPrefix : string;
+   ThisList     : TListItem;
+
+begin
+
+//--- Reset the information on the Setup tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_1 then
+      LockS_State := True;
+
+//--- Reset the information on the Convert tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_3 then begin
+
+      edtCurrVersion.Clear();
+
+      LockC_State         := True;
+      stProgress.Caption  := '';
+      StaticText3.Caption := 'LPMS Utility: Enter the information below then click on the [Get] button to retrieve the current Data Base version';
+
+   end;
+
+//--- Reset the information on the Upgrade tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_4 then begin
+
+      lvAlpha.Clear();
+      lvNumeric.Clear();
+      lvExclude.Clear();
+      edtFolder.Clear();
+      edtRoot.Clear();
+      edtSubkey.Clear();
+      edtSetupLoc.Clear();
+
+      LockU_State       := True;
+      rbSilent.Checked  := False;
+      rbSave.Checked    := False;
+      rbRestore.Checked := False;
+      cbPersist.Checked := False;
+      cbIgnore.Checked  := False;
+      cbDebug.Checked   := False;
+
+   end;
+
+//--- Reset the information on the SQL tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_SQL then begin
+
+      LockD_State         := True;
+      StaticText6.Caption := 'LPMS Utility: Enter the database information below together with a valid SQL statement then click on ''Process''';
+
+   end;
+
+//--- Reset the information on the Restore tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_6 then begin
+
+      edtBackupFile.Clear();
+      edtTitle.Clear();
+      edtDate.Clear();
+      edtMode.Clear();
+      edtVersion.Clear();
+      edtTime.Clear();
+      edtType.Clear();
+
+      LockB_State            := True;
+      edtBackupFile.ReadOnly := True;
+      rbFull.Checked         := False;
+      rbPartial.Checked      := False;
+      cbType.Checked         := False;
+      stMsgB.Caption         := 'LPMS Utility: Enter or select the backup file to restore then select the required options before clicking on ''Restore''';
+
+   end;
+
+//--- Reset the information on the Log Display tab for safety reasons
+
+   if pgTabs.ActivePageIndex <> TAB_7 then begin
+
+      edtUserL.Clear();
+      edtPasswordL.Clear();
+      edtHostL.Clear();
+      edtArchive.Clear();
+      edtSearchUser.Clear();
+      edtSearchDesc.Clear();
+      edtUser.Clear();
+      edtDateL.Clear();
+      edtTimeL.Clear();
+      edtDescriptionL.Clear();
+      lvLog.Clear();
+
+      LockL_State            := True;
+      chkAutoRefresh.Checked := False;
+      chkMatchAny.Checked    := False;
+      speInterval.Value      := 60;
+      stMsgL.Caption         := 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents';
+
+   end;
+
+//--- Set up the tab selected by the user
+
+{$IFDEF OLD_ENCODING}
+   ThisPrefix := jvCipher.DecodeString(SecretPhrase,Copy(DBPrefix,1,6));
+{$ELSE}
+//   ThisPrefix := Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),SecretPhrase);
+   ThisPrefix := 'dev001';
+{$ENDIF}
+
+   if pgTabs.ActivePageIndex = TAB_0 then begin
+
+      edtKey.Text    := UserKey;
+      edtPrefix.Text := ThisPrefix;
+
+//      edtNameChange(Sender);
+
+      btnRegister.Default := True;
+      btnCancelR.Caption  := 'Cancel';
+      btnCancelR.Default  := False;
+      edtName.SetFocus();
+
+   end else if pgTabs.ActivePageIndex = TAB_1 then begin
+
+      edtPrefixF.Text := ThisPrefix;
+
+      if LockS_State = True then begin
+
+         btnLockS.Visible    := True;
+         btnUnlockS.Visible  := False;
+
+         edtHostName.Enabled := False;
+         edtUserName.Enabled := False;
+         edtPassword.Enabled := False;
+         edtSQLFile.Enabled  := False;
+         edtCpyName.Enabled  := False;
+         edtPrefixF.Enabled  := False;
+
+         btnProcessF.Enabled := False;
+         btnProcessF.Default := False;
+         btnCancelF.Caption  := 'Cancel';
+         btnCancelF.Default  := True;
+
+      end else begin
+
+         btnLockS.Visible    := False;
+         btnUnlockS.Visible  := True;
+
+         edtHostName.Enabled := True;
+         edtUserName.Enabled := True;
+         edtPassword.Enabled := True;
+         edtSQLFile.Enabled  := True;
+         edtCpyName.Enabled  := True;
+         edtPrefixF.Enabled  := True;
+
+//         edtHostNameChange(Sender);
+
+         btnProcessF.Default := True;
+         btnCancelF.Caption  := 'Cancel';
+         btnCancelF.Default  := False;
+
+         edtHostName.SetFocus();
+
+      end;
+
+   end else if pgTabs.ActivePageIndex = TAB_2 then begin
+
+      edtPrefixM.Text := ThisPrefix;
+
+      edtKeyM.Text        := UserKey;
+      btnProcessM.Enabled := False;
+
+//      edtPrefixMChange(Sender);
+
+      btnProcessM.Default := True;
+      btnCancelM.Caption  := 'Cancel';
+      btnCancelM.Default  := False;
+
+      edtPrefixM.SetFocus();
+
+   end else if pgTabs.ActivePageIndex = TAB_3 then begin
+
+      edtPrefixC.Text    := ThisPrefix;
+      edtNewVersion.Text := '3.2.1';
+      stProgress.Caption := '';
+
+      if LockC_State = True then begin
+
+         btnLockC.Visible       := True;
+         btnUnlockC.Visible     := False;
+
+         edtHostNameC.Enabled   := False;
+         edtUserNameC.Enabled   := False;
+         edtPasswordC.Enabled   := False;
+         edtPrefixC.Enabled     := False;
+         edtCurrVersion.Enabled := False;
+         edtNewVersion.Enabled  := False;
+
+         btnGet.Enabled         := False;
+
+         btnProcessC.Enabled    := False;
+         btnProcessC.Default    := False;
+         btnCancelC.Caption     := 'Cancel';
+         btnCancelC.Default     := True;
+
+      end else begin
+
+         btnLockC.Visible       := False;
+         btnUnlockC.Visible     := True;
+
+         edtHostNameC.Enabled   := True;
+         edtUserNameC.Enabled   := True;
+         edtPasswordC.Enabled   := True;
+         edtPrefixC.Enabled     := True;
+         edtCurrVersion.Enabled := True;
+         edtNewVersion.Enabled  := True;
+
+         btnGet.Enabled         := True;
+//         edtHostNameCChange(Sender);
+
+         btnProcessC.Default    := True;
+         btnCancelC.Caption     := 'Cancel';
+         btnCancelC.Default     := False;
+
+         edtHostNameC.SetFocus();
+
+      end;
+
+   end else if pgTabs.ActivePageIndex = TAB_4 then begin
+
+      cbPersist.Checked   := False;
+      cbIgnore.Checked    := False;
+      cbDebug.Checked     := False;
+
+      btnUpgradeU.Enabled := False;
+
+      if LockU_State = True then begin
+
+         btnLockU.Visible   := True;
+         btnUnlockU.Visible := False;
+
+         lvAlpha.Enabled     := False;
+         lvNumeric.Enabled   := False;
+         lvExclude.Enabled   := False;
+         rbSilent.Enabled    := False;
+         rbSave.Enabled      := False;
+         rbRestore.Enabled   := False;
+         cbPersist.Enabled   := False;
+         cbIgnore.Enabled    := False;
+         cbDebug.Enabled     := False;
+         edtFolder.Enabled   := False;
+         edtRoot.Enabled     := False;
+         edtSubkey.Enabled   := False;
+         edtSetupLoc.Enabled := False;
+
+         btnUpgradeU.Enabled := False;
+         btnUpgradeU.Default := False;
+         btnCancelU.Caption  := 'Cancel';
+         btnCancelU.Default  := True;
+
+      end else begin
+
+         btnLockU.Visible   := False;
+         btnUnlockU.Visible := True;
+
+         lvAlpha.Enabled     := True;
+         lvNumeric.Enabled   := True;
+         lvExclude.Enabled   := True;
+         rbSilent.Enabled    := True;
+         rbSave.Enabled      := True;
+         rbRestore.Enabled   := True;
+         cbPersist.Enabled   := True;
+         cbIgnore.Enabled    := True;
+         cbDebug.Enabled     := True;
+         edtFolder.Enabled   := True;
+         edtRoot.Enabled     := True;
+         edtSubkey.Enabled   := True;
+         edtSetupLoc.Enabled := True;
+
+         btnUpgradeU.Default := True;
+         btnCancelU.Caption  := 'Cancel';
+         btnCancelU.Default  := False;
+
+         for idx := 0 to NUM_VAL do begin
+
+            ThisList := lvAlpha.Items.Add();
+            ThisList.Caption := '';
+
+            ThisList := lvNumeric.Items.Add();
+            ThisList.Caption := '';
+
+            ThisList := lvExclude.Items.Add();
+            ThisList.Caption := '';
+
+         end;
+
+         edtFolder.Text := RegPath;
+         edtSubkey.Text := 'Preferences';
+{$IFDEF WINDOWS}
+         edtRoot.Text   := 'Software\\BlueCrane Software\\LPMS 3';
+{$ELSE}
+         edtRoot.Text   := 'LPMS 3.ini';
+{$ENDIF}
+
+      end;
+
+   end else if pgTabs.ActivePageIndex = TAB_SQL then begin
+
+      SQLQry1.Close();
+      btnProcessD.Enabled := False;
+
+      if LockD_State = True then begin
+
+         btnLockD.Visible     := True;
+         btnUnlockD.Visible   := False;
+
+         edtHostNameD.Enabled := False;
+         edtUserNameD.Enabled := False;
+         edtPasswordD.Enabled := False;
+         edtPrefixD.Enabled   := False;
+         edtSQLD.Enabled      := False;
+
+         btnProcessD.Enabled := False;
+         btnProcessD.Default := False;
+         btnCancelD.Caption  := 'Cancel';
+         btnCancelD.Default  := True;
+
+      end else begin
+
+         btnLockD.Visible     := False;
+         btnUnlockD.Visible   := True;
+
+         edtHostNameD.Enabled := True;
+         edtUserNameD.Enabled := True;
+         edtPasswordD.Enabled := True;
+         edtPrefixD.Enabled   := True;
+         edtSQLD.Enabled      := True;
+
+         btnProcessD.Default := True;
+         btnCancelD.Caption  := 'Cancel';
+         btnCancelD.Default  := False;
+
+         edtHostNameD.SetFocus();
+
+      end;
+
+   end else if pgTabs.ActivePageIndex = TAB_6 then begin
+
+      rbFull.Checked      := True;
+      cbType.Checked      := False;
+      btnProcessB.Enabled := False;
+      btnAllB.Enabled     := False;
+      lvTables.Enabled    := False;
+      Selected            := True;
+
+      if LockB_State = True then begin
+
+         btnLockB.Visible      := True;
+         btnUnlockB.Visible    := False;
+         btnAllB.Enabled       := False;
+
+         edtBackupFile.Enabled := False;
+//         btnOpenB.Enabled      := False;
+         btnAllB.Enabled       := False;
+         edtTitle.Enabled      := False;
+         edtDate.Enabled       := False;
+         edtTime.Enabled       := False;
+         edtVersion.Enabled    := False;
+         edtMode.Enabled       := False;
+         edtType.Enabled       := False;
+         rbFull.Enabled        := False;
+         rbPartial.Enabled     := False;
+         cbType.Enabled        := False;
+         rbFull.Checked        := False;
+         rbPartial.Checked     := False;
+         cbType.Checked        := False;
+
+         btnProcessB.Enabled   := False;
+         btnProcessB.Default   := False;
+         btnCancelB.Caption    := 'Cancel';
+         btnCancelB.Default    := True;
+
+      end else begin
+
+         btnLockB.Visible      := False;
+         btnUnlockB.Visible    := True;
+
+         edtBackupFile.Enabled := True;
+//         btnOpenB.Enabled      := True;
+
+         edtBackupFile.SetFocus();
+
+      end;
+
+   end else if pgTabs.ActivePageIndex = TAB_7 then begin
+
+      edtArchive.Clear();
+      edtSearchUser.Clear();
+      edtSearchDesc.Clear();
+      edtUser.Clear();
+      edtDateL.Clear();
+      edtTimeL.Clear();
+      edtDescriptionL.Clear();
+      lvLog.Clear();
+      chkMatchAny.Checked    := False;
+      stMsg.Caption          := '0 Records';
+      chkAutoRefresh.Checked := False;
+      speInterval.Value      := 60;
+      btnOpenLog.Enabled     := False;
+
+      btnLockL.Visible       := True;
+      btnUnlockL.Visible     := False;
+
+      dtpSDate.Enabled       := False;
+      dtpSTime.Enabled       := False;
+      dtpEDate.Enabled       := False;
+      dtpETime.Enabled       := False;
+      btnReload.Enabled      := False;
+
+      edtSearchUser.Enabled  := False;
+      btnSearchUser.Enabled  := False;
+      edtSearchDesc.Enabled  := False;
+      btnSearchDesc.Enabled  := False;
+      btnSearchBoth.Enabled  := False;
+      chkMatchAny.Enabled    := False;
+
+      btnFirst.Enabled       := False;
+      btnPrev.Enabled        := False;
+      btnNext.Enabled        := False;
+      btnLast.Enabled        := False;
+
+      lvLog.Enabled          := False;
+      chkAutoRefresh.Enabled := False;
+      speInterval.Enabled    := False;
+
+      btnProcessL.Enabled    := False;
+
+      btnAll.Enabled         := False;
+      btnArchive.Enabled     := False;
+
+      DateIsSet              := False;
+      ArchiveActive          := False;
+
+      edtUserL.SetFocus();
+
+   end;
+
+end;
+
+//==============================================================================
+// Databae Functions
+//==============================================================================
+
 //---------------------------------------------------------------------------
+// Function to open a connection to the datastore
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.DM_Open_Connection() : boolean;
+begin
+
+   try
+
+      SQLQry1.Close;
+      SQLCon.Open;
+
+      except on E : Exception do begin
+
+         ErrMsg := E.Message;
+         Result := False;
+         Exit;
+
+      end;
+
+   end;
+
+   Result := True;
+
+end;
+
+//---------------------------------------------------------------------------
+// Function to access the Database
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.DM_Put_DB(S1: string; RunType: integer) : boolean;
+begin
+
+   try
+
+      SQLQry1.Close();
+      SQLQry1.SQL.Text := S1;
+
+      if RunType = TYPE_SELECT then
+         SQLQry1.Open
+      else
+         SQLQry1.ExecSQL;
+
+      except on E : Exception do begin
+
+         ErrMsg := E.Message;
+
+         if pgTabs.Pages[3].Visible = True then
+            stProgress.Caption := '';
+
+         Result := False;
+         Exit;
+
+      end;
+
+   end;
+
+   Result := True;
+
+end;
+
+//==============================================================================
+// Support Functions
+//==============================================================================
+
+//------------------------------------------------------------------------------
+// Function to Request a PassPhrase from the User
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.InputQueryM(ThisCap, Question : string; DispType: integer) : string;
+begin
+
+   FLPMS_InputQuery := TFLPMS_InputQuery.Create(Application);
+
+   FLPMS_InputQuery.Caption := ThisCap;
+   FLPMS_InputQuery.edtInput.Clear();
+   FLPMS_InputQuery.lblCaption.Caption := Question;
+
+   if DispType = ord(TYPE_PASSWORD) then
+      FLPMS_InputQuery.edtInput.PasswordChar := '*';
+
+   FLPMS_UtilityApp.Hide();
+   FLPMS_InputQuery.ShowModal();
+   FLPMS_UtilityApp.Show();
+
+   FLPMS_InputQuery.Destroy;
+
+   Result := ThisRes;
+
+end;
+
+//------------------------------------------------------------------------------
 // Function to do a Vignere Cypher
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 function TFLPMS_UtilityApp.Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
 const
    OrdBigA = Ord('A');

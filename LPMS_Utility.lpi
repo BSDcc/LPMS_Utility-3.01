@@ -39,7 +39,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="LPMS_Utility.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -52,6 +52,12 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="LPMS_UtilityApp"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="../BSD_Utilities/lpms_inputquery.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+        <UnitName Value="LPMS_InputQuery"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -61,6 +67,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="../BSD_Utilities"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

@@ -26,6 +26,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Align = alClient
     TabIndex = 5
     TabOrder = 1
+    OnChange = pgTabsChange
     object Register: TTabSheet
       Caption = 'Register'
       ClientHeight = 535
@@ -2751,6 +2752,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
+        OnClick = btnLockDClick
       end
       object Image6: TImage
         Left = 840
@@ -3097,6 +3099,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
+        OnClick = btnLockDClick
       end
       object Label29: TLabel
         Left = 12
@@ -3126,6 +3129,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 52
         Width = 751
         Anchors = [akTop, akLeft, akRight]
+        OnChange = edtHostNameDChange
         TabOrder = 1
       end
       object btnCancelD: TButton
@@ -3145,6 +3149,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
+        OnClick = btnProcessDClick
         TabOrder = 9
       end
       object edtUserNameD: TEdit
@@ -3152,6 +3157,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 82
         Width = 100
+        OnChange = edtHostNameDChange
         TabOrder = 2
       end
       object edtPasswordD: TEdit
@@ -3161,6 +3167,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 100
         EchoMode = emPassword
         MaxLength = 32
+        OnChange = edtHostNameDChange
         PasswordChar = '*'
         TabOrder = 3
       end
@@ -3170,6 +3177,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 142
         Width = 100
         MaxLength = 6
+        OnChange = edtHostNameDChange
         TabOrder = 4
       end
       object edtSQLD: TComboBox
@@ -3179,6 +3187,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 751
         Anchors = [akTop, akLeft, akRight]
         ItemHeight = 0
+        OnChange = edtHostNameDChange
         TabOrder = 5
       end
       object DBGrid1: TDBGrid
@@ -3189,6 +3198,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akTop, akLeft, akRight, akBottom]
         Color = clWindow
         Columns = <>
+        DataSource = SQLDs1
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
@@ -3210,6 +3220,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ChildSizing.ControlsPerLine = 100
         ClientHeight = 25
         ClientWidth = 168
+        DataSource = SQLDs1
         Options = []
         TabOrder = 7
         VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbEdit, nbPost, nbCancel]
@@ -5236,7 +5247,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'PoweredBy component'
+    PoweredBy.About.Title = 'About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
@@ -5261,6 +5272,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
   end
   object SQLQry1: TSQLQuery
     FieldDefs = <>
+    AfterOpen = SQLQry1AfterOpen
     Params = <>
     left = 504
     top = 384
