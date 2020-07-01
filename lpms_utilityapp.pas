@@ -32,7 +32,7 @@ uses
    {$IFDEF CPUARMHF}                 // Running on ARM (Raspbian) architecture
       mysql55conn;
    {$ELSE}                           // Running on Intel architecture
-      mysql57conn;
+      mysql57conn, Types;
    {$ENDIF}
 {$ENDIF}
 
@@ -258,7 +258,11 @@ type
       procedure btnCancelRClick(Sender: TObject);
       procedure btnLockDClick(Sender: TObject);
       procedure btnProcessDClick(Sender: TObject);
+      procedure btnProcessMClick(Sender: TObject);
       procedure edtHostNameDChange(Sender: TObject);
+      procedure edtKeyMButtonClick(Sender: TObject);
+      procedure edtKeyMChange(Sender: TObject);
+      procedure edtPrefixMChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure Image2Click(Sender: TObject);
       procedure pgTabsChange(Sender: TObject);
@@ -287,7 +291,7 @@ private  { Private Declarations }
    ErrMsg         : string;        // Last error message
    FilesDir       : string;        //
    HostName       : string;        //
-   KeepRegString  : string;        //
+   KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
@@ -310,8 +314,6 @@ private  { Private Declarations }
    ExportSet      : TDOMNode;      //
    TableSet       : TDOMNode;      //
    ThisNode       : TDOMNode;      //
-
-
 
 {$IFDEF WINDOWS}                   // Target is Winblows
    SQLCon  : TMySQL56Connection;
@@ -337,6 +339,7 @@ private  { Private Declarations }
    function DM_Open_Connection() : boolean;
    function InputQueryM(ThisCap, Question : string; DispType: integer) : string;
    function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
+   function MaskField(InputField: string; MaskType: integer): string;
 
 public   { Publlic Declartions}
    DoRestore      : boolean;       //
@@ -374,6 +377,9 @@ const
    TYPE_TEXT          = 2;
    TYPE_ARCHIVE       = 1;
    TYPE_CURRENT       = 2;
+   TYPE_MASK          = 1;
+   TYPE_UNMASK        = 2;
+
 
 var
    FLPMS_UtilityApp: TFLPMS_UtilityApp;
@@ -385,6 +391,10 @@ implementation
 {$R *.lfm}
 
 { TFLPMS_UtilityApp }
+
+{==============================================================================}
+{--- General functions                                                      ---}
+{==============================================================================}
 
 //------------------------------------------------------------------------------
 // Executed when the Form is created
@@ -398,6 +408,14 @@ var
 {$ENDIF}
 
 begin
+
+//--- Temporary
+
+{$IFDEF WINDOWS}
+   KeepRegString := 'Software\BlueCrane Software\LPMS 3';
+{$ELSE}
+   KeepRegString := 'LPMS 3.ini';
+{$ENDIF}
 
 //--- Set the Format Settings to override the system locale
 
@@ -484,11 +502,10 @@ begin
 //--- Get the default values stored in the Registry
 
 {$IFDEF WINDOWS}
-   RegIni := TRegistryIniFile.Create('Software\BlueCrane Software\LPMS 3');
+   RegIni := TRegistryIniFile.Create(KeepRegString);
 {$ELSE}
-   RegIni := TINIFile.Create(RegPath + 'LPMS 3.ini');
+   RegIni := TINIFile.Create(RegPath + KeepRegString);
 {$ENDIF}
-
 
    edtSQLFile.Text := RegIni.ReadString('Preferences','SQLLocation',RegPath + 'LPMS_SQL.txt');
    UserKey         := RegIni.ReadString('Preferences','Key','');
@@ -509,179 +526,6 @@ begin
    SQLQry1.Transaction := SQLTran;
    SQLDs1.DataSet      := SQLQry1;
 }
-
-end;
-
-//------------------------------------------------------------------------------
-// User clicked on the Cancel button
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.btnCancelRClick(Sender: TObject);
-begin
-
-   Close;
-
-end;
-
-//------------------------------------------------------------------------------
-// A field on the SQL Page changed
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.edtHostNameDChange(Sender: TObject);
-var
-   FldCount : integer = 0;
-
-begin
-
-   if LockD_State = True then
-      Exit;
-
-//--- Check if the Process button can be enabled
-
-   if Trim(edtHostNameD.Text) <> '' then Inc(FldCount);
-   if Trim(edtUserNameD.Text) <> '' then Inc(FldCount);
-   if Trim(edtPasswordD.Text) <> '' then Inc(FldCount);
-   if Trim(edtPrefixD.Text)   <> '' then Inc(FldCount);
-   if Trim(edtSQLD.Text)      <> '' then Inc(FldCount);
-
-   if FldCount = 5 then
-      btnProcessD.Enabled := True
-   else
-      btnProcessD.Enabled := False;
-
-end;
-
-//------------------------------------------------------------------------------
-// User clicked on the Lock button on the SQL Page
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.btnLockDClick(Sender: TObject);
-var
-   Passwd : string;
-
-begin
-
-   if LockD_State = True then begin
-
-      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
-
-      if Passwd = PassPhrase then
-         LockD_State := False;
-
-   end else begin
-
-      LockD_State := True;
-
-      edtHostNameD.Clear();
-      edtUserNameD.Clear();
-      edtPasswordD.Clear();
-      edtPrefixD.Clear();
-      edtSQLD.Clear();
-
-   end;
-
-   pgTabsChange(Sender);
-
-end;
-
-//---------------------------------------------------------------------------
-// User click on the Process button on the SQL Page
-//---------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.btnProcessDClick(Sender: TObject);
-var
-   S1 : string;
-
-begin
-
-//--- Keep track of the commands that are entered
-
-   if edtSQLD.Items.IndexOf(edtSQLD.Text) = -1 then
-      edtSQLD.Items.Insert(0,edtSQLD.Text);
-
-//--- Build the DB connection string
-
-   SQLCon.HostName     := edtHostNameD.Text;
-   SQLCon.UserName     := edtUserNameD.Text;
-   SQLCon.Password     := edtPasswordD.Text;
-   SQLCon.DatabaseName := edtPrefixD.Text + '_LPMS';
-   SQLTran.DataBase    := SQLCon;
-   SQLQry1.Transaction := SQLTran;
-   SQLDs1.DataSet      := SQLQry1;
-
-//--- Open a connection to the datastore named in HostName
-
-   if DM_Open_Connection() = False then begin
-
-      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
-      Exit;
-
-   end;
-
-//--- Select the Database to use
-
-   S1 := 'USE ' + edtPrefixD.Text + '_LPMS';
-   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
-
-      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
-      Exit;
-
-   end;
-
-   SemaSQL := False;
-
-//--- Execute the SQL Statement
-
-   SQLQry1.Close();
-   SQLQry1.SQL.Text := edtSQLD.Text;
-
-   if ((LowerCase(Copy(edtSQLD.Text,1,6)) = 'select') or (LowerCase(Copy(edtSQLD.Text,1,4)) = 'show')) then
-      SQLQry1.Open()
-   else
-      SQLQry1.ExecSQL();
-
-end;
-
-//-===--------------------------------------------------------------------------
-// Executed after data was loaded from the DB - adjust column width
-//----===-----------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.SQLQry1AfterOpen(DataSet: TDataSet);
-var
-   idx1, idx2, idx3, Len, ThisTop, ThisLen : integer;
-   Str                                 : string;
-
-begin
-
-   ThisLen := DBGrid1.Columns.Count;
-
-   for idx1 := 0 to DBGrid1.Columns.Count - 1 do begin
-
-      Str := DBGrid1.Columns.Items[idx1].Title.Caption;
-      ThisTop := Length(Str) * 8;
-
-      SQLQry1.First;
-
-      for idx2 := 0 to SQLQry1.RecordCount - 1 do begin
-
-
-         Str := SQLQry1.Fields.FieldByNumber(idx1 + 1).AsString;
-         Len := Length(Str) * 8;
-
-         if Len > ThisTop then
-            ThisTop := Len;
-
-         SQLQry1.Next;
-         DBGrid1.Columns.Items[idx1].Width := ThisTop;
-
-      end;
-
-   end;
-
-end;
-
-//------------------------------------------------------------------------------
-// User clicked on the top right icon to show about information
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.Image2Click(Sender: TObject);
-begin
-
-   saAbout.ShowAbout;
 
 end;
 
@@ -796,7 +640,7 @@ begin
       chkAutoRefresh.Checked := False;
       chkMatchAny.Checked    := False;
       speInterval.Value      := 60;
-      stMsgL.Caption         := 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents';
+      stMsgL.Caption         := 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load''' + #10 + 'to display the contents';
 
    end;
 
@@ -805,8 +649,7 @@ begin
 {$IFDEF OLD_ENCODING}
    ThisPrefix := jvCipher.DecodeString(SecretPhrase,Copy(DBPrefix,1,6));
 {$ELSE}
-//   ThisPrefix := Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),SecretPhrase);
-   ThisPrefix := 'dev001';
+   ThisPrefix := Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),SecretPhrase);
 {$ENDIF}
 
    if pgTabs.ActivePageIndex = TAB_0 then begin
@@ -871,7 +714,7 @@ begin
       edtKeyM.Text        := UserKey;
       btnProcessM.Enabled := False;
 
-//      edtPrefixMChange(Sender);
+      edtPrefixMChange(Sender);
 
       btnProcessM.Default := True;
       btnCancelM.Caption  := 'Cancel';
@@ -1148,9 +991,325 @@ begin
 
 end;
 
-//==============================================================================
-// Databae Functions
-//==============================================================================
+//------------------------------------------------------------------------------
+// User clicked on the Cancel button on a Tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnCancelRClick(Sender: TObject);
+begin
+
+   Close;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the top right icon to show about information
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.Image2Click(Sender: TObject);
+begin
+
+   saAbout.ShowAbout;
+
+end;
+
+{==============================================================================}
+{--- Maintenance Tab functions                                              ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// The Prefix changed on the Maintenance Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtPrefixMChange(Sender: TObject);
+begin
+
+   if ((Trim(edtPrefixM.Text) = '') or (Trim(edtKeyM.Text) = '')) then
+      btnProcessM.Enabled := False
+   else
+      btnProcessM.Enabled := True;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on he button to clear the Key field
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtKeyMButtonClick(Sender: TObject);
+begin
+
+   edtKeyM.Clear;
+   edtKeyM.SetFocus;
+
+end;
+
+//------------------------------------------------------------------------------
+// The value of the Key field changed
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtKeyMChange(Sender: TObject);
+begin
+
+   //
+   edtPrefixMChange(Sender);
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Update button on the Maintenance Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessMClick(Sender: TObject);
+var
+   idx1                     : integer;
+   PartValid                : boolean;
+   PartOne, PartTwo, T1, T2 : string;
+{$IFDEF WINDOWS}
+   RegIni                   : TRegistryIniFile;
+{$ELSE}
+   RegIni                   : TINIFile;
+{$ENDIF}
+
+begin
+
+   if Length(edtPrefixM.Text) <> 6 then begin
+
+      Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtPrefixM.SetFocus();
+      Exit;
+
+   end;
+
+   PartOne   := Copy(edtPrefixM.Text,1,3);
+   PartTwo   := Copy(edtPrefixM.Text,4,3);
+   PartValid := True;
+
+//--- Check that the first three characters are all alphabetic
+
+   for idx1 := 1 to 3 do begin
+
+      if (PartOne[idx1] in ['A'..'Z','a'..'z']) = False then begin
+         PartValid := False;
+         break;
+      end;
+
+   end;
+
+//--- Cheek that the last three characters are all numeric
+
+   for idx1 := 1 to 3 do begin
+
+      if (PartTwo[idx1] in ['0'..'9']) = False then begin
+         PartValid := False;
+         break;
+      end;
+
+   end;
+
+   if PartValid = False then begin
+
+      Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtPrefixM.SetFocus();
+      Exit;
+
+   end;
+
+   if Length(Trim(edtKeyM.Text)) <> 38 then begin
+
+      Application.MessageBox('Key is a required field and must be exactly 38 characters long - Please provide a valid Key','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtKeyM.SetFocus();
+      Exit;
+
+   end;
+
+{$IFDEF OLD_ENCODING}
+   DBPrefix := jvCipher.EncodeString(ThisPass,(edtPrefixM.Text + FormatDateTime('yyyy/mm/dd',Now())));
+{$ELSE}
+   DBPrefix := Vignere(CYPHER_ENC,PChar(edtPrefixM.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now)),SecretPhrase);
+   T1       := Copy(DBPrefix,1,6);
+   T2       := Copy(DBPrefix,7,99);
+   DBPrefix := T1 + MaskField(T2,TYPE_MASK);
+{$ENDIF}
+
+   UserKey  := edtKeyM.Text;
+
+//--- Write the new values to the Registry
+
+{$IFDEF WINDOWS}
+   RegIni := TRegistryIniFile.Create(KeepRegString);
+{$ELSE}
+   RegIni := TINIFile.Create(RegPath + KeepRegString);
+{$ENDIF}
+
+   RegIni.WriteString('Preferences','Key',UserKey);
+   RegIni.WriteString('Preferences','DBPrefix',DBPrefix);
+
+   RegIni.Destroy;
+
+   Application.MessageBox('Prefix and Key sucessfully updated...','LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+   btnProcessM.Default := False;
+   btnCancelM.Caption  := 'Close';
+   btnCancelM.Default  := True;
+   btnCancelM.SetFocus();
+
+end;
+
+
+{==============================================================================}
+{--- SQL Tab functions                                                      ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// A field on the SQL Page changed
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtHostNameDChange(Sender: TObject);
+var
+   FldCount : integer = 0;
+
+begin
+
+   if LockD_State = True then
+      Exit;
+
+//--- Check if the Process button can be enabled
+
+   if Trim(edtHostNameD.Text) <> '' then Inc(FldCount);
+   if Trim(edtUserNameD.Text) <> '' then Inc(FldCount);
+   if Trim(edtPasswordD.Text) <> '' then Inc(FldCount);
+   if Trim(edtPrefixD.Text)   <> '' then Inc(FldCount);
+   if Trim(edtSQLD.Text)      <> '' then Inc(FldCount);
+
+   if FldCount = 5 then
+      btnProcessD.Enabled := True
+   else
+      btnProcessD.Enabled := False;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Lock button on the SQL Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnLockDClick(Sender: TObject);
+var
+   Passwd : string;
+
+begin
+
+   if LockD_State = True then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then
+         LockD_State := False;
+
+   end else begin
+
+      LockD_State := True;
+
+      edtHostNameD.Clear();
+      edtUserNameD.Clear();
+      edtPasswordD.Clear();
+      edtPrefixD.Clear();
+      edtSQLD.Clear();
+
+   end;
+
+   pgTabsChange(Sender);
+
+end;
+
+//---------------------------------------------------------------------------
+// User click on the Process button on the SQL Page
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessDClick(Sender: TObject);
+var
+   S1 : string;
+
+begin
+
+//--- Keep track of the commands that are entered
+
+   if edtSQLD.Items.IndexOf(edtSQLD.Text) = -1 then
+      edtSQLD.Items.Insert(0,edtSQLD.Text);
+
+//--- Build the DB connection string
+
+   SQLCon.HostName     := edtHostNameD.Text;
+   SQLCon.UserName     := edtUserNameD.Text;
+   SQLCon.Password     := edtPasswordD.Text;
+   SQLCon.DatabaseName := edtPrefixD.Text + '_LPMS';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
+   SQLDs1.DataSet      := SQLQry1;
+
+//--- Open a connection to the datastore named in HostName
+
+   if DM_Open_Connection() = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+//--- Select the Database to use
+
+   S1 := 'USE ' + edtPrefixD.Text + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   SemaSQL := False;
+
+//--- Execute the SQL Statement
+
+   SQLQry1.Close();
+   SQLQry1.SQL.Text := edtSQLD.Text;
+
+   if ((LowerCase(Copy(edtSQLD.Text,1,6)) = 'select') or (LowerCase(Copy(edtSQLD.Text,1,4)) = 'show')) then
+      SQLQry1.Open()
+   else
+      SQLQry1.ExecSQL();
+
+end;
+
+//------------------------------------------------------------------------------
+// Executed after data was loaded from the DB - adjust column width
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.SQLQry1AfterOpen(DataSet: TDataSet);
+var
+   idx1, idx2, idx3, Len, ThisTop, ThisLen : integer;
+   Str                                 : string;
+
+begin
+
+   ThisLen := DBGrid1.Columns.Count;
+
+   for idx1 := 0 to DBGrid1.Columns.Count - 1 do begin
+
+      Str := DBGrid1.Columns.Items[idx1].Title.Caption;
+      ThisTop := Length(Str) * 8;
+
+      SQLQry1.First;
+
+      for idx2 := 0 to SQLQry1.RecordCount - 1 do begin
+
+
+         Str := SQLQry1.Fields.FieldByNumber(idx1 + 1).AsString;
+         Len := Length(Str) * 8;
+
+         if Len > ThisTop then
+            ThisTop := Len;
+
+         SQLQry1.Next;
+         DBGrid1.Columns.Items[idx1].Width := ThisTop;
+
+      end;
+
+   end;
+
+end;
+
+{==============================================================================}
+{--- Database functions                                                     ---}
+{==============================================================================}
 
 //---------------------------------------------------------------------------
 // Function to open a connection to the datastore
@@ -1211,9 +1370,9 @@ begin
 
 end;
 
-//==============================================================================
-// Support Functions
-//==============================================================================
+{==============================================================================}
+{--- Support functions                                                      ---}
+{==============================================================================}
 
 //------------------------------------------------------------------------------
 // Function to Request a PassPhrase from the User
@@ -1237,6 +1396,107 @@ begin
    FLPMS_InputQuery.Destroy;
 
    Result := ThisRes;
+
+end;
+
+//------------------------------------------------------------------------------
+// Function to Mask/Unmask a field that will be stored in a plain file
+//
+// InputField contains the field to be masked/unmasked and the processed field
+// is returned as the Result of the function
+//
+// MaskType determines whether InputField is masked or unmasked
+// See MASK_TYPES above
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.MaskField(InputField: string; MaskType: integer): string;
+var
+   idx1             : integer;
+   S2               : string;
+   S1               : array[1..64] of char;
+   Hi1, Hi2, HL, Lo : Word;
+
+begin
+
+   Result := '';
+
+   case MaskType of
+
+//--- Mask the Input Field
+
+      TYPE_MASK: begin
+
+         S1   := InputField;
+         S2   := '';
+         idx1 := 1;
+
+         while (S1[idx1] <> #0) do begin
+
+//--- Get copies of the current character
+
+            Hi1 := Word(S1[idx1]);
+            Lo  := Word(S1[idx1]);
+
+//--- Move the 4 high bits to the right and mask out the four left bits
+
+            Hi1 := Hi1 shr 4;
+            Lo  := Lo and %00001111;
+
+//--- Turn the Hi and Lo parts into displayable characters
+
+            Hi1 := Hi1 or %01000000;
+            Lo  := Lo  or %01000000;
+
+//--- Add them to the result string
+
+            S2 := S2 + char(Hi1) + char(Lo);
+
+            inc(idx1);
+
+         end;
+
+         Result := S2;
+
+      end;
+
+//--- Unmask the input field
+
+      TYPE_UNMASK : begin
+
+         S1   := InputField;
+         S2   := '';
+         idx1 := 1;
+
+         while (S1[idx1] <> #0) do begin
+
+      //--- Get copies of the next 2 characters
+
+            Hi1 := Word(S1[idx1]);
+            Inc(idx1);
+            Hi2 := Word(S1[idx1]);
+            Inc(idx1);
+
+      //--- Move the 4 low bits of the first to the left and mask the 4 low bits then
+      //--- mask the 4 high bits of the second
+
+            Hi1 := Hi1 shl 4;
+            Hi1 := Hi1 and %11110000;
+            Hi2 := Hi2 and %00001111;
+
+      //--- Merge the 2 characters
+
+            HL := Hi1 or Hi2;
+
+      //--- Add it to the result string
+
+            S2 := S2 + char(HL);
+
+         end;
+
+         Result := S2;
+
+      end;
+
+   end;
 
 end;
 
