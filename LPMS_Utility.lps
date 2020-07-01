@@ -21,9 +21,9 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="LPMS_UtilityApp"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="1016"/>
+        <TopLine Value="1015"/>
         <CursorPos Y="1039"/>
-        <FoldState Value=" TLt209 T3,705131 pj8kY0M2 piajU0W311t"/>
+        <FoldState Value=" TLt209 T3,705131~"/>
         <UsageCount Value="41"/>
         <Bookmarks Count="2">
           <Item0 X="29" Y="339" ID="1"/>
@@ -108,7 +108,7 @@
         <UsageCount Value="10"/>
       </Unit10>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="29" HistoryIndex="28">
       <Position1>
         <Filename Value="lpms_utilityapp.pas"/>
         <Caret Line="1057" Column="44" TopLine="1039"/>
@@ -225,10 +225,6 @@
         <Filename Value="lpms_utilityapp.pas"/>
         <Caret Line="652" TopLine="632"/>
       </Position29>
-      <Position30>
-        <Filename Value="lpms_utilityapp.pas"/>
-        <Caret Line="353" Column="12" TopLine="379"/>
-      </Position30>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
