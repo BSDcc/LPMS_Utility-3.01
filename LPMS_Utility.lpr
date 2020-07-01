@@ -7,7 +7,7 @@ uses
    cthreads,
    {$ENDIF}{$ENDIF}
    Interfaces, // this includes the LCL widgetset
-   Forms, datetimectrls, LPMS_UtilityApp
+   Forms, datetimectrls, LPMS_UtilityApp, LPMS_InputQuery
    { you can add units after this };
 
 {$R *.res}
