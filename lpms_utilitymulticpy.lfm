@@ -1,0 +1,63 @@
+object FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy
+  Left = 726
+  Height = 77
+  Top = 227
+  Width = 383
+  Caption = 'LPMS UTILITY'
+  ClientHeight = 77
+  ClientWidth = 383
+  OnShow = FormShow
+  Position = poScreenCenter
+  LCLVersion = '2.0.8.0'
+  object Label1: TLabel
+    Left = 8
+    Height = 17
+    Top = 12
+    Width = 52
+    Caption = 'DBPrefix:'
+    ParentColor = False
+  end
+  object edtDBPrefix: TEdit
+    Left = 80
+    Height = 27
+    Top = 8
+    Width = 121
+    MaxLength = 6
+    OnChange = edtDBPrefixChange
+    TabOrder = 0
+  end
+  object cbMultiCpy: TCheckBox
+    Left = 216
+    Height = 21
+    Top = 10
+    Width = 157
+    Caption = ' Multi Company Support'
+    TabOrder = 1
+  end
+  object btnOK: TButton
+    Left = 298
+    Height = 25
+    Top = 38
+    Width = 75
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 3
+  end
+  object btnCancel: TButton
+    Left = 216
+    Height = 25
+    Top = 38
+    Width = 75
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 2
+  end
+  object Bevel1: TBevel
+    Left = 0
+    Height = 2
+    Top = 0
+    Width = 383
+    Align = alTop
+  end
+end

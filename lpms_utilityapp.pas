@@ -15,16 +15,17 @@ unit LPMS_UtilityApp;
 {$mode objfpc}{$H+}
 
 interface
+
 //------------------------------------------------------------------------------
 // Uses clause
 //------------------------------------------------------------------------------
 uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
-   DateTimePicker, LazFileUtils, sqldb, db, LCLType, Math, DOM,
+   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout, StrUtils,
+   DateTimePicker, LazFileUtils, sqldb, db, LCLType, Math, DOM, Process,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
-   Registry, mysql56conn;
+   Registry, Windows, mysql56conn;
 {$ENDIF}
 
 {$IFDEF LINUX}                       // Target is Linux
@@ -32,7 +33,7 @@ uses
    {$IFDEF CPUARMHF}                 // Running on ARM (Raspbian) architecture
       mysql55conn;
    {$ELSE}                           // Running on Intel architecture
-      mysql57conn, Types;
+      mysql57conn;
    {$ENDIF}
 {$ENDIF}
 
@@ -53,6 +54,14 @@ type
    { TFLPMS_UtilityApp }
 
    TFLPMS_UtilityApp = class(TForm)
+      Bevel1: TBevel;
+      Bevel2: TBevel;
+      Bevel3: TBevel;
+      Bevel4: TBevel;
+      Bevel5: TBevel;
+      Bevel6: TBevel;
+      Bevel7: TBevel;
+      Bevel8: TBevel;
       btnAll: TSpeedButton;
       btnAllB: TSpeedButton;
       btnArchive: TSpeedButton;
@@ -262,8 +271,10 @@ type
       procedure edtHostNameDChange(Sender: TObject);
       procedure edtKeyMButtonClick(Sender: TObject);
       procedure edtKeyMChange(Sender: TObject);
+      procedure edtKeyMKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure edtPrefixMChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
+      procedure FormShow(Sender: TObject);
       procedure Image2Click(Sender: TObject);
       procedure pgTabsChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
@@ -271,6 +282,7 @@ type
 private  { Private Declarations }
    CallHWND       : integer;       //
    ArchiveActive  : boolean;       //
+   CanUpdate      : boolean;       // Semaphore to inhibit update processing
    DateIsSet      : boolean;       //
    LockB_State    : boolean;       // Lock status of the Restore Tab
    LockC_State    : boolean;       // Lock status of the Convert Tab
@@ -291,15 +303,12 @@ private  { Private Declarations }
    ErrMsg         : string;        // Last error message
    FilesDir       : string;        //
    HostName       : string;        //
-   KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
    Password       : string;        //
    Prefix         : string;        //
-   RegPath        : string;        // Path to the local INI file - Not used on Winblows
    RestoreTables  : string;        //
-   SecretPhrase   : string;        // Used by Vignere
    ServerName     : string;        // The HostName where the LPMS_Server is running
    ServerPort     : string;        // The Port on which the LPMS_Server is listening
    SQLFile        : string;        //
@@ -335,25 +344,29 @@ private  { Private Declarations }
    {$ENDIF}
 {$ENDIF}
 
-   function DM_Put_DB(S1: string; RunType: integer) : boolean;
-   function DM_Open_Connection() : boolean;
-   function InputQueryM(ThisCap, Question : string; DispType: integer) : string;
-   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
-   function MaskField(InputField: string; MaskType: integer): string;
+   procedure SilentUpgrade();
+   function  DM_Put_DB(S1: string; RunType: integer) : boolean;
+   function  DM_Open_Connection() : boolean;
+   function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
 
 public   { Publlic Declartions}
    DoRestore      : boolean;       //
    MultiCompany   : boolean;       //
    Proceed        : boolean;       //
    DBPrefix       : string;        // The Database Prefix stored in the Registry
+   KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
    PassPhrase     : string;        // Used by Input Query
+   RegPath        : string;        // Path to the local INI file - Not used on Winblows
    RestoreHost    : string;        //
    RestorePass    : string;        //
    RestoreUser    : string;        //
    Result         : string;        //
+   SecretPhrase   : string;        // Used by Vignere
    ThisDBPrefix   : string;        //
    ThisPass       : string;        //
    ThisRes        : string;        // Result from InputQuery
+
+   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
 
 end;
 
@@ -380,13 +393,62 @@ const
    TYPE_MASK          = 1;
    TYPE_UNMASK        = 2;
 
+type
+
+   REC_Key_Priv = record
+      Key              : string;
+      DaysLeft         : integer;
+      LPMS_Collections : boolean;
+      LPMS_DocGen      : boolean;
+      LPMS_Floating    : boolean;
+      LPMS_Options4    : boolean;
+      License          : integer;
+      DBPrefix         : string;
+      Unique           : string;
+      KeyDate          : string;
+   end;
+
+   REC_Key_Values = record
+      Unique           : string;
+      ExpDate          : string;
+      DBPrefix         : string;
+      LPMS_Collections : boolean;
+      LPMS_DocGen      : boolean;
+      LPMS_Floating    : boolean;
+      LPMS_Options4    : boolean;
+      License          : integer;
+   end;
+
+//--- Temporary - Allow both old style encoding and new style encoding but
+//--- only one type at a time
+
+//{$DEFINE OLD_ENCODING}
 
 var
    FLPMS_UtilityApp: TFLPMS_UtilityApp;
 
+   This_Key_Values : REC_Key_Values;
+   This_Key_Priv   : REC_Key_Priv;
+
+{$IFDEF DARWIN}
+   function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.dylib';
+   function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.dylib';
+{$ENDIF}
+{$IFDEF WINDOWS}
+   function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'BSD_Utilities.dll';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'BSD_Utilities.dll';
+   function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'BSD_Utilities.dll';
+{$ENDIF}
+{$IFDEF LINUX}
+   function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.so';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.so';
+   function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.so';
+{$ENDIF}
+
 implementation
 
-   uses LPMS_InputQuery;
+   uses LPMS_UtilityMultiCpy, LPMS_InputQuery;
 
 {$R *.lfm}
 
@@ -401,21 +463,19 @@ implementation
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.FormCreate(Sender: TObject);
 var
+   idx1, NumParms : integer;
+   ParmsFound     : boolean = True;
+   ThisPassPhrase : string;
+   Params, Args   : TStringList;
 {$IFDEF WINDOWS}
-   RegIni    : TRegistryIniFile;
+   RegIni         : TRegistryIniFile;
 {$ELSE}
-   RegIni    : TINIFile;
+   RegIni         : TINIFile;
 {$ENDIF}
 
 begin
 
-//--- Temporary
-
-{$IFDEF WINDOWS}
-   KeepRegString := 'Software\BlueCrane Software\LPMS 3';
-{$ELSE}
-   KeepRegString := 'LPMS 3.ini';
-{$ENDIF}
+   CanUpdate := False;
 
 //--- Set the Format Settings to override the system locale
 
@@ -499,12 +559,26 @@ begin
    SecretPhrase := 'BLUECRANE SOFTWARE DEVELOPMENT CC';
    PassPhrase   := 'BlueCrane Software Development CC';
 
+//--- Checek whether any parameters to do a Silent install were passed
+
+   //
+
+//--- Check whether we are dealing with a Multi Company situation
+
+   FLPMS_UtilityMultiCpy := TFLPMS_UtilityMultiCpy.Create(Application);
+
+   FLPMS_UtilityApp.Hide();
+   FLPMS_UtilityMultiCpy.ShowModal();
+   FLPMS_UtilityApp.Show();
+
+   FLPMS_UtilityMultiCpy.Destroy;
+
 //--- Get the default values stored in the Registry
 
 {$IFDEF WINDOWS}
    RegIni := TRegistryIniFile.Create(KeepRegString);
 {$ELSE}
-   RegIni := TINIFile.Create(RegPath + KeepRegString);
+   RegIni := TINIFile.Create(KeepRegString);
 {$ENDIF}
 
    edtSQLFile.Text := RegIni.ReadString('Preferences','SQLLocation',RegPath + 'LPMS_SQL.txt');
@@ -516,16 +590,136 @@ begin
 
    RegIni.Destroy;
 
-{
-//--- Build the DB connection string
+//--- Check whether any paramters were passed and retrieve if so
 
-   SQLCon.HostName     := ServerName;
-   SQLCon.UserName     := 'LPMSAdmin';
-   SQLCon.Password     := 'LA01';
-   SQLTran.DataBase    := SQLCon;
-   SQLQry1.Transaction := SQLTran;
-   SQLDs1.DataSet      := SQLQry1;
+   CallHWND := 0;
+
+   try
+
+      Params  := TStringList.Create;
+      Args    := TStringList.Create;
+
+      for idx1 := 1 to ParamCount do
+         Args.Add(ParamStr(idx1));
+
+//--- Call and execute the cmdlOptions function in the BSD_Utilities DLL
+
+      NumParms := cmdlOptions('G:M:P:H:', Args, Params);
+
+      if NumParms > 0 then begin
+
+         idx1      := 0;
+         NumParms := NumParms * 2;
+
+         while idx1 < Params.Count do begin
+
+            if Params.Strings[idx1] = 'G' then               // GUID for LPMS installation upgrade
+               ThisGUID := Params.Strings[idx1 + 1];
+
+            if Params.Strings[idx1] = 'M' then              // Full path to "setup.exe" for new version
+               ThisInstall := Params.Strings[idx1 + 1];
+
+            if Params.Strings[idx1] = 'P' then              // Passphrase to run FirstRun - required
+               ThisPassPhrase := Params.Strings[idx1 + 1];
+
+{$IFDEF WINDOWS}
+            if Params.Strings[idx1] = 'H' then begin        // Hide and Show the callers Form
+
+               CallHWND := StrToInt(Params.Strings[idx1 + 1]);
+
+               if CallHWND <> 0 then
+                  ShowWindow(CallHWND,SW_HIDE);
+
+            end;
+{$ENDIF}
+
+            idx1 := idx1 + 2;
+
+         end;
+
+      end else
+         ParmsFound := False;
+
+   finally
+
+//      Params.Destroy;
+      Args.Free;
+
+   end;
+
+//--- Attempt a silent uninstall and upgrade of LPMS if both GUID and Setup
+//--- location was passed as parameters
+
+   if (ParmsFound = True) and ((ThisGUID <> '') and (ThisInstall <> '')) and (ThisPassPhrase = PassPhrase) then begin
+
+      SilentUpgrade();
+      Application.Terminate;
+      Exit;
+
+   end;
+
+//--- If we get here then no/insufficient/invalid parameters were passed.
+//--- Check whether this user is already registered
+
+   if UserKey = '** Not Registered **' then begin
+
+      pgTabs.Pages[0].Visible := True;
+      pgTabs.Pages[1].Visible := False;
+      pgTabs.Pages[2].Visible := False;
+      pgTabs.Pages[3].Visible := False;
+      pgTabs.Pages[4].Visible := False;
+      pgTabs.ActivePageIndex  := 0;
+
+   end else begin
+
+      pgTabs.Pages[0].Visible := False;
+      pgTabs.Pages[1].Visible := False;
+      pgTabs.Pages[2].Visible := True;
+      pgTabs.Pages[3].Visible := False;
+      pgTabs.Pages[4].Visible := False;
+      pgTabs.ActivePageIndex  := 2;
+
+   end;
+
+//--- Display the landing tab
+
+   pgTabsChange(Sender);
+
+//--- Set some default values
+
+   btnRegister.Enabled := False;
+   btnProcessF.Enabled := False;
+   btnProcessM.Enabled := False;
+   btnUpgradeU.Enabled := False;
+
+{
+//--- Retrieve this PC's Mac Addresses (Up to 6)
+
+   This_Key_Rec  = new LPMS_Key_Rec;
+   DldDecode->LPMS_Key_GetUnique(This_Key_Rec);
+
+   if (This_Key_Rec->MacAddress[0] == "")
+   {
+      MessageBox(NULL,"Unable to find a valid MACAddress - FirstRun cannot continue...","Legal Practise Management System - FirstRun",(MB_OK|MB_ICONSTOP|MB_SYSTEMMODAL));
+      delete This_Key_Rec;
+      Application->Terminate();
+      return;
+   }
+   else
+      edtUnique->Text = This_Key_Rec->MacAddress[0];
+
+   delete This_Key_Rec;
 }
+
+end;
+
+//------------------------------------------------------------------------------
+// Executed when the Form is shown
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.FormShow(Sender: TObject);
+begin
+
+   //
 
 end;
 
@@ -1043,9 +1237,85 @@ end;
 // The value of the Key field changed
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.edtKeyMChange(Sender: TObject);
+var
+   idx1, idx2, SelStrt : integer;
+   DoIns               : boolean;
+   ThisKey, ThisStr    : string;
+   Parts               : TStringList;
+
 begin
 
-   //
+   if CanUpdate = True then
+      Exit;
+
+   if Trim(edtKeyM.Text) = '' then
+      Exit;
+
+   try
+
+      Parts := TStringList.Create;
+
+//--- Determine where the cursor is and whether we are at the end of the field.
+//--- If we are not at the end then we are doing an insert
+
+      SelStrt := edtKeyM.SelStart;
+
+      if SelStrt < Length(edtKeyM.Text) then
+         DoIns := True
+      else
+         DoIns := False;
+
+      ThisKey  := '';
+      ThisStr  := '';
+
+//--- Remove the '-' characters from the key as these will shift due to new
+//--- characters being added or eisting characters being deleted
+
+      ExtractStrings(['-'], [' '], PChar(edtKeyM.Text), Parts);
+
+      for idx1 := 0 to Parts.Count - 1 do
+         ThisStr := ThisStr + Parts[idx1];
+
+//--- Rebuild the structure of the key inserting '-' at the appropriate places
+
+      for idx2 := 1 to Length(ThisStr) do begin
+
+         ThisKey := ThisKey + ThisStr[idx2];
+
+         if idx2 in [4,7,11,15,19,23,27] then
+            ThisKey := ThisKey + '-';
+
+      end;
+
+   finally
+
+      Parts.Free;
+
+   end;
+
+   CanUpdate    := True;
+   edtKeyM.Text := ThisKey;
+
+//--- If the cursor is positioned at a '-' then we need to move it forward by
+//--- 1 position, however this test will fail if we are at the beginning of the
+//--- field
+
+   if SelStrt > 0 then begin
+
+      if ThisKey[SelStrt] = '-' then
+         Inc(SelStrt);
+
+   end;
+
+//--- Reposition the cursor depending on wheter we are doing an insert or not
+
+   if DoIns = True then
+      edtKeyM.SelStart := SelStrt
+   else
+      edtKeyM.SelStart := Length(edtKeyM.Text);
+
+   CanUpdate := False;
+
    edtPrefixMChange(Sender);
 
 end;
@@ -1132,7 +1402,7 @@ begin
 {$IFDEF WINDOWS}
    RegIni := TRegistryIniFile.Create(KeepRegString);
 {$ELSE}
-   RegIni := TINIFile.Create(RegPath + KeepRegString);
+   RegIni := TINIFile.Create(KeepRegString);
 {$ENDIF}
 
    RegIni.WriteString('Preferences','Key',UserKey);
@@ -1149,6 +1419,125 @@ begin
 
 end;
 
+//------------------------------------------------------------------------------
+// Check whether the User pressed the backspace key while editing the Key on
+// the Maintenance Tab to preserve the position of the '-' characters
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtKeyMKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+   KeepSelStart, KeepLength : integer;
+   ThisField                : string;
+
+begin
+
+//--- Trap and Process the Backspace key
+
+   if Key = VK_BACK then begin
+
+//--- If we are at the start of the field then we consume the key and do nothing
+
+      if (edtKeyM.SelStart = 0) and (edtKeyM.SelLength = 0) then begin
+
+         Key := 0;
+         Exit;
+
+      end;
+
+//--- If the whole field is selected then simply delete the contents
+
+      if edtKeyM.SelLength = Length(edtKeyM.Text) then begin
+
+         edtKeyM.Text := '';
+         KeepSelStart := 0;
+
+      end else begin
+
+//--- Otherwise delete what is selected
+
+         ThisField    := '';
+         KeepLength   := edtKeyM.SelLength;
+         KeepSelStart := edtKeyM.SelStart;
+
+         if KeepSelStart = 1 then
+
+            ThisField := Copy(edtKeyM.Text,2,Length(edtKeyM.Text) - 1)
+
+         else begin
+
+            if KeepLength = 0 then
+               ThisField := Copy(edtKeyM.Text,1,KeepSelStart - 1)
+            else
+               ThisField := Copy(edtKeyM.Text,1,KeepSelStart);
+
+            ThisField := Thisfield + Copy(edtKeyM.Text,KeepSelStart + KeepLength + 1,Length(edtKeyM.Text) - 1);
+
+         end;
+
+//--- Update the field without invoking the edtKeyRChange routine
+
+         CanUpdate := True;
+         edtKeyM.Text := ThisField;
+         CanUpdate := False;
+
+      end;
+
+      if KeepLength = 0 then
+         edtKeyM.SelStart := KeepSelStart - 1
+      else
+         edtKeyM.SelStart := KeepSelStart;
+
+      Key := 0;
+
+   end;
+
+end;
+
+{==============================================================================}
+{--- Upgrade Tab functions                                                  ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// Parameters to perform a silent upgrade of LPMS were passed to LPMS_Utility
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.SilentUpgrade();
+var
+   idx      : integer;
+   Process  : TProcess;
+
+begin
+
+   Process := TProcess.Create(nil);
+
+   try
+
+      Process.InheritHandles := False;
+      Process.Options        := [poWaitOnExit];
+      Process.ShowWindow     := swoShow;
+
+//--- Copy default environment variables including DISPLAY variable for GUI
+//--- application to work
+
+      for idx := 1 to GetEnvironmentVariableCount do
+         Process.Environment.Add(GetEnvironmentString(idx));
+
+      Process.Executable := LPMSUpgrade;
+      Process.Parameters.Add('--args');
+      Process.Parameters.Add('-TFull');
+      Process.Parameters.Add('-G' + ThisGUID);
+      Process.Parameters.Add('-M' + AnsiReplaceStr(AnsiReplaceStr(ThisInstall,':','~'),' ','#'));
+      Process.Parameters.Add('-F' + AnsiReplaceStr(AnsiReplaceStr(RegPath,':','~'),' ','#'));
+      Process.Parameters.Add('-R' + AnsiReplaceStr(AnsiReplaceStr('Software\BlueCrane Software\LPMS 3',':','~'),' ','#'));
+      Process.Parameters.Add('-SPreferences');
+
+      FLPMS_UtilityApp.Hide();
+      Process.Execute;
+      FLPMS_UtilityApp.Show();
+
+   finally
+      Process.Free;
+   end;
+
+end;
 
 {==============================================================================}
 {--- SQL Tab functions                                                      ---}
@@ -1275,12 +1664,12 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.SQLQry1AfterOpen(DataSet: TDataSet);
 var
-   idx1, idx2, idx3, Len, ThisTop, ThisLen : integer;
-   Str                                 : string;
+   idx1, idx2, Len, ThisTop{, ThisLen} : integer;
+   Str                               : string;
 
 begin
 
-   ThisLen := DBGrid1.Columns.Count;
+//   ThisLen := DBGrid1.Columns.Count;
 
    for idx1 := 0 to DBGrid1.Columns.Count - 1 do begin
 
@@ -1377,7 +1766,7 @@ end;
 //------------------------------------------------------------------------------
 // Function to Request a PassPhrase from the User
 //------------------------------------------------------------------------------
-function TFLPMS_UtilityApp.InputQueryM(ThisCap, Question : string; DispType: integer) : string;
+function TFLPMS_UtilityApp.InputQueryM(ThisCap, Question: string; DispType: integer) : string;
 begin
 
    FLPMS_InputQuery := TFLPMS_InputQuery.Create(Application);
@@ -1396,107 +1785,6 @@ begin
    FLPMS_InputQuery.Destroy;
 
    Result := ThisRes;
-
-end;
-
-//------------------------------------------------------------------------------
-// Function to Mask/Unmask a field that will be stored in a plain file
-//
-// InputField contains the field to be masked/unmasked and the processed field
-// is returned as the Result of the function
-//
-// MaskType determines whether InputField is masked or unmasked
-// See MASK_TYPES above
-//------------------------------------------------------------------------------
-function TFLPMS_UtilityApp.MaskField(InputField: string; MaskType: integer): string;
-var
-   idx1             : integer;
-   S2               : string;
-   S1               : array[1..64] of char;
-   Hi1, Hi2, HL, Lo : Word;
-
-begin
-
-   Result := '';
-
-   case MaskType of
-
-//--- Mask the Input Field
-
-      TYPE_MASK: begin
-
-         S1   := InputField;
-         S2   := '';
-         idx1 := 1;
-
-         while (S1[idx1] <> #0) do begin
-
-//--- Get copies of the current character
-
-            Hi1 := Word(S1[idx1]);
-            Lo  := Word(S1[idx1]);
-
-//--- Move the 4 high bits to the right and mask out the four left bits
-
-            Hi1 := Hi1 shr 4;
-            Lo  := Lo and %00001111;
-
-//--- Turn the Hi and Lo parts into displayable characters
-
-            Hi1 := Hi1 or %01000000;
-            Lo  := Lo  or %01000000;
-
-//--- Add them to the result string
-
-            S2 := S2 + char(Hi1) + char(Lo);
-
-            inc(idx1);
-
-         end;
-
-         Result := S2;
-
-      end;
-
-//--- Unmask the input field
-
-      TYPE_UNMASK : begin
-
-         S1   := InputField;
-         S2   := '';
-         idx1 := 1;
-
-         while (S1[idx1] <> #0) do begin
-
-      //--- Get copies of the next 2 characters
-
-            Hi1 := Word(S1[idx1]);
-            Inc(idx1);
-            Hi2 := Word(S1[idx1]);
-            Inc(idx1);
-
-      //--- Move the 4 low bits of the first to the left and mask the 4 low bits then
-      //--- mask the 4 high bits of the second
-
-            Hi1 := Hi1 shl 4;
-            Hi1 := Hi1 and %11110000;
-            Hi2 := Hi2 and %00001111;
-
-      //--- Merge the 2 characters
-
-            HL := Hi1 or Hi2;
-
-      //--- Add it to the result string
-
-            S2 := S2 + char(HL);
-
-         end;
-
-         Result := S2;
-
-      end;
-
-   end;
 
 end;
 

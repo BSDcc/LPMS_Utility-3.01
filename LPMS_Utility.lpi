@@ -21,6 +21,7 @@
           <Version Value="11"/>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
+            <Libraries Value="../BSD_Utilities/lib/$(TargetCPU)-$(TargetOS)"/>
             <OtherUnitFiles Value="../BSD_Utilities"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(BuildMode)"/>
           </SearchPaths>
@@ -106,7 +107,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="LPMS_Utility.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -125,6 +126,14 @@
         <HasResources Value="True"/>
         <UnitName Value="LPMS_InputQuery"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="lpms_utilitymulticpy.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FLPMS_UtilityMultiCpy"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="LPMS_UtilityMultiCpy"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

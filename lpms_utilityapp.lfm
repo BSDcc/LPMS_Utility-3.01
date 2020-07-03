@@ -1,12 +1,14 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 695
+  Left = 645
   Height = 570
-  Top = 49
+  Top = 124
   Width = 890
+  ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
   ClientHeight = 570
   ClientWidth = 890
   OnCreate = FormCreate
+  OnShow = FormShow
   Position = poScreenCenter
   LCLVersion = '2.0.8.0'
   object PageControl1: TPageControl
@@ -390,6 +392,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 752
         Anchors = [akTop, akLeft, akRight]
         TabOrder = 4
+      end
+      object Bevel2: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
       end
     end
     object Setup: TTabSheet
@@ -995,6 +1004,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxLength = 0
         TabOrder = 4
       end
+      object Bevel3: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
+      end
     end
     object Maintenance: TTabSheet
       Caption = 'Maintenance'
@@ -1281,6 +1297,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 752
         Anchors = [akTop, akLeft, akRight]
         ButtonWidth = 25
+        CharCase = ecUppercase
         Glyph.Data = {
           36030000424D3803000000000000360000002800000010000000100000000100
           18000000000000000000120B0000120B00000000000000000000FF00FFFF00FF
@@ -1309,12 +1326,20 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
-        MaxLength = 0
+        MaxLength = 38
         NumGlyphs = 1
         OnButtonClick = edtKeyMButtonClick
         OnChange = edtKeyMChange
+        OnKeyDown = edtKeyMKeyDown
         PasswordChar = #0
         TabOrder = 2
+      end
+      object Bevel1: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
       end
     end
     object Convert: TTabSheet
@@ -1938,6 +1963,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = ' New Style Encoding'
         TabOrder = 9
         Visible = False
+      end
+      object Bevel4: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
       end
     end
     object Upgrade: TTabSheet
@@ -2635,6 +2667,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxLength = 0
         TabOrder = 13
       end
+      object Bevel5: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
+      end
     end
     object SQL: TTabSheet
       Caption = 'SQL'
@@ -3228,6 +3267,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Options = []
         TabOrder = 7
         VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbEdit, nbPost, nbCancel]
+      end
+      object Bevel6: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
       end
     end
     object Restore: TTabSheet
@@ -3935,6 +3981,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
         TabOrder = 1
+      end
+      object Bevel7: TBevel
+        Left = 0
+        Height = 2
+        Top = 64
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
       end
     end
     object Log: TTabSheet
@@ -5247,13 +5300,20 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'seconds'
         ParentColor = False
       end
+      object Bevel8: TBevel
+        Left = 0
+        Height = 2
+        Top = 64
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
+      end
     end
   end
   object saAbout: TSplashAbout
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
