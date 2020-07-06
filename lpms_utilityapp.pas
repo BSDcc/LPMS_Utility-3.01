@@ -441,10 +441,12 @@ var
 {$IFDEF DARWIN}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.dylib';
+   function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.dylib';
 {$ENDIF}
 {$IFDEF WINDOWS}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'BSD_Utilities.dll';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'BSD_Utilities.dll';
+   function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'BSD_Utilities.dll';
 {$ENDIF}
 {$IFDEF LINUX}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.so';
@@ -1721,6 +1723,8 @@ begin
    try
 
       SQLQry1.Close;
+      SQLCon.Close;
+
       SQLCon.Open;
 
       except on E : Exception do begin
