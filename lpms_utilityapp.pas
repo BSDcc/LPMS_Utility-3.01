@@ -21,8 +21,9 @@ interface
 //------------------------------------------------------------------------------
 uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout, StrUtils,
-   DateTimePicker, LazFileUtils, sqldb, db, LCLType, Math, DOM, Process,
+   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
+   IdTCPClient, StrUtils, DateTimePicker, LazFileUtils, sqldb, db, LCLType,
+   Math, DOM, Process,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry, Windows, mysql56conn;
@@ -114,6 +115,8 @@ type
       chkAutoRefresh: TCheckBox;
       chkMatchAny: TCheckBox;
       Convert: TTabSheet;
+      tcpClient: TIdTCPClient;
+      saAbout: TSplashAbout;
       SQLDs1: TDataSource;
       DBGrid1: TDBGrid;
       DBNavigator1: TDBNavigator;
@@ -169,14 +172,14 @@ type
       edtFolder: TFileNameEdit;
       edtSetupLoc: TFileNameEdit;
       edtSQLFile: TFileNameEdit;
-      Image1: TImage;
-      Image2: TImage;
-      Image3: TImage;
-      Image4: TImage;
-      Image5: TImage;
-      Image6: TImage;
-      Image7: TImage;
-      Image8: TImage;
+      imgMaintenance: TImage;
+      imgSetup: TImage;
+      imgRegister: TImage;
+      imgConvert: TImage;
+      imgUpgrade: TImage;
+      imgSQL: TImage;
+      imgRestore: TImage;
+      imgLog: TImage;
       Label1: TLabel;
       Label10: TLabel;
       Label11: TLabel;
@@ -267,14 +270,17 @@ type
       procedure btnLockDClick(Sender: TObject);
       procedure btnProcessDClick(Sender: TObject);
       procedure btnProcessMClick(Sender: TObject);
+      procedure btnRegisterClick(Sender: TObject);
       procedure edtHostNameDChange(Sender: TObject);
       procedure edtKeyMButtonClick(Sender: TObject);
       procedure edtKeyMChange(Sender: TObject);
       procedure edtKeyMKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+      procedure edtNameChange(Sender: TObject);
       procedure edtPrefixMChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
-//      procedure Image2Click(Sender: TObject);
+      procedure imgRegisterClick(Sender: TObject);
+      procedure n(Sender: TObject; var Key: char);
       procedure pgTabsChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
 
@@ -350,6 +356,10 @@ private  { Private Declarations }
    function  DM_Open_Connection() : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
    function  MaskField(InputField: string; MaskType: integer): string;
+   procedure ProcessResponse(Response: string);
+   function  Disassemble(Str: string; ThisType: integer) : TStringList;
+
+
 //   function  GetUnique(): integer;
 
 public   { Publlic Declartions}
@@ -493,12 +503,12 @@ begin
    DefaultFormatSettings.DateSeparator     := '/';
    DefaultFormatSettings.ThousandSeparator := ' ';
 
-//   saAbout                 := TSplashAbout.Create(nil);
-//   saAbout.Author          := 'BlueCrane Software Development CC';
-//   saAbout.BackGroundColor := clSkyBlue;
-//   saAbout.UserTitle       := 'LPMS Utility';
-//   saAbout.Description     := 'Made with: LCL' + saAbout.PoweredBy.InfoLCLVersion + ' and FPC ' + saAbout.PoweredBy.InfoFPCVersion + #10 + 'For: ' + saAbout.PoweredBy.InfoFPCTarget + ' (' + saAbout.PoweredBy.InfoWidgetSet + ')' + #10 + #10 + 'Support: support@bluecrane.cc' + #10 + 'Visit: www.bluecrane.cc' + #10 + #10 + 'Copyright (c) 2009 - ' + FormatDateTime('yyyy',Now());
-//   saAbout.ShowDescription := True;
+   saAbout                 := TSplashAbout.Create(nil);
+   saAbout.Author          := 'BlueCrane Software Development CC';
+   saAbout.BackGroundColor := clSkyBlue;
+   saAbout.UserTitle       := 'LPMS Utility';
+   saAbout.Description     := 'Made with: LCL' + saAbout.PoweredBy.InfoLCLVersion + ' and FPC ' + saAbout.PoweredBy.InfoFPCVersion + #10 + 'For: ' + saAbout.PoweredBy.InfoFPCTarget + ' (' + saAbout.PoweredBy.InfoWidgetSet + ')' + #10 + #10 + 'Support: support@bluecrane.cc' + #10 + 'Visit: www.bluecrane.cc' + #10 + #10 + 'Copyright (c) 2009 - ' + FormatDateTime('yyyy',Now());
+   saAbout.ShowDescription := True;
 
 {$IFDEF WINDOWS}                    // Target is Winblows
    OSName  := 'MS-Windows';
@@ -1210,17 +1220,125 @@ begin
 
 end;
 
-{
 //------------------------------------------------------------------------------
 // User clicked on the top right icon to show about information
 //------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.Image2Click(Sender: TObject);
+procedure TFLPMS_UtilityApp.imgRegisterClick(Sender: TObject);
 begin
 
    saAbout.ShowAbout;
 
 end;
-}
+
+procedure TFLPMS_UtilityApp.n(Sender: TObject; var Key: char);
+begin
+
+end;
+
+{==============================================================================}
+{--- Register Tab functions                                                 ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// User clicked on the Register button on the Register Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnRegisterClick(Sender: TObject);
+var
+   Response, PlainReq, CodedReq : string;
+
+begin
+
+   if Trim(edtName.Text) = '' then begin
+
+      Application.MessageBox('Name is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtName.SetFocus;
+      Exit;
+
+   end;
+
+   if Trim(edtEmail.Text) = '' then begin
+
+      Application.MessageBox('Email is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtEmail.SetFocus();
+      Exit;
+
+   end;
+
+   if Trim(edtNum.Text) = '' then begin
+
+      Application.MessageBox('Contact Num is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtNum.SetFocus();
+      Exit;
+
+   end;
+
+   if Trim(edtCompany.Text) = '' then begin
+
+      Application.MessageBox('Company is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtCompany.SetFocus();
+      Exit;
+
+   end;
+
+//--- Connect to the Server and request registration
+
+   tcpClient.Disconnect;
+   tcpClient.Host := ServerName;
+   tcpClient.Port := StrToInt(ServerPort);
+   tcpClient.Connect;
+
+//--- Identify ourselves to the Server and get the Server's response
+
+   tcpClient.IOHandler.WriteLn('LPMS Server Request');
+   Response := tcpClient.IOHandler.ReadLn;
+
+   if Response = 'LPMS Server Ready' then begin
+
+      PlainReq := '4|' + edtName.Text + '|' + edtEmail.Text + '|' + edtNum.Text + '|' + edtCompany.Text + '|' + edtUnique.Text + '|' + edtPrefix.Text + '|';
+      CodedReq := Vignere(CYPHER_ENC,PlainReq,SecretPhrase);
+      tcpClient.IOHandler.WriteLn(CodedReq);
+      Response := tcpClient.IOHandler.ReadLn;
+      ProcessResponse(Response);
+
+   end else begin
+
+      Application.MessageBox(PChar('Unexpected or invalid response from Server: "' + Response + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      tcpClient.Disconnect;
+      Exit;
+
+   end;
+
+//--- Wrap it up
+
+   tcpClient.Disconnect;
+
+   btnRegister.Default := false;
+   btnCancelR.Caption  := 'Close';
+   btnCancelR.Default  := true;
+   btnCancelR.SetFocus;
+
+end;
+
+//---------------------------------------------------------------------------
+// A field on the Registration Page changed
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtNameChange(Sender: TObject);
+var
+   FldCount : integer = 0;
+
+begin
+
+   if edtName.Text    <> '' then Inc(FldCount);
+   if edtEmail.Text   <> '' then Inc(FldCount);
+   if edtNum.Text     <> '' then Inc(FldCount);
+   if edtCompany.Text <> '' then Inc(FldCount);
+
+   if FldCount = 4 then
+      btnRegister.Enabled := True
+   else
+      btnRegister.Enabled := False;
+
+end;
 
 {==============================================================================}
 {--- Maintenance Tab functions                                              ---}
@@ -1906,6 +2024,120 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// Process the response from the Server
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.ProcessResponse(Response: string);
+var
+   idx1, MsgType      : integer;
+   ThisPrefix, T1, T2 : string;
+{$IFDEF WINDOWS}
+   RegIni             : TRegistryIniFile;
+{$ELSE}
+   RegIni             : TINIFile;
+{$ENDIF}
+
+begin
+
+//--- Disassemble the response from the Server
+
+   RespList := TStringList.Create;
+   RespList := Disassemble(Response,TYPE_CODED);
+
+   if ((RespList.Strings[0] = '0') or (RespList.Strings[0] = '1')) then begin
+
+      idx1 := 1;
+
+      if RespList.Strings[0] = '0' then
+         MsgType := MB_ICONINFORMATION
+      else
+         MsgType := MB_ICONSTOP;
+
+//--- Process the response(s)
+
+      while idx1 < RespList.Count do begin
+
+         case StrToInt(Resplist.Strings[idx1]) of
+            1: begin
+
+{$IFDEF WINDOWS}
+                  RegIni := TRegistryIniFile.Create(KeepRegString);
+{$ELSE}
+                  RegIni := TINIFile.Create(KeepRegString);
+{$ENDIF}
+                  RegIni.WriteString('Preferences',RespList.Strings[idx1 + 1],RespList.Strings[idx1 + 2]);
+                  RegIni.Destroy;
+
+                  idx1 := idx1 + 3;
+
+            end;
+
+            2: begin
+
+               Application.MessageBox(PChar(RespList.Strings[idx1 + 1]),'LPMS Utility',(MB_OK + MsgType));
+               idx1 := idx1 + 2;
+
+            end;
+
+         end;
+
+      end;
+
+//--- Retrieve the newly generated Key from the Registry if registration was successful
+
+      if (RespList.Strings[0] = '0') then begin
+
+{$IFDEF WINDOWS}
+         RegIni := TRegistryIniFile.Create(KeepRegString);
+{$ELSE}
+         RegIni := TINIFile.Create(KeepRegString);
+{$ENDIF}
+
+         ThisPrefix := RegIni.ReadString('Preferences','DBPrefix','');
+         UserKey    := RegIni.ReadString('Preferences','Key','');
+
+{$IFDEF OLD_ENCODING}
+         DBPrefix := jvCipher.EncodeString(ThisPass,(edtPrefix.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now())));
+{$ELSE}
+         DBPrefix := Vignere(CYPHER_ENC,edtPrefix.Text,SecretPhrase) + MaskField(FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now),TYPE_MASK);
+{$ENDIF}
+
+         RegIni.WriteString('Preferences','DBPrefix',DBPrefix);
+
+         RegIni.Destroy;
+
+         edtPrefix.Text := ThisPrefix;
+         edtKey.Text    := UserKey;
+
+      end;
+
+   end;
+
+   RespList.Free;
+
+end;
+
+//---------------------------------------------------------------------------
+// Function to Disassemble a message or Log entry
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.Disassemble(Str: string; ThisType: integer) : TStringList;
+var
+   ThisStr : string;
+   Tokens  : TStringList;
+
+begin
+
+   if ThisType = TYPE_CODED then
+      ThisStr := Vignere(CYPHER_DEC,Str,SecretPhrase)
+   else
+      ThisStr := Str;
+
+   Tokens := TStringList.Create;
+   ExtractStrings(['|'], [], PChar(ThisStr),Tokens);
+   Result := Tokens;
+
+end;
+
+//------------------------------------------------------------------------------
 // Function to do a Vignere Cypher
 //------------------------------------------------------------------------------
 function TFLPMS_UtilityApp.Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
@@ -1999,99 +2231,6 @@ begin
    Result := Encrypted;
 
 end;
-
-{
-//------------------------------------------------------------------------------
-// Procedure to Extract the MAC Address(es) of the current PC - up to 6
-//
-// Get_Unique_Values Will contain up to 6 MAC Addresses
-//
-// Returns the number of MAC Addresses found
-//
-//------------------------------------------------------------------------------
-function TFLPMS_UtilityApp.GetUnique(): integer;
-{$IFDEF LINUX}
-const
-  Linux_Path = '/sys/class/net/';
-
-var
-   NumFound, idx : integer;
-   InfoFile      : TextFile;
-   Path, ThisStr : string;
-   ResultList    : TStringList;
-   Process       : TProcess;
-
-{$ENDIF}
-{$IFDEF WINDOWS}
-{$ENDIF}
-{$IFDEF DARWIN}
-{$ENDIF}
-
-begin
-
-{$IFDEF LINUX}
-   try
-
-//--- Execute 'ls' in the /sys/class/net/ directory to get a list of all the
-//--- registered interfaces e.g. enp3s0 and lo
-
-      Process    := TProcess.Create(nil);
-      ResultList := TStringList.Create;
-
-      Process.Executable := 'ls';
-      Process.Parameters.Add(Linux_Path);
-      Process.Options := Process.Options + [poUsePipes, poWaitOnExit];
-      Process.Execute;
-
-      ResultList.LoadFromStream(Process.Output);
-
-      NumFound := 0;
-
-//--- Step through the returned results to open each interface file and extract
-//--- MAC Address for the interfce from it
-
-      for idx := 0 to ResultList.Count - 1 do begin
-
-         Path := Linux_Path + ResultList.Strings[idx] + '/address';
-
-//--- Open and read the File
-
-         AssignFile(InfoFile, Path);
-         Reset(InfoFile);
-         ReadLn(InfoFile,This_Unique_Values.Unique[idx + 1]);
-         CloseFile(InfoFile);
-
-         Inc(NumFound);
-
-      end;
-
-   finally
-
-      ResultList.Free;
-      Process.Free;
-
-   end;
-
-//--- Remove the ':' characters and convert all to uppercase
-
-   for idx := 1 to NumFound do begin
-
-      ThisStr := This_Unique_Values.Unique[idx];
-      ThisStr := UpperCase(Copy(ThisStr,1,2) + Copy(ThisStr,4,2) + Copy(ThisStr,7,2) + Copy(ThisStr,10,2) + Copy(ThisStr,13,2) + Copy(ThisStr,16,2));
-      This_Unique_Values.Unique[idx] := ThisStr;
-
-   end;
-
-   Result := NumFound;
-
-{$ENDIF}
-{$IFDEF WINDOWS}
-{$ENDIF}
-{$IFDEF DARWIN}
-{$ENDIF}
-
-end;
-}
 
 //------------------------------------------------------------------------------
 end.

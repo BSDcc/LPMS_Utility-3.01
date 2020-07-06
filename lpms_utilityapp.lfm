@@ -1,7 +1,7 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 645
+  Left = 754
   Height = 570
-  Top = 124
+  Top = 178
   Width = 890
   ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
@@ -10,7 +10,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
   OnCreate = FormCreate
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '2.0.6.0'
+  LCLVersion = '2.0.8.0'
   object PageControl1: TPageControl
     Left = 0
     Height = 570
@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = SQL
+    ActivePage = Register
     Align = alClient
-    TabIndex = 5
+    TabIndex = 0
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -82,12 +82,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'Prefix:'
         ParentColor = False
       end
-      object Image3: TImage
+      object imgRegister: TImage
         Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -323,6 +324,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 52
         Width = 752
         Anchors = [akTop, akLeft, akRight]
+        OnChange = edtNameChange
         TabOrder = 1
       end
       object btnCancelR: TButton
@@ -342,6 +344,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Register'
+        OnClick = btnRegisterClick
         TabOrder = 9
       end
       object edtEmail: TEdit
@@ -350,6 +353,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 82
         Width = 752
         Anchors = [akTop, akLeft, akRight]
+        OnChange = edtNameChange
         TabOrder = 2
       end
       object edtNum: TEdit
@@ -357,6 +361,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 112
         Width = 100
+        OnChange = edtNameChange
         TabOrder = 3
       end
       object edtUnique: TEdit
@@ -390,6 +395,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 142
         Width = 752
         Anchors = [akTop, akLeft, akRight]
+        OnChange = edtNameChange
         TabOrder = 4
       end
       object Bevel2: TBevel
@@ -445,12 +451,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'Prefix:'
         ParentColor = False
       end
-      object Image2: TImage
+      object imgSetup: TImage
         Left = 840
         Height = 32
         Top = 9
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1012,31 +1019,32 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     end
     object Maintenance: TTabSheet
       Caption = 'Maintenance'
-      ClientHeight = 542
-      ClientWidth = 882
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 2
       object Label6: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 56
-        Width = 32
+        Width = 35
         Caption = 'Prefix:'
         ParentColor = False
       end
       object Label14: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 86
-        Width = 22
+        Width = 23
         Caption = 'Key:'
         ParentColor = False
       end
-      object Image1: TImage
-        Left = 838
+      object imgMaintenance: TImage
+        Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1248,7 +1256,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 12
-        Width = 819
+        Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Provide or Change the ''Prefix'' and or ''Key'' below then click on ''Update'' to update.'
         Font.Color = clBlue
@@ -1260,7 +1268,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPrefixM: TEdit
         Left = 120
-        Height = 23
+        Height = 27
         Top = 52
         Width = 100
         MaxLength = 6
@@ -1268,9 +1276,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 1
       end
       object btnCancelM: TButton
-        Left = 713
+        Left = 715
         Height = 25
-        Top = 511
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
@@ -1278,9 +1286,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 3
       end
       object btnProcessM: TButton
-        Left = 795
+        Left = 797
         Height = 25
-        Top = 511
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Update'
@@ -1289,9 +1297,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtKeyM: TEditButton
         Left = 120
-        Height = 23
+        Height = 27
         Top = 82
-        Width = 750
+        Width = 752
         Anchors = [akTop, akLeft, akRight]
         ButtonWidth = 25
         CharCase = ecUppercase
@@ -1335,7 +1343,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 888
+        Width = 890
         Anchors = [akTop, akLeft, akRight]
       end
     end
@@ -1608,12 +1616,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'Current Version:'
         ParentColor = False
       end
-      object Image4: TImage
+      object imgConvert: TImage
         Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1973,12 +1982,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       ClientHeight = 535
       ClientWidth = 884
       ImageIndex = 4
-      object Image5: TImage
+      object imgUpgrade: TImage
         Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -2476,7 +2486,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Alpha Keys'
-            Width = 73
+            Width = 116
           end>
         GridLines = True
         RowSelect = True
@@ -2492,7 +2502,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Numeric Keys'
-            Width = 88
+            Width = 116
           end>
         GridLines = True
         RowSelect = True
@@ -2550,7 +2560,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Exclude List'
-            Width = 76
+            Width = 116
           end>
         GridLines = True
         RowSelect = True
@@ -2672,21 +2682,21 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     end
     object SQL: TTabSheet
       Caption = 'SQL'
-      ClientHeight = 542
-      ClientWidth = 882
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 5
       object Label25: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 56
-        Width = 63
+        Width = 66
         Caption = 'Host Name:'
         ParentColor = False
       end
       object btnUnlockD: TSpeedButton
         Left = 12
         Height = 32
-        Top = 505
+        Top = 498
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -2792,12 +2802,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         }
         OnClick = btnLockDClick
       end
-      object Image6: TImage
-        Left = 838
+      object imgSQL: TImage
+        Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -3007,32 +3018,32 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label26: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 86
-        Width = 61
+        Width = 67
         Caption = 'User Name:'
         ParentColor = False
       end
       object Label27: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 116
-        Width = 53
+        Width = 57
         Caption = 'Password:'
         ParentColor = False
       end
       object Label28: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 176
-        Width = 81
+        Width = 86
         Caption = 'SQL Statement:'
         ParentColor = False
       end
       object btnLockD: TSpeedButton
         Left = 12
         Height = 32
-        Top = 505
+        Top = 498
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -3140,9 +3151,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label29: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 146
-        Width = 32
+        Width = 35
         Caption = 'Prefix:'
         ParentColor = False
       end
@@ -3150,7 +3161,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 12
-        Width = 819
+        Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Enter the database information below together with a valid SQL statement then click on ''Process'''
         Font.Color = clBlue
@@ -3162,17 +3173,17 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtHostNameD: TEdit
         Left = 120
-        Height = 23
+        Height = 27
         Top = 52
-        Width = 749
+        Width = 751
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtHostNameDChange
         TabOrder = 1
       end
       object btnCancelD: TButton
-        Left = 713
+        Left = 715
         Height = 25
-        Top = 511
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
@@ -3180,9 +3191,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 8
       end
       object btnProcessD: TButton
-        Left = 795
+        Left = 797
         Height = 25
-        Top = 511
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
@@ -3191,7 +3202,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtUserNameD: TEdit
         Left = 120
-        Height = 23
+        Height = 27
         Top = 82
         Width = 100
         OnChange = edtHostNameDChange
@@ -3199,7 +3210,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPasswordD: TEdit
         Left = 120
-        Height = 23
+        Height = 27
         Top = 112
         Width = 100
         EchoMode = emPassword
@@ -3210,7 +3221,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPrefixD: TEdit
         Left = 120
-        Height = 23
+        Height = 27
         Top = 142
         Width = 100
         MaxLength = 6
@@ -3219,19 +3230,19 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtSQLD: TComboBox
         Left = 120
-        Height = 23
+        Height = 27
         Top = 172
-        Width = 749
+        Width = 751
         Anchors = [akTop, akLeft, akRight]
-        ItemHeight = 15
+        ItemHeight = 0
         OnChange = edtHostNameDChange
         TabOrder = 5
       end
       object DBGrid1: TDBGrid
         Left = 12
-        Height = 303
+        Height = 296
         Top = 202
-        Width = 857
+        Width = 859
         Anchors = [akTop, akLeft, akRight, akBottom]
         Color = clWindow
         Columns = <>
@@ -3241,14 +3252,11 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Font.Name = 'Tahoma'
         ParentFont = False
         TabOrder = 6
-        TitleFont.Color = clWindowText
-        TitleFont.Height = -11
-        TitleFont.Name = 'Tahoma'
       end
       object DBNavigator1: TDBNavigator
-        Left = 538
+        Left = 540
         Height = 25
-        Top = 511
+        Top = 504
         Width = 168
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
@@ -3269,7 +3277,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 888
+        Width = 890
         Anchors = [akTop, akLeft, akRight]
       end
     end
@@ -3394,12 +3402,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'Backup File:'
         ParentColor = False
       end
-      object Image7: TImage
+      object imgRestore: TImage
         Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -3920,7 +3929,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Table'
-            Width = 44
+            Width = 817
           end>
         ColumnClick = False
         GridLines = True
@@ -4207,12 +4216,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
       end
-      object Image8: TImage
+      object imgLog: TImage
         Left = 840
         Height = 32
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
+        OnClick = imgRegisterClick
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -5153,7 +5163,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Description'
-            Width = 75
+            Width = 72
           end        
           item
             Caption = 'Created By'
@@ -5318,6 +5328,35 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
   end
   object SQLDs1: TDataSource
     left = 560
+    top = 384
+  end
+  object saAbout: TSplashAbout
+    PoweredBy.About.Description.Strings = (
+      'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
+    )
+    PoweredBy.About.Title = 'PoweredBy component'
+    PoweredBy.About.Height = 280
+    PoweredBy.About.Width = 400
+    PoweredBy.About.Font.Color = clNavy
+    PoweredBy.About.Font.Height = -13
+    PoweredBy.About.Font.Name = 'Arial'
+    PoweredBy.About.BackGroundColor = clWindow
+    PoweredBy.About.Version = '1.0.4.0'
+    PoweredBy.About.Authorname = 'Gordon Bamber'
+    PoweredBy.About.Organisation = 'Public Domain'
+    PoweredBy.About.AuthorEmail = 'minesadorada@charcodelvalle.com'
+    PoweredBy.About.ComponentName = 'PoweredBy component'
+    PoweredBy.About.LicenseType = abModifiedGPL
+    UserTitle = 'My Application'
+    ShowDescription = False
+    left = 392
+    top = 384
+  end
+  object tcpClient: TIdTCPClient
+    ConnectTimeout = 0
+    Port = 0
+    ReadTimeout = -1
+    left = 336
     top = 384
   end
 end
