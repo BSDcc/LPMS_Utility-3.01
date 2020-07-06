@@ -224,7 +224,7 @@ procedure TFLPMS_UtilityMultiCpy.btnCancelClick(Sender: TObject);
 begin
 
    FLPMS_UtilityApp.Proceed := False;
-   Exit;
+   Close;
 
 end;
 

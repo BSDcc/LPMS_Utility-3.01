@@ -248,7 +248,6 @@ type
       Restore: TTabSheet;
       Setup: TTabSheet;
       speInterval: TSpinEdit;
-      saAbout: TSplashAbout;
       SQL: TTabSheet;
       SQLQry1: TSQLQuery;
       SQLTran: TSQLTransaction;
@@ -275,12 +274,14 @@ type
       procedure edtPrefixMChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
-      procedure Image2Click(Sender: TObject);
+//      procedure Image2Click(Sender: TObject);
       procedure pgTabsChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
 
 private  { Private Declarations }
-   CallHWND       : integer;       //
+{$IFDEF WINDOWS}
+   CallHWND       : integer;       // If <> 0 then it contains the calling program's Windows Handle so that it can be temporarily hidden
+{$ENDIF}
    ArchiveActive  : boolean;       //
    CanUpdate      : boolean;       // Semaphore to inhibit update processing
    DateIsSet      : boolean;       //
@@ -312,8 +313,8 @@ private  { Private Declarations }
    ServerName     : string;        // The HostName where the LPMS_Server is running
    ServerPort     : string;        // The Port on which the LPMS_Server is listening
    SQLFile        : string;        //
-   ThisGUID       : string;        //
-   ThisInstall    : string;        //
+   ThisGUID       : string;        // Contains LPMS' existing GUID - used for silent installs
+   ThisInstall    : string;        // FQDSN of the Silent Install utility
    UserName       : string;        //
    UserKey        : string;        // The LPMS Key stored in the Registry
    LogList        : TStringList;   //
@@ -348,11 +349,13 @@ private  { Private Declarations }
    function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_Open_Connection() : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
+   function  MaskField(InputField: string; MaskType: integer): string;
+//   function  GetUnique(): integer;
 
 public   { Publlic Declartions}
    DoRestore      : boolean;       //
    MultiCompany   : boolean;       //
-   Proceed        : boolean;       //
+   Proceed        : boolean;       // False when user clicked on 'Cancel' on the MultiCpy screen otherwise True
    DBPrefix       : string;        // The Database Prefix stored in the Registry
    KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
    PassPhrase     : string;        // Used by Input Query
@@ -390,8 +393,8 @@ const
    TYPE_TEXT          = 2;
    TYPE_ARCHIVE       = 1;
    TYPE_CURRENT       = 2;
-   TYPE_MASK          = 1;
-   TYPE_UNMASK        = 2;
+   TYPE_MASK          = 0;
+   TYPE_UNMASK        = 1;
 
 type
 
@@ -419,6 +422,10 @@ type
       License          : integer;
    end;
 
+   REC_Unique_Values = record
+      Unique           : array [1..6] of string;
+   end;
+
 //--- Temporary - Allow both old style encoding and new style encoding but
 //--- only one type at a time
 
@@ -427,23 +434,22 @@ type
 var
    FLPMS_UtilityApp: TFLPMS_UtilityApp;
 
-   This_Key_Values : REC_Key_Values;
-   This_Key_Priv   : REC_Key_Priv;
+   This_Key_Values    : REC_Key_Values;
+   This_Key_Priv      : REC_Key_Priv;
+   This_Unique_Values : REC_Unique_Values;
 
 {$IFDEF DARWIN}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
-   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.dylib';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.dylib';
 {$ENDIF}
 {$IFDEF WINDOWS}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'BSD_Utilities.dll';
-   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'BSD_Utilities.dll';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'BSD_Utilities.dll';
 {$ENDIF}
 {$IFDEF LINUX}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.so';
-   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.so';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.so';
+   function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.so';
 {$ENDIF}
 
 implementation
@@ -463,19 +469,20 @@ implementation
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.FormCreate(Sender: TObject);
 var
-   idx1, NumParms : integer;
-   ParmsFound     : boolean = True;
-   ThisPassPhrase : string;
-   Params, Args   : TStringList;
+   idx1, NumParms, NumUnique : integer;
+   ParmsFound                : boolean = True;
+   ThisPassPhrase            : string;
+   Params, Args              : TStringList;
 {$IFDEF WINDOWS}
-   RegIni         : TRegistryIniFile;
+   RegIni                    : TRegistryIniFile;
 {$ELSE}
-   RegIni         : TINIFile;
+   RegIni                    : TINIFile;
 {$ENDIF}
 
 begin
 
    CanUpdate := False;
+   Proceed   := True;
 
 //--- Set the Format Settings to override the system locale
 
@@ -484,12 +491,12 @@ begin
    DefaultFormatSettings.DateSeparator     := '/';
    DefaultFormatSettings.ThousandSeparator := ' ';
 
-   saAbout                 := TSplashAbout.Create(nil);
-   saAbout.Author          := 'BlueCrane Software Development CC';
-   saAbout.BackGroundColor := clSkyBlue;
-   saAbout.UserTitle       := 'LPMS Utility';
-   saAbout.Description     := 'Made with: LCL' + saAbout.PoweredBy.InfoLCLVersion + ' and FPC ' + saAbout.PoweredBy.InfoFPCVersion + #10 + 'For: ' + saAbout.PoweredBy.InfoFPCTarget + ' (' + saAbout.PoweredBy.InfoWidgetSet + ')' + #10 + #10 + 'Support: support@bluecrane.cc' + #10 + 'Visit: www.bluecrane.cc' + #10 + #10 + 'Copyright (c) 2009 - ' + FormatDateTime('yyyy',Now());
-   saAbout.ShowDescription := True;
+//   saAbout                 := TSplashAbout.Create(nil);
+//   saAbout.Author          := 'BlueCrane Software Development CC';
+//   saAbout.BackGroundColor := clSkyBlue;
+//   saAbout.UserTitle       := 'LPMS Utility';
+//   saAbout.Description     := 'Made with: LCL' + saAbout.PoweredBy.InfoLCLVersion + ' and FPC ' + saAbout.PoweredBy.InfoFPCVersion + #10 + 'For: ' + saAbout.PoweredBy.InfoFPCTarget + ' (' + saAbout.PoweredBy.InfoWidgetSet + ')' + #10 + #10 + 'Support: support@bluecrane.cc' + #10 + 'Visit: www.bluecrane.cc' + #10 + #10 + 'Copyright (c) 2009 - ' + FormatDateTime('yyyy',Now());
+//   saAbout.ShowDescription := True;
 
 {$IFDEF WINDOWS}                    // Target is Winblows
    OSName  := 'MS-Windows';
@@ -573,6 +580,15 @@ begin
 
    FLPMS_UtilityMultiCpy.Destroy;
 
+//--- If Proceed is False then the User clicked on 'Cancel' - Terminate
+
+   if Proceed = False then begin
+
+      Application.Terminate;
+      Exit;
+
+   end;
+
 //--- Get the default values stored in the Registry
 
 {$IFDEF WINDOWS}
@@ -592,7 +608,9 @@ begin
 
 //--- Check whether any paramters were passed and retrieve if so
 
+{$IFDEF WINDOWS}
    CallHWND := 0;
+{$ENDIF}
 
    try
 
@@ -642,7 +660,7 @@ begin
 
    finally
 
-//      Params.Destroy;
+      Params.Free;
       Args.Free;
 
    end;
@@ -692,24 +710,19 @@ begin
    btnProcessM.Enabled := False;
    btnUpgradeU.Enabled := False;
 
-{
+
 //--- Retrieve this PC's Mac Addresses (Up to 6)
 
-   This_Key_Rec  = new LPMS_Key_Rec;
-   DldDecode->LPMS_Key_GetUnique(This_Key_Rec);
+   NumUnique := GetUnique(This_Unique_Values);
 
-   if (This_Key_Rec->MacAddress[0] == "")
-   {
-      MessageBox(NULL,"Unable to find a valid MACAddress - FirstRun cannot continue...","Legal Practise Management System - FirstRun",(MB_OK|MB_ICONSTOP|MB_SYSTEMMODAL));
-      delete This_Key_Rec;
-      Application->Terminate();
-      return;
-   }
-   else
-      edtUnique->Text = This_Key_Rec->MacAddress[0];
+   if NumUnique = 0 then begin
 
-   delete This_Key_Rec;
-}
+      Application.MessageBox('Unable to find a valid MACAddress - LPMS Utility cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Application.Terminate;
+      Exit;
+
+   end else
+      edtUnique.Text := This_Unique_Values.Unique[1];
 
 end;
 
@@ -728,15 +741,15 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.pgTabsChange(Sender: TObject);
 const
-   NUM_VAL = 48;
-   TAB_0   = 0;
-   TAB_1   = 1;
-   TAB_2   = 2;
-   TAB_3   = 3;
-   TAB_4   = 4;
-   TAB_SQL   = 5;
-   TAB_6   = 6;
-   TAB_7   = 7;
+   NUM_VAL         = 48;
+   TAB_REGISTER    =  0;
+   TAB_SETUP       =  1;
+   TAB_MAINTENANCE =  2;
+   TAB_CONVERT     =  3;
+   TAB_UPGRADE     =  4;
+   TAB_SQL         =  5;
+   TAB_RESTORE     =  6;
+   TAB_LOG         =  7;
 
 var
    idx          : integer;
@@ -747,12 +760,12 @@ begin
 
 //--- Reset the information on the Setup tab for safety reasons
 
-   if pgTabs.ActivePageIndex <> TAB_1 then
+   if pgTabs.ActivePageIndex <> TAB_SETUP then
       LockS_State := True;
 
 //--- Reset the information on the Convert tab for safety reasons
 
-   if pgTabs.ActivePageIndex <> TAB_3 then begin
+   if pgTabs.ActivePageIndex <> TAB_CONVERT then begin
 
       edtCurrVersion.Clear();
 
@@ -764,7 +777,7 @@ begin
 
 //--- Reset the information on the Upgrade tab for safety reasons
 
-   if pgTabs.ActivePageIndex <> TAB_4 then begin
+   if pgTabs.ActivePageIndex <> TAB_UPGRADE then begin
 
       lvAlpha.Clear();
       lvNumeric.Clear();
@@ -795,7 +808,7 @@ begin
 
 //--- Reset the information on the Restore tab for safety reasons
 
-   if pgTabs.ActivePageIndex <> TAB_6 then begin
+   if pgTabs.ActivePageIndex <> TAB_RESTORE then begin
 
       edtBackupFile.Clear();
       edtTitle.Clear();
@@ -816,7 +829,7 @@ begin
 
 //--- Reset the information on the Log Display tab for safety reasons
 
-   if pgTabs.ActivePageIndex <> TAB_7 then begin
+   if pgTabs.ActivePageIndex <> TAB_LOG then begin
 
       edtUserL.Clear();
       edtPasswordL.Clear();
@@ -846,7 +859,7 @@ begin
    ThisPrefix := Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),SecretPhrase);
 {$ENDIF}
 
-   if pgTabs.ActivePageIndex = TAB_0 then begin
+   if pgTabs.ActivePageIndex = TAB_REGISTER then begin
 
       edtKey.Text    := UserKey;
       edtPrefix.Text := ThisPrefix;
@@ -858,7 +871,7 @@ begin
       btnCancelR.Default  := False;
       edtName.SetFocus();
 
-   end else if pgTabs.ActivePageIndex = TAB_1 then begin
+   end else if pgTabs.ActivePageIndex = TAB_SETUP then begin
 
       edtPrefixF.Text := ThisPrefix;
 
@@ -901,7 +914,7 @@ begin
 
       end;
 
-   end else if pgTabs.ActivePageIndex = TAB_2 then begin
+   end else if pgTabs.ActivePageIndex = TAB_MAINTENANCE then begin
 
       edtPrefixM.Text := ThisPrefix;
 
@@ -916,7 +929,7 @@ begin
 
       edtPrefixM.SetFocus();
 
-   end else if pgTabs.ActivePageIndex = TAB_3 then begin
+   end else if pgTabs.ActivePageIndex = TAB_CONVERT then begin
 
       edtPrefixC.Text    := ThisPrefix;
       edtNewVersion.Text := '3.2.1';
@@ -964,7 +977,7 @@ begin
 
       end;
 
-   end else if pgTabs.ActivePageIndex = TAB_4 then begin
+   end else if pgTabs.ActivePageIndex = TAB_UPGRADE then begin
 
       cbPersist.Checked   := False;
       cbIgnore.Checked    := False;
@@ -1082,7 +1095,7 @@ begin
 
       end;
 
-   end else if pgTabs.ActivePageIndex = TAB_6 then begin
+   end else if pgTabs.ActivePageIndex = TAB_RESTORE then begin
 
       rbFull.Checked      := True;
       cbType.Checked      := False;
@@ -1130,7 +1143,7 @@ begin
 
       end;
 
-   end else if pgTabs.ActivePageIndex = TAB_7 then begin
+   end else if pgTabs.ActivePageIndex = TAB_LOG then begin
 
       edtArchive.Clear();
       edtSearchUser.Clear();
@@ -1195,6 +1208,7 @@ begin
 
 end;
 
+{
 //------------------------------------------------------------------------------
 // User clicked on the top right icon to show about information
 //------------------------------------------------------------------------------
@@ -1204,6 +1218,7 @@ begin
    saAbout.ShowAbout;
 
 end;
+}
 
 {==============================================================================}
 {--- Maintenance Tab functions                                              ---}
@@ -1325,13 +1340,13 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnProcessMClick(Sender: TObject);
 var
-   idx1                     : integer;
-   PartValid                : boolean;
-   PartOne, PartTwo, T1, T2 : string;
+   idx1             : integer;
+   PartValid        : boolean;
+   PartOne, PartTwo : string;
 {$IFDEF WINDOWS}
-   RegIni                   : TRegistryIniFile;
+   RegIni           : TRegistryIniFile;
 {$ELSE}
-   RegIni                   : TINIFile;
+   RegIni           : TINIFile;
 {$ENDIF}
 
 begin
@@ -1389,10 +1404,7 @@ begin
 {$IFDEF OLD_ENCODING}
    DBPrefix := jvCipher.EncodeString(ThisPass,(edtPrefixM.Text + FormatDateTime('yyyy/mm/dd',Now())));
 {$ELSE}
-   DBPrefix := Vignere(CYPHER_ENC,PChar(edtPrefixM.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now)),SecretPhrase);
-   T1       := Copy(DBPrefix,1,6);
-   T2       := Copy(DBPrefix,7,99);
-   DBPrefix := T1 + MaskField(T2,TYPE_MASK);
+   DBPrefix := Vignere(CYPHER_ENC,edtPrefixM.Text,SecretPhrase) + MaskField(FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now),TYPE_MASK);
 {$ENDIF}
 
    UserKey  := edtKeyM.Text;
@@ -1789,6 +1801,107 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// Function to Mask/Unmask a field that will be stored in a plain file
+//
+// InputField contains the field to be masked/unmasked and the processed field
+// is returned as the Result of the function
+//
+// MaskType determines whether InputField is masked or unmasked
+// See MASK_TYPES above
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.MaskField(InputField: string; MaskType: integer): string;
+var
+   idx1             : integer;
+   S2               : string;
+   S1               : array[1..64] of char;
+   Hi1, Hi2, HL, Lo : Word;
+
+begin
+
+   Result := '';
+
+   case MaskType of
+
+//--- Mask the Input Field
+
+      TYPE_MASK: begin
+
+         S1   := InputField;
+         S2   := '';
+         idx1 := 1;
+
+         while (S1[idx1] <> #0) do begin
+
+//--- Get copies of the current character
+
+            Hi1 := Word(S1[idx1]);
+            Lo  := Word(S1[idx1]);
+
+//--- Move the 4 high bits to the right and mask out the four left bits
+
+            Hi1 := Hi1 shr 4;
+            Lo  := Lo and %00001111;
+
+//--- Turn the Hi and Lo parts into displayable characters
+
+            Hi1 := Hi1 or %01000000;
+            Lo  := Lo  or %01000000;
+
+//--- Add them to the result string
+
+            S2 := S2 + char(Hi1) + char(Lo);
+
+            inc(idx1);
+
+         end;
+
+         Result := S2;
+
+      end;
+
+//--- Unmask the input field
+
+      TYPE_UNMASK : begin
+
+         S1   := InputField;
+         S2   := '';
+         idx1 := 1;
+
+         while (S1[idx1] <> #0) do begin
+
+      //--- Get copies of the next 2 characters
+
+            Hi1 := Word(S1[idx1]);
+            Inc(idx1);
+            Hi2 := Word(S1[idx1]);
+            Inc(idx1);
+
+      //--- Move the 4 low bits of the first to the left and mask the 4 low bits then
+      //--- mask the 4 high bits of the second
+
+            Hi1 := Hi1 shl 4;
+            Hi1 := Hi1 and %11110000;
+            Hi2 := Hi2 and %00001111;
+
+      //--- Merge the 2 characters
+
+            HL := Hi1 or Hi2;
+
+      //--- Add it to the result string
+
+            S2 := S2 + char(HL);
+
+         end;
+
+         Result := S2;
+
+      end;
+
+   end;
+
+end;
+
+//------------------------------------------------------------------------------
 // Function to do a Vignere Cypher
 //------------------------------------------------------------------------------
 function TFLPMS_UtilityApp.Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
@@ -1882,6 +1995,99 @@ begin
    Result := Encrypted;
 
 end;
+
+{
+//------------------------------------------------------------------------------
+// Procedure to Extract the MAC Address(es) of the current PC - up to 6
+//
+// Get_Unique_Values Will contain up to 6 MAC Addresses
+//
+// Returns the number of MAC Addresses found
+//
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.GetUnique(): integer;
+{$IFDEF LINUX}
+const
+  Linux_Path = '/sys/class/net/';
+
+var
+   NumFound, idx : integer;
+   InfoFile      : TextFile;
+   Path, ThisStr : string;
+   ResultList    : TStringList;
+   Process       : TProcess;
+
+{$ENDIF}
+{$IFDEF WINDOWS}
+{$ENDIF}
+{$IFDEF DARWIN}
+{$ENDIF}
+
+begin
+
+{$IFDEF LINUX}
+   try
+
+//--- Execute 'ls' in the /sys/class/net/ directory to get a list of all the
+//--- registered interfaces e.g. enp3s0 and lo
+
+      Process    := TProcess.Create(nil);
+      ResultList := TStringList.Create;
+
+      Process.Executable := 'ls';
+      Process.Parameters.Add(Linux_Path);
+      Process.Options := Process.Options + [poUsePipes, poWaitOnExit];
+      Process.Execute;
+
+      ResultList.LoadFromStream(Process.Output);
+
+      NumFound := 0;
+
+//--- Step through the returned results to open each interface file and extract
+//--- MAC Address for the interfce from it
+
+      for idx := 0 to ResultList.Count - 1 do begin
+
+         Path := Linux_Path + ResultList.Strings[idx] + '/address';
+
+//--- Open and read the File
+
+         AssignFile(InfoFile, Path);
+         Reset(InfoFile);
+         ReadLn(InfoFile,This_Unique_Values.Unique[idx + 1]);
+         CloseFile(InfoFile);
+
+         Inc(NumFound);
+
+      end;
+
+   finally
+
+      ResultList.Free;
+      Process.Free;
+
+   end;
+
+//--- Remove the ':' characters and convert all to uppercase
+
+   for idx := 1 to NumFound do begin
+
+      ThisStr := This_Unique_Values.Unique[idx];
+      ThisStr := UpperCase(Copy(ThisStr,1,2) + Copy(ThisStr,4,2) + Copy(ThisStr,7,2) + Copy(ThisStr,10,2) + Copy(ThisStr,13,2) + Copy(ThisStr,16,2));
+      This_Unique_Values.Unique[idx] := ThisStr;
+
+   end;
+
+   Result := NumFound;
+
+{$ENDIF}
+{$IFDEF WINDOWS}
+{$ENDIF}
+{$IFDEF DARWIN}
+{$ENDIF}
+
+end;
+}
 
 //------------------------------------------------------------------------------
 end.

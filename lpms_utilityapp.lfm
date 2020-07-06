@@ -88,7 +88,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -452,7 +451,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 9
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1039,7 +1037,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1617,7 +1614,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -1983,7 +1979,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -2803,7 +2798,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -3403,7 +3397,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -4217,7 +4210,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 8
         Width = 32
         Anchors = [akTop, akRight]
-        OnClick = Image2Click
         Picture.Data = {
           055449636F6E761900000000010002002020000001000800A808000026000000
           2020000001002000A8100000CE08000028000000200000004000000001000800
@@ -5308,28 +5300,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akTop, akLeft, akRight]
       end
     end
-  end
-  object saAbout: TSplashAbout
-    PoweredBy.About.Description.Strings = (
-      'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
-    )
-    PoweredBy.About.Title = 'About About About About PoweredBy component'
-    PoweredBy.About.Height = 280
-    PoweredBy.About.Width = 400
-    PoweredBy.About.Font.Color = clNavy
-    PoweredBy.About.Font.Height = -13
-    PoweredBy.About.Font.Name = 'Arial'
-    PoweredBy.About.BackGroundColor = clWindow
-    PoweredBy.About.Version = '1.0.4.0'
-    PoweredBy.About.Authorname = 'Gordon Bamber'
-    PoweredBy.About.Organisation = 'Public Domain'
-    PoweredBy.About.AuthorEmail = 'minesadorada@charcodelvalle.com'
-    PoweredBy.About.ComponentName = 'PoweredBy component'
-    PoweredBy.About.LicenseType = abModifiedGPL
-    UserTitle = 'My Application'
-    ShowDescription = False
-    left = 392
-    top = 384
   end
   object SQLTran: TSQLTransaction
     Active = False
