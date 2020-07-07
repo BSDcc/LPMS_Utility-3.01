@@ -1312,9 +1312,9 @@ begin
 
    tcpClient.Disconnect;
 
-   btnRegister.Default := false;
+   btnRegister.Default := False;
    btnCancelR.Caption  := 'Close';
-   btnCancelR.Default  := true;
+   btnCancelR.Default  := True;
    btnCancelR.SetFocus;
 
 end;
@@ -1333,9 +1333,14 @@ begin
    if edtNum.Text     <> '' then Inc(FldCount);
    if edtCompany.Text <> '' then Inc(FldCount);
 
-   if FldCount = 4 then
-      btnRegister.Enabled := True
-   else
+   if FldCount = 4 then begin
+
+//--- Online registration via LPMS_Utility is allowed for 'evl001' only
+
+      if Trim(edtPrefix.Text) = 'evl001' then
+         btnRegister.Enabled := True;
+
+   end else
       btnRegister.Enabled := False;
 
 end;
