@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Register
+    ActivePage = Setup
     Align = alClient
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -888,6 +888,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
+        OnClick = btnLockSClick
       end
       object btnCancelF: TButton
         Left = 715
@@ -906,6 +907,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
+        OnClick = btnProcessFClick
         TabOrder = 8
       end
       object edtHostName: TEdit
@@ -915,6 +917,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 752
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
+        OnChange = edtHostNameChange
         TabOrder = 1
       end
       object edtPassword: TEdit
@@ -924,6 +927,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 100
         AutoSize = False
         EchoMode = emPassword
+        OnChange = edtHostNameChange
         PasswordChar = '*'
         TabOrder = 3
       end
@@ -942,6 +946,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 82
         Width = 100
         AutoSize = False
+        OnChange = edtHostNameChange
         TabOrder = 2
       end
       object StaticText1: TStaticText
@@ -965,6 +970,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 752
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
+        OnChange = edtHostNameChange
         TabOrder = 5
       end
       object edtSQLFile: TFileNameEdit
@@ -1008,6 +1014,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         AutoSize = False
         MaxLength = 0
         TabOrder = 4
+        OnButtonClick = edtSQLFileButtonClick
       end
       object Bevel3: TBevel
         Left = 0
@@ -5334,7 +5341,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About PoweredBy component'
+    PoweredBy.About.Title = 'About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy

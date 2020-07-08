@@ -268,15 +268,19 @@ type
       Upgrade: TTabSheet;
       procedure btnCancelRClick(Sender: TObject);
       procedure btnLockDClick(Sender: TObject);
+      procedure btnLockSClick(Sender: TObject);
       procedure btnProcessDClick(Sender: TObject);
+      procedure btnProcessFClick(Sender: TObject);
       procedure btnProcessMClick(Sender: TObject);
       procedure btnRegisterClick(Sender: TObject);
+      procedure edtHostNameChange(Sender: TObject);
       procedure edtHostNameDChange(Sender: TObject);
       procedure edtKeyMButtonClick(Sender: TObject);
       procedure edtKeyMChange(Sender: TObject);
       procedure edtKeyMKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure edtNameChange(Sender: TObject);
       procedure edtPrefixMChange(Sender: TObject);
+      procedure edtSQLFileButtonClick(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure imgRegisterClick(Sender: TObject);
@@ -354,6 +358,7 @@ private  { Private Declarations }
    procedure SilentUpgrade();
    function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_Open_Connection() : boolean;
+   function  DM_PutSignature() : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
    function  MaskField(InputField: string; MaskType: integer): string;
    procedure ProcessResponse(Response: string);
@@ -1346,6 +1351,338 @@ begin
 end;
 
 {==============================================================================}
+{--- Setup Tab functions                                                    ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// User clicked on the Process button on the Setup Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessFClick(Sender: TObject);
+var
+   PartValid            : boolean;
+   idx1                 : integer;
+   PartOne, PartTwo, S1 : string;
+   SQLList              : TStringList;
+{$IFDEF WINDOWS}
+   RegIni               : TRegistryIniFile;
+{$ELSE}
+   RegIni               : TINIFile;
+{$ENDIF}
+
+begin
+
+   if Trim(edtHostName.Text) = '' then begin
+
+      Application.MessageBox('Host Name is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtHostName.SetFocus;
+      Exit;
+
+   end;
+
+   if Trim(edtUserName.Text) = '' then begin
+
+      Application.MessageBox('User Name is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtUserName.SetFocus;
+      Exit;
+
+   end;
+
+   if Trim(edtPassword.Text) = '' then begin
+
+      Application.MessageBox('Password is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtPassword.SetFocus;
+      Exit;
+
+   end;
+
+   if Trim(edtSQLFile.Text) = '' then begin
+
+      Application.MessageBox('SQL File is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtSQLFile.SetFocus;
+      Exit;
+
+   end;
+
+   if Trim(edtCpyName.Text) = '' then begin
+
+      Application.MessageBox('Company Name is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtCpyName.SetFocus;
+      Exit;
+
+   end;
+
+//--- Make sure that Prefix contains exactly 6 characters with the first 3 alpa
+//--- and the last three numeric
+
+   if Length(edtPrefixF.Text) <> 6 then begin
+
+      Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtPrefixF.SetFocus;
+      Exit;
+
+   end;
+
+   PartOne   := Copy(edtPrefixF.Text,1,3);
+   PartTwo   := Copy(edtPrefixF.Text,4,3);
+   PartValid := True;
+
+   for idx1 := 1 to 3 do begin
+
+      if (PartOne[idx1] in ['A'..'Z','a'..'z']) = False then begin
+         PartValid := False;
+         break;
+      end;
+
+   end;
+
+   for idx1 := 1 to 3 do begin
+
+      if (PartTwo[idx1] in ['0'..'9']) = False then begin
+         PartValid := False;
+         break;
+      end;
+
+   end;
+
+   if PartValid = False then begin
+      Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
+      edtPrefixF.SetFocus;
+      Exit;
+
+   end;
+
+//--- Warn the user that this action will utterly destroy any existing database
+
+   if (Application.MessageBox(PChar('WARNING: This action will completely destroy any existing LPMS database for "' + edtPrefixF.Text + '" in "' + edtHostName.Text + '" and cannot be undone without a valid backup. You can:' + #10 + #10 + #10 + 'Click [OK] to proceed; or' + #10 + #10 + 'Click on [Cancel] to cancel this action'),'LPMS Utility',(MB_OKCANCEL + MB_ICONSTOP)) = ID_CANCEL) then
+      Exit;
+
+//--- User wants to proceed
+
+   HostName := edtHostName.Text;
+   Prefix   := edtPrefixF.Text;
+   SQLFile  := edtSQLFile.Text;
+
+//--- Build the DB connection string
+
+   SQLCon.HostName     := edtHostName.Text;
+   SQLCon.UserName     := edtUserName.Text;
+   SQLCon.Password     := edtPassword.Text;
+//   SQLCon.DatabaseName := edtPrefixF.Text + '_LPMS';
+   SQLCon.DatabaseName := 'mysql';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
+
+//--- Open a connection to the datastore named in HostName
+
+   if DM_Open_Connection() = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+//--- Start by creating the Database
+
+   S1 := 'DROP DATABASE IF EXISTS ' + Prefix + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Information message: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+   end;
+
+   S1 := 'CREATE DATABASE ' + Prefix + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   SQLCon.DatabaseName := edtPrefixF.Text + '_LPMS';
+
+//--- Define the default LPMS user for both local and remote access
+
+   S1 := 'DROP USER "' + Prefix + '_LD"@"localhost"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Information message: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+   end;
+
+   S1 := 'CREATE USER "' + Prefix + '_LD"@"localhost" IDENTIFIED BY "LD01"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   S1 := 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' + Prefix + '_LPMS.* TO "' + Prefix + '_LD"@"localhost"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   S1 := 'DROP USER "' + Prefix + '_LD"@"%"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Information message: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+   end;
+
+   S1 := 'CREATE USER "' + Prefix + '_LD"@"%" IDENTIFIED BY "LD01"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   S1 := 'GRANT SELECT, INSERT, UPDATE, DELETE ON ' + Prefix + '_LPMS.* TO "' + Prefix + '_LD"@"%"';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+//--- Create the tables
+
+   S1 := 'USE ' + Prefix + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   try
+
+      SQLList := TStringList.Create;
+      SQLList.LoadFromFile(SQLFile);
+
+      for idx1 := 0 to SQLList.Count - 1 do begin
+
+         if SQLList.Strings[idx1][1] = '#' then
+            continue;
+
+         if SQLList.Strings[idx1][1] = '1' then begin
+
+            if (DM_Put_DB(SQLList.Strings[idx1].SubString(1,Length(SQLList.Strings[idx1]) - 1),TYPE_OTHER) = False) then
+               Application.MessageBox(PChar('Information message: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+         end else begin
+
+            if (DM_Put_DB(SQLList.Strings[idx1].SubString(1,Length(SQLList.Strings[idx1]) - 1),TYPE_SELECT) = False) then
+               Application.MessageBox(PChar('Information message: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+         end;
+
+      end;
+
+   finally
+
+      SQLList.Free;
+
+   end;
+
+//--- Write the LPMS Signature to the Database
+
+   if DM_PutSignature() = False then
+      Exit;
+
+//--- Insert the values of HostName, DBPrefix and LastUser into the Registry
+//--- Write the new values to the Registry
+
+{$IFDEF OLD_ENCODING}
+   DBPrefix := jvCipher.EncodeString(ThisPass,(edtPrefixF.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now)));
+{$ELSE}
+   DBPrefix := Vignere(CYPHER_ENC,edtPrefixF.Text,SecretPhrase) + MaskField(FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now),TYPE_MASK);
+{$ENDIF}
+
+
+{$IFDEF WINDOWS}
+   RegIni := TRegistryIniFile.Create(KeepRegString);
+{$ELSE}
+   RegIni := TINIFile.Create(KeepRegString);
+{$ENDIF}
+
+   RegIni.WriteString('Preferences','HostName',edtHostName.Text);
+   RegIni.WriteString('Preferences','DBPrefix',DBPrefix);
+   RegIni.WriteString('Preferences','LastUser','Administrator');
+
+   RegIni.Destroy;
+
+//--- Wrap it up
+
+   Application.MessageBox('Set-up successfully completed...','LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+
+   btnProcessF.Default := False;
+   btnCancelF.Caption  := 'Close';
+   btnCancelF.Default  := True;
+   btnCancelF.SetFocus;
+
+end;
+
+//------------------------------------------------------------------------------
+// A Field on the Set-up Page changed
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtHostNameChange(Sender: TObject);
+var
+   FldCount : integer = 0;
+
+begin
+
+   if Trim(edtHostName.Text) <> '' then Inc(FldCount);
+   if Trim(edtUserName.Text) <> '' then Inc(FldCount);
+   if Trim(edtPassword.Text) <> '' then Inc(FldCount);
+   if Trim(edtCpyName.Text)  <> '' then Inc(FldCount);
+
+   if FldCount = 4 then
+      btnProcessF.Enabled := True
+   else
+      btnProcessF.Enabled := False;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the embedded button in the SQL File field
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtSQLFileButtonClick(Sender: TObject);
+begin
+
+   edtSQLFile.Filter      := 'SQL Text Files (*.txt)|*.txt|SQL Files (*.sql)|*.sql|All Files (*.*)|*.*';
+   edtSQLFile.DefaultExt  := '.txt';
+   edtSQLFile.FilterIndex := 1;
+
+end;
+
+//------------------------------------------------------------------------------
+// User Clicked on the Lock at the bottom of the Set-up Page
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnLockSClick(Sender: TObject);
+var
+   Passwd : string;
+
+begin
+
+   if LockS_State = True  then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then
+         LockS_State := False;
+
+   end else
+      LockS_State := True;
+
+   pgTabsChange(Sender);
+
+end;
+
+{==============================================================================}
 {--- Maintenance Tab functions                                              ---}
 {==============================================================================}
 
@@ -1658,7 +1995,7 @@ begin
          Process.Environment.Add(GetEnvironmentString(idx));
 
       Process.Executable := LPMSUpgrade;
-      Process.Parameters.Add('--args');
+//      Process.Parameters.Add('--args');
       Process.Parameters.Add('-TFull');
       Process.Parameters.Add('-G' + ThisGUID);
       Process.Parameters.Add('-M' + AnsiReplaceStr(AnsiReplaceStr(ThisInstall,':','~'),' ','#'));
@@ -1891,6 +2228,47 @@ begin
          Exit;
 
       end;
+
+   end;
+
+   Result := True;
+
+end;
+
+//---------------------------------------------------------------------------
+// Function to insert the LPMS signature and the Default Administrator
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.DM_PutSignature() : boolean;
+var
+   S1, ThisVersion : string;
+
+begin
+
+   ThisVersion := '3.2.1';
+   Result := False;
+
+   S1 := 'INSERT INTO lpms (Signature, Version, VATRegistered, UniqueNum, CpyName, Create_By, Create_On, Create_At) Values("Legal Practise Management System - LPMS", "' +
+          ThisVersion + '", 0, 1, "' + edtCpyName.Text + '", "' +
+          edtUserName.Text + '", "' +
+          FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) + '", "' +
+          FormatDateTime(DefaultFormatSettings.LongTimeFormat,Now) + '")';
+
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   S1 := 'INSERT INTO control (Control_UserID, Control_Password, Control_Name, Control_UserType, Control_FeeEarner, Control_Unique, Create_By, Create_Date, Create_Time) Values("Administrator", "ƒÐâÎ±ÛÔâ×ÇÞØ", "Default System Administrator", "Administrator", 0, 1, "' +
+          edtUserName.Text + '", "' +
+          FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) + '", "' +
+          FormatDateTime(DefaultFormatSettings.LongTimeFormat,Now) + '")';
+
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
 
    end;
 
