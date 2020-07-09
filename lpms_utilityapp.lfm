@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Setup
+    ActivePage = Restore
     Align = alClient
-    TabIndex = 1
+    TabIndex = 6
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -3400,6 +3400,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
+        OnClick = btnUnlockBClick
       end
       object Label32: TLabel
         Left = 12
@@ -3730,6 +3731,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
           FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE
         }
+        OnClick = btnUnlockBClick
       end
       object lblTitle: TLabel
         Left = 190
@@ -3848,6 +3850,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Restore'
+        OnClick = btnProcessBClick
         TabOrder = 14
       end
       object rbFull: TRadioButton
@@ -3993,6 +3996,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
         TabOrder = 1
+        OnButtonClick = edtBackupFileButtonClick
+        OnChange = edtBackupFileChange
       end
       object Bevel7: TBevel
         Left = 0
@@ -5341,7 +5346,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy

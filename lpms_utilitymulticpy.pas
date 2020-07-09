@@ -52,7 +52,7 @@ private  { Private Declarations }
    MultiCompany : boolean;          // Indicates whether Multi Company was selected;
    DBPrefix     : string;           // Holds the chosen DBPrefix
 
-public   { Publlic Declartions}
+public   { Public Declartions}
 
 end;
 
@@ -70,6 +70,16 @@ const
 
 var
    FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy;
+
+{$IFDEF DARWIN}
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.dylib';
+{$ENDIF}
+{$IFDEF WINDOWS}
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'BSD_Utilities.dll';
+{$ENDIF}
+{$IFDEF LINUX}
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.so';
+{$ENDIF}
 
 implementation
 
@@ -113,7 +123,7 @@ begin
 {$IFDEF OLD_ENCODING}
    ThisDBPrefix := jvCipher.DecodeString(FLPMS_UtilityApp.ThisPass,DBPrefix);
 {$ELSE}
-   ThisDBPrefix := FLPMS_UtilityApp.Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),FLPMS_UtilityApp.SecretPhrase);
+   ThisDBPrefix := Vignere(CYPHER_DEC,Copy(DBPrefix,1,6),FLPMS_UtilityApp.SecretPhrase);
 {$ENDIF}
 
   if MultiCompany = True then begin
@@ -194,7 +204,7 @@ begin
 {$IFDEF OLD_ENCODING}
       ThisDBPrefix := jvCipher.DecodeString(FLPMS_UtilityApp.ThisPass,ThisDBPrefix);
 {$ELSE}
-      ThisDBPrefix := FLPMS_UtilityApp.Vignere(CYPHER_DEC,Copy(ThisDBPrefix,1,6),FLPMS_UtilityApp.SecretPhrase);
+      ThisDBPrefix := Vignere(CYPHER_DEC,Copy(ThisDBPrefix,1,6),FLPMS_UtilityApp.SecretPhrase);
 {$ENDIF}
 
       if (edtDBPrefix.Text = Copy(ThisDBPrefix,1,6)) or (Copy(ThisDBPrefix,1,6) = 'invali') then begin

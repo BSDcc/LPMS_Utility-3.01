@@ -23,7 +23,7 @@ uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
    ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
    IdTCPClient, StrUtils, DateTimePicker, LazFileUtils, sqldb, db, LCLType,
-   Math, DOM, Process,
+   DOM, Process,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry, Windows, mysql56conn;
@@ -269,10 +269,14 @@ type
       procedure btnCancelRClick(Sender: TObject);
       procedure btnLockDClick(Sender: TObject);
       procedure btnLockSClick(Sender: TObject);
+      procedure btnProcessBClick(Sender: TObject);
       procedure btnProcessDClick(Sender: TObject);
       procedure btnProcessFClick(Sender: TObject);
       procedure btnProcessMClick(Sender: TObject);
       procedure btnRegisterClick(Sender: TObject);
+      procedure btnUnlockBClick(Sender: TObject);
+      procedure edtBackupFileButtonClick(Sender: TObject);
+      procedure edtBackupFileChange(Sender: TObject);
       procedure edtHostNameChange(Sender: TObject);
       procedure edtHostNameDChange(Sender: TObject);
       procedure edtKeyMButtonClick(Sender: TObject);
@@ -284,7 +288,6 @@ type
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure imgRegisterClick(Sender: TObject);
-      procedure n(Sender: TObject; var Key: char);
       procedure pgTabsChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
 
@@ -356,11 +359,12 @@ private  { Private Declarations }
 {$ENDIF}
 
    procedure SilentUpgrade();
+   function  FindTable(ThisTable: string; idx1: integer) : integer;
    function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_Open_Connection() : boolean;
    function  DM_PutSignature() : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
-   function  MaskField(InputField: string; MaskType: integer): string;
+//   function  MaskField(InputField: string; MaskType: integer): string;
    procedure ProcessResponse(Response: string);
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
 
@@ -384,7 +388,7 @@ public   { Publlic Declartions}
    ThisPass       : string;        //
    ThisRes        : string;        // Result from InputQuery
 
-   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
+//   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
 
 end;
 
@@ -455,23 +459,29 @@ var
 
 {$IFDEF DARWIN}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.dylib';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.dylib';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.dylib';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.dylib';
 {$ENDIF}
 {$IFDEF WINDOWS}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'BSD_Utilities.dll';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'BSD_Utilities.dll';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'BSD_Utilities.dll';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'BSD_Utilities.dll';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'BSD_Utilities.dll';
 {$ENDIF}
 {$IFDEF LINUX}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.so';
+   function  MaskField(InputField: string; MaskType: integer): string; stdcall; external 'libbsd_utilities.so';
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.so';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.so';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.so';
 {$ENDIF}
 
 implementation
 
-   uses LPMS_UtilityMultiCpy, LPMS_InputQuery;
+   uses LPMS_UtilityMultiCpy, LPMS_InputQuery, LPMS_UtilitySelDB;
 
 {$R *.lfm}
 
@@ -836,7 +846,7 @@ begin
       edtType.Clear();
 
       LockB_State            := True;
-      edtBackupFile.ReadOnly := True;
+      edtBackupFile.Enabled  := False;
       rbFull.Checked         := False;
       rbPartial.Checked      := False;
       cbType.Checked         := False;
@@ -921,8 +931,6 @@ begin
          edtCpyName.Enabled  := True;
          edtPrefixF.Enabled  := True;
 
-//         edtHostNameChange(Sender);
-
          btnProcessF.Default := True;
          btnCancelF.Caption  := 'Cancel';
          btnCancelF.Default  := False;
@@ -984,8 +992,6 @@ begin
          edtNewVersion.Enabled  := True;
 
          btnGet.Enabled         := True;
-//         edtHostNameCChange(Sender);
-
          btnProcessC.Default    := True;
          btnCancelC.Caption     := 'Cancel';
          btnCancelC.Default     := False;
@@ -1128,7 +1134,6 @@ begin
          btnAllB.Enabled       := False;
 
          edtBackupFile.Enabled := False;
-//         btnOpenB.Enabled      := False;
          btnAllB.Enabled       := False;
          edtTitle.Enabled      := False;
          edtDate.Enabled       := False;
@@ -1232,11 +1237,6 @@ procedure TFLPMS_UtilityApp.imgRegisterClick(Sender: TObject);
 begin
 
    saAbout.ShowAbout;
-
-end;
-
-procedure TFLPMS_UtilityApp.n(Sender: TObject; var Key: char);
-begin
 
 end;
 
@@ -1467,8 +1467,7 @@ begin
    SQLCon.HostName     := edtHostName.Text;
    SQLCon.UserName     := edtUserName.Text;
    SQLCon.Password     := edtPassword.Text;
-//   SQLCon.DatabaseName := edtPrefixF.Text + '_LPMS';
-   SQLCon.DatabaseName := 'mysql';
+   SQLCon.DatabaseName := 'mysql';          // Temporary until we have a new database
    SQLTran.DataBase    := SQLCon;
    SQLQry1.Transaction := SQLTran;
 
@@ -1498,7 +1497,7 @@ begin
 
    end;
 
-   SQLCon.DatabaseName := edtPrefixF.Text + '_LPMS';
+   SQLCon.DatabaseName := edtPrefixF.Text + '_LPMS';  // Now we have a database
 
 //--- Define the default LPMS user for both local and remote access
 
@@ -1594,7 +1593,6 @@ begin
       Exit;
 
 //--- Insert the values of HostName, DBPrefix and LastUser into the Registry
-//--- Write the new values to the Registry
 
 {$IFDEF OLD_ENCODING}
    DBPrefix := jvCipher.EncodeString(ThisPass,(edtPrefixF.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now)));
@@ -2064,11 +2062,11 @@ begin
 
       LockD_State := True;
 
-      edtHostNameD.Clear();
-      edtUserNameD.Clear();
-      edtPasswordD.Clear();
-      edtPrefixD.Clear();
-      edtSQLD.Clear();
+      edtHostNameD.Clear;
+      edtUserNameD.Clear;
+      edtPasswordD.Clear;
+      edtPrefixD.Clear;
+      edtSQLD.Clear;
 
    end;
 
@@ -2138,12 +2136,10 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.SQLQry1AfterOpen(DataSet: TDataSet);
 var
-   idx1, idx2, Len, ThisTop{, ThisLen} : integer;
-   Str                               : string;
+   idx1, idx2, Len, ThisTop : integer;
+   Str                      : string;
 
 begin
-
-//   ThisLen := DBGrid1.Columns.Count;
 
    for idx1 := 0 to DBGrid1.Columns.Count - 1 do begin
 
@@ -2167,6 +2163,329 @@ begin
       end;
 
    end;
+
+end;
+
+{==============================================================================}
+{--- Restore Tab functions                                                  ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// User selected a Backup File name
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtBackupFileChange(Sender: TObject);
+begin
+
+   //
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button embedded in the Backup File field
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtBackupFileButtonClick(Sender: TObject);
+begin
+
+   edtBackupFile.Filter      := 'LPMS Backup Files (*.lpb)|*.lpb|All Files (*.*)|*.*';
+   edtBackupFile.DefaultExt  := '.lpb';
+   edtBackupFile.FilterIndex := 1;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Process button on the Restore tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessBClick(Sender: TObject);
+var
+   idx1, idx2, idx3                            : integer;
+   RecCount                                    : integer = 0;
+   Found                                       : boolean = False;
+   S0, S1, ThisTable, SaveConStr, SaveHostName : string;
+
+begin
+
+//--- Check whether any items have been selected
+
+   for idx1 := 0 to lvTables.Items.Count - 1 do begin
+
+      if lvTables.Items.Item[idx1].Checked = True then begin
+
+         Found := True;
+         break;
+
+      end;
+
+   end;
+
+   if Found = False then
+      Exit;
+
+{
+//--- Insert the tables to be restored into the TableList
+
+   TableList := TStringList.Create;
+
+   for  idx1 :=0 to lvTables.Items.Count - 1 do begin
+
+      if lvTables.Items.Item[idx1].Checked = True then
+         TableList.Add(lvTables.Items.Item[idx1].Caption);
+
+   end;
+}
+
+//--- Select the MySQL server on which the information will be restored
+
+   DoRestore := False;
+
+   FLPMS_UtilityApp.Hide;
+   FLPMS_UtilitySelDB := TFLPMS_UtilitySelDB.Create(Application);
+   FLPMS_UtilitySelDB.ShowModal;
+   FLPMS_UtilitySelDB.Destroy;
+   FLPMS_UtilityApp.Show;
+
+   if DoRestore = False then
+      Exit;
+
+//--- If we get here we can proceed with the Restore. Connect to the Database
+//--- using the credentials provided by the user.
+
+   SaveHostName := HostName;
+   HostName     := RestoreHost;
+
+   SQLCon.HostName     := RestoreHost;
+   SQLCon.UserName     := RestoreUser;
+   SQLCon.Password     := RestorePass;
+   SQLCon.DatabaseName := ThisDBPrefix + '_LPMS';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
+   SQLDs1.DataSet      := SQLQry1;
+
+   if DM_Open_Connection = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+//--- Select the database associated with the DBPRefix
+
+   S1 := 'USE ' + ThisDBPrefix + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   if edtMode.Text = 'Standalone' then begin
+
+//--- The backup was taken in Standalone mode - we simply execute each SQL
+//--- instruction in the ImportList (loaded from the Backup file) in turn
+//--- We start with string 1 as string 0 contains the meta data
+
+//--- Give the user another chance to opt out
+
+      if Application.MessageBox(PChar('WARNING: Backup taken on "' + edtDate.Text + '" at "' + edtTime.Text + '" will overwrite existing information in Database "' + RestoreHost + '[' + ThisDBPrefix + ']".' + #10 + #10 + 'WARNING: This is a permanent operation and cannot be reversed once started. You can:' + #10 + #10 + #10 + 'Click [Yes] to continue with the Restore; or' + #10 + #10 + 'Click on [No] to return.'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+         Exit;
+
+      stProgressB.Caption := 'Writing Record no.: 1';
+      stProgressB.Refresh;
+
+      for idx1 := 1 to ImportList.Count - 1 do begin
+
+         S1 := ImportList.Strings[idx1];
+
+         if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+            stProgressB.Caption := 'Writing Record no.: ' + IntToStr(RecCount);
+            stProgressB.Refresh;
+            Application.MessageBox(PChar('Information message: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+            Exit;
+
+         end;
+
+         Inc(RecCount);
+
+         if (RecCount mod 10) = 0 then begin
+
+            stProgressB.Caption := 'Writing Record no.: ' + IntToStr(RecCount);
+            stProgressB.Refresh();
+
+         end;
+
+      end;
+
+   end else begin
+
+//--- The backup was taken in Managed mode - we need to work through the SQL
+//--- statements systematically and restore only the tables in the list returned
+//--- from FldExpImp. In addition we need to take the value of BackupReplace
+//--- into account. If the value is True then we need to DROP and CREATE the
+//--- table before restoring.
+//--- We start with string 1 as string 0 contains the meta data
+
+//--- Give the user another chance to opt out if 'Replace content' was selected
+
+      if cbType.Checked = True then begin
+
+         if Application.MessageBox(PChar('WARNING: Backup taken on "' + edtDate.Text + '" at "' + edtTime.Text + '" will overwrite existing information in Database "' + RestoreHost + '[' + DBPrefix + ']".' + #10 + #10 + 'WARNING: This is a permanent operation and cannot be reversed once started. You can:' + #10 + #10 + #10 + 'Click [Yes] to continue with the Restore; or' + #10 + #10 + 'Click [No] to return.'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
+
+//--- Insert the tables to be restored into the TableList
+
+      try
+
+         TableList := TStringList.Create;
+
+         for  idx1 := 0 to lvTables.Items.Count - 1 do begin
+
+            if lvTables.Items.Item[idx1].Checked = True then
+               TableList.Add(lvTables.Items.Item[idx1].Caption);
+
+         end;
+
+         idx3 := 1;
+
+         for idx1 := 0 to TableList.Count - 1 do begin
+
+            idx2 := FindTable(TableList.Strings[idx1],idx3);
+
+            if idx2 = -1 then begin
+
+               Application.MessageBox(PChar('Unexpected error during Restore - Table "' + TableList.Strings[idx1] + '" is not in the Backup file.' + #10 + #10 + 'Restore process aborted'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+               Exit;
+
+            end;
+
+            idx3 := idx2;
+
+            S0 := ImportList.Strings[idx3].SubString(1,1);
+            S1 := ImportList.Strings[idx3].SubString(2,999999);
+            ThisTable := S1;
+
+            stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: 1';
+            stProgressB.Refresh;
+
+            if cbType.Checked = False then
+               idx3 := idx3 + 3
+            else
+               Inc(idx3);
+
+            while StrToInt(ImportList.Strings[idx3].SubString(1,1)) <> LINE_TABLE do begin
+
+               S1 := ImportList.Strings[idx3].SubString(2,999999);
+
+               if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+                  stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
+                  stProgressB.Refresh;
+                  Application.MessageBox(PCHar('Information message: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+                  Exit;
+
+               end;
+
+               Inc(RecCount);
+
+               if (RecCount mod 10) = 0 then begin
+
+                  stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
+                  stProgressB.Refresh;
+
+               end;
+
+               Inc(idx3);
+
+            end;
+
+         end;
+
+      finally
+
+         TableList.Destroy;
+
+      end;
+
+   end;
+
+//--- Show the final count
+
+   if edtMode.Text = 'Standalone' then
+      stProgressB.Caption := 'Writing Record no.: ' + IntToStr(RecCount)
+   else
+      stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
+
+   stProgressB.Refresh;
+
+//--- Close the database
+
+   SQLQry1.Close;
+   SQLCon.Close;
+
+   HostName := SaveHostName;
+
+   Application.MessageBox('Restore successfully completed','LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+   stProgressB.Caption := '';
+
+end;
+
+//------------------------------------------------------------------------------
+// Function to locate the start of the passed table in the Restore list
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.FindTable(ThisTable: string; idx1: integer) : integer;
+var
+   idx2               : integer;
+   S0, S1, FoundTable : string;
+
+begin
+   for idx2 := idx1 to ImportList.Count - 1 do begin
+
+      S0 := ImportList.Strings[idx2].SubString(1,1);
+      S1 := ImportList.Strings[idx2].SubString(2,999999);
+
+      if StrToInt(S0) = LINE_TABLE then
+         FoundTable := S1;
+
+      if FoundTable = ThisTable then begin
+         Result := idx2;
+         break;
+      end;
+
+   end;
+
+   Result := -1;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Lock/Unlock button on the Restore Tab
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnUnlockBClick(Sender: TObject);
+var
+   Passwd : string;
+
+begin
+
+   if LockB_State = True then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then begin
+
+         LockB_State           := False;
+         edtBackupFile.Enabled := False;
+
+      end;
+
+   end else begin
+
+      LockB_State           := True;
+      edtBackupFile.Enabled := True;
+
+   end;
+
+   pgTabsChange(Sender);
 
 end;
 
@@ -2305,6 +2624,7 @@ begin
 
 end;
 
+{
 //------------------------------------------------------------------------------
 // Function to Mask/Unmask a field that will be stored in a plain file
 //
@@ -2405,6 +2725,7 @@ begin
    end;
 
 end;
+}
 
 //------------------------------------------------------------------------------
 // Process the response from the Server
@@ -2520,6 +2841,7 @@ begin
 
 end;
 
+{
 //------------------------------------------------------------------------------
 // Function to do a Vignere Cypher
 //------------------------------------------------------------------------------
@@ -2614,6 +2936,7 @@ begin
    Result := Encrypted;
 
 end;
+}
 
 //------------------------------------------------------------------------------
 end.
