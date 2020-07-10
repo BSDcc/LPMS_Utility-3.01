@@ -115,6 +115,7 @@ type
       chkAutoRefresh: TCheckBox;
       chkMatchAny: TCheckBox;
       Convert: TTabSheet;
+      stMsgB: TLabel;
       tcpClient: TIdTCPClient;
       saAbout: TSplashAbout;
       SQLDs1: TDataSource;
@@ -261,7 +262,6 @@ type
       StaticText5: TStaticText;
       StaticText6: TStaticText;
       stMsg: TStaticText;
-      stMsgB: TStaticText;
       stMsgL: TStaticText;
       stProgress: TStaticText;
       stProgressB: TStaticText;
@@ -289,6 +289,8 @@ type
       procedure FormShow(Sender: TObject);
       procedure imgRegisterClick(Sender: TObject);
       procedure pgTabsChange(Sender: TObject);
+      procedure rbFullClick(Sender: TObject);
+      procedure rbPartialClick(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
 
 private  { Private Declarations }
@@ -331,9 +333,7 @@ private  { Private Declarations }
    UserName       : string;        //
    UserKey        : string;        // The LPMS Key stored in the Registry
    LogList        : TStringList;   //
-   ImportList     : TStringList;   //
    RespList       : TStringList;   //
-   TableList      : TStringList;   //
    ExportSet      : TDOMNode;      //
    TableSet       : TDOMNode;      //
    ThisNode       : TDOMNode;      //
@@ -360,16 +360,13 @@ private  { Private Declarations }
 
    procedure SilentUpgrade();
    function  FindTable(ThisTable: string; idx1: integer) : integer;
+   procedure GetList(FileName: string);
    function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_Open_Connection() : boolean;
    function  DM_PutSignature() : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
-//   function  MaskField(InputField: string; MaskType: integer): string;
    procedure ProcessResponse(Response: string);
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
-
-
-//   function  GetUnique(): integer;
 
 public   { Publlic Declartions}
    DoRestore      : boolean;       //
@@ -387,8 +384,6 @@ public   { Publlic Declartions}
    ThisDBPrefix   : string;        //
    ThisPass       : string;        //
    ThisRes        : string;        // Result from InputQuery
-
-//   function Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
 
 end;
 
@@ -456,6 +451,8 @@ var
    This_Key_Values    : REC_Key_Values;
    This_Key_Priv      : REC_Key_Priv;
    This_Unique_Values : REC_Unique_Values;
+   ImportList         : TStringList;   //
+   TableList          : TStringList;   //
 
 {$IFDEF DARWIN}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
@@ -1126,6 +1123,8 @@ begin
       btnAllB.Enabled     := False;
       lvTables.Enabled    := False;
       Selected            := True;
+
+      lvTables.Clear;
 
       if LockB_State = True then begin
 
@@ -2171,16 +2170,6 @@ end;
 {==============================================================================}
 
 //------------------------------------------------------------------------------
-// User selected a Backup File name
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.edtBackupFileChange(Sender: TObject);
-begin
-
-   //
-
-end;
-
-//------------------------------------------------------------------------------
 // User clicked on the button embedded in the Backup File field
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.edtBackupFileButtonClick(Sender: TObject);
@@ -2189,6 +2178,123 @@ begin
    edtBackupFile.Filter      := 'LPMS Backup Files (*.lpb)|*.lpb|All Files (*.*)|*.*';
    edtBackupFile.DefaultExt  := '.lpb';
    edtBackupFile.FilterIndex := 1;
+
+end;
+
+//------------------------------------------------------------------------------
+// User selected a Backup File name
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtBackupFileChange(Sender: TObject);
+var
+   idx1     : integer;
+   ThisList : TListItem;
+
+begin
+
+//--- Check whether the supplied file exists
+
+   if FileExists(edtBackupFile.Text) = False then
+      Exit;
+
+   GetList(edtBackupFile.Text);
+
+//--- Check whether the Backup is a valid backup file
+
+   if (((edtTitle.Text = 'LPMS_Backup') and (edtVersion.Text >= '3.0.2')) or (edtTitle.Text = 'BSD_Backup_Manager') or (edtTitle.Text = 'BSD Backup Manager')) then
+      cbType.Checked := True
+   else begin
+
+      Application.MessageBox(PChar('"' + edtBackupFile.Text + '" appears not to be a valid backup file.'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Exit;
+
+   end;
+
+   if edtMode.Text = 'Managed' then begin
+
+      stMsgB.Caption  := 'LPMS First Run Utility: Select "Full Restore" to restore all tables listed below or select "Choose what to Restore" to do a selective restore of the tables listed below. Select "Replace content" to replace the current content of the selected databases. WARNING: This action will destroy the current content of the database and cannot be reversed once started.';
+
+      rbFull.Enabled     := True;
+      rbPartial.Enabled  := True;
+      cbType.Enabled     := True;
+
+   end else
+      stMsgB.Caption    := 'LPMS First Run Utility: Click [Restore] to proceed with the Restore or [Cancel] to cancel the Restore request. WARNING: This action will destroy the current content of the tables listed below and cannot be reversed once started.';
+
+   edtTitle.Enabled   := True;
+   edtDate.Enabled    := True;
+   edtTime.Enabled    := True;
+   edtVersion.Enabled := True;
+   edtMode.Enabled    := True;
+   edtType.Enabled    := True;
+
+//--- Extract the tables that are in scope
+
+   lvTables.Clear;
+
+   for idx1 := 0 to TableList.Count - 1 do begin
+
+      ThisList := lvTables.Items.Add;
+
+      ThisList.Caption := TableList.Strings[idx1];
+      ThisList.Checked := True;
+
+   end;
+
+   rbFullClick(Sender);
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on Full Restore on the Restore Tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.rbFullClick(Sender: TObject);
+var
+   idx1 : integer;
+
+begin
+
+   lvTables.Enabled := False;
+   btnAllB.Enabled  := False;
+
+   for idx1 := 0 to lvTables.Items.Count - 1 do
+      lvTables.Items.Item[idx1].Checked := True;
+
+   btnCancelB.Default  := False;
+   btnProcessB.Default := True;
+   btnProcessB.Enabled := True;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on Choose what to Restore on the Restore tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.rbPartialClick(Sender: TObject);
+var
+   idx1  : integer;
+   Found : boolean = False;
+
+begin
+
+   lvTables.Enabled := True;
+   btnAllB.Enabled  := True;
+
+//--- Check whether any items have been selected
+
+   for idx1 := 0 to lvTables.Items.Count - 1 do begin
+
+      if lvTables.Items.Item[idx1].Checked = True then begin
+
+         Found := True;
+         break;
+
+      end;
+
+   end;
+
+
+   btnProcessB.Enabled := Found;
+   btnCancelB.Default  := not Found;
+   btnProcessB.Default := Found;
 
 end;
 
@@ -2219,19 +2325,6 @@ begin
 
    if Found = False then
       Exit;
-
-{
-//--- Insert the tables to be restored into the TableList
-
-   TableList := TStringList.Create;
-
-   for  idx1 :=0 to lvTables.Items.Count - 1 do begin
-
-      if lvTables.Items.Item[idx1].Checked = True then
-         TableList.Add(lvTables.Items.Item[idx1].Caption);
-
-   end;
-}
 
 //--- Select the MySQL server on which the information will be restored
 
@@ -2457,7 +2550,50 @@ begin
    Result := -1;
 
 end;
+{
 
+//---------------------------------------------------------------------------
+// User clicked on the Toggle All button on the Restore tab
+//---------------------------------------------------------------------------
+void __fastcall TFLPMS_FirstRunApp::btnAllBClick(TObject *Sender)
+{
+var
+   idx1 : integer;
+
+begin
+
+   Selected := not Selected;
+
+   for idx1 := 0 to lvTables.Items.Count - 1 do
+      lvTables.Items.Item[idx1].Checked := Selected;
+
+end;
+}
+
+//---------------------------------------------------------------------------
+// User selected/unselected an item in the tables listview on the Restore tab
+//---------------------------------------------------------------------------
+void __fastcall TFLPMS_FirstRunApp::lvTablesItemChecked(TObject *Sender, TListItem *Item)
+{
+   int  idx1;
+   bool Found = false;
+
+//--- Check whether any items have been selected
+
+   for (idx1=0;idx1<lvTables->Items->Count;idx1++)
+   {
+      if (lvTables->Items->Item[idx1]->Checked == true)
+      {
+         Found = true;
+         break;
+      }
+   }
+
+   btnProcessB->Enabled = Found;
+   btnCancelB->Default  = !Found;
+   btnProcessB->Default = Found;
+}
+}
 //---------------------------------------------------------------------------
 // User clicked on the Lock/Unlock button on the Restore Tab
 //---------------------------------------------------------------------------
@@ -2488,6 +2624,57 @@ begin
    pgTabsChange(Sender);
 
 end;
+
+//---------------------------------------------------------------------------
+// Function to extract meta data from the backup file
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.GetList(FileName: string);
+var
+   ThisLine          : string;
+   FirstLine, Tokens : TStringList;
+
+begin
+
+//--- Load the entire backup file into memory then extract the first line
+
+   ImportList.LoadFromFile(FileName);
+   ThisLine := ImportList.Strings[0];
+
+//--- Set up to extract the tokens in the First line
+
+   try
+
+      Tokens := TStringList.Create;
+      ExtractStrings(['|'], [], PChar(ThisLine),Tokens);
+
+//--- Extract the values of the individual tokens
+
+      edtTitle.Text   := Tokens.Strings[0].SubString(7,99);
+      edtDate.Text    := Tokens.Strings[1].SubString(5,99);
+      edtTime.Text    := Tokens.Strings[2].SubString(5,99);
+      edtVersion.Text := Tokens.Strings[3].SubString(8,99);
+      edtType.Text    := Tokens.Strings[4].SubString(5,99);
+      edtMode.Text    := Tokens.Strings[5].SubString(5,99);
+      RestoreTables   := Tokens.Strings[6].SubString(7,1024);
+
+//--- Extract the list of tablenames
+
+      FirstLine               := TStringList.Create;
+      FirstLine.Delimiter     := ',';
+      FirstLine.DelimitedText := RestoreTables;
+
+      TableList.Clear;
+      TableList.AddStrings(FirstLine);
+
+   finally
+
+      FirstLine.Free;
+      Tokens.Free;
+
+   end;
+
+end;
+
 
 {==============================================================================}
 {--- Database functions                                                     ---}

@@ -8,7 +8,7 @@ uses
    {$ENDIF}{$ENDIF}
    Interfaces, // this includes the LCL widgetset
    Forms, datetimectrls, LPMS_UtilityApp, LPMS_InputQuery, LPMS_UtilityMultiCpy,
-   indylaz, LPMS_UtilitySelDB
+   indylaz, Classes, LPMS_UtilitySelDB
    { you can add units after this };
 
 {$R *.res}
@@ -20,6 +20,22 @@ begin
    Application.CreateForm(TFLPMS_UtilityApp, FLPMS_UtilityApp);
    Application.CreateForm(TFLPMS_UtilityMultiCpy, FLPMS_UtilityMultiCpy);
    Application.CreateForm(TFLPMS_UtilitySelDB, FLPMS_UtilitySelDB);
-   Application.Run;
+
+//--- Allocate lists that must be deleted when the program ends
+
+   try
+
+      ImportList := TStringList.Create;
+      TableList  := TStringList.Create;
+
+      Application.Run;
+
+   finally
+
+      ImportList.Free;
+      TableList.Free;
+
+   end;
+
 end.
 

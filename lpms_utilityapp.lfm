@@ -1,7 +1,7 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 754
+  Left = 527
   Height = 570
-  Top = 178
+  Top = 141
   Width = 890
   ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
@@ -3758,7 +3758,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object lblVersion: TLabel
-        Left = 360
+        Left = 425
         Height = 17
         Top = 104
         Width = 45
@@ -3766,7 +3766,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object lblTime: TLabel
-        Left = 360
+        Left = 425
         Height = 17
         Top = 136
         Width = 31
@@ -3774,7 +3774,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object lblType: TLabel
-        Left = 360
+        Left = 425
         Height = 17
         Top = 166
         Width = 30
@@ -3819,20 +3819,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ShowHint = True
         ParentShowHint = False
       end
-      object stMsgB: TStaticText
-        Left = 12
-        Height = 48
-        Top = 12
-        Width = 821
-        Anchors = [akTop, akLeft, akRight]
-        Caption = 'LPMS First Run Utility: Enter or select the backup file to restore then select the required options before clicking on ''Restore'''
-        Font.Color = clBlue
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 0
-      end
       object btnCancelB: TButton
         Left = 715
         Height = 25
@@ -3841,7 +3827,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
         OnClick = btnCancelRClick
-        TabOrder = 13
+        TabOrder = 12
       end
       object btnProcessB: TButton
         Left = 797
@@ -3851,7 +3837,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akRight, akBottom]
         Caption = 'Restore'
         OnClick = btnProcessBClick
-        TabOrder = 14
+        TabOrder = 13
       end
       object rbFull: TRadioButton
         Left = 12
@@ -3860,7 +3846,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 91
         Caption = ' Full Restore'
         Checked = True
-        TabOrder = 2
+        OnClick = rbFullClick
+        TabOrder = 1
         TabStop = True
       end
       object rbPartial: TRadioButton
@@ -3869,7 +3856,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 134
         Width = 158
         Caption = ' Choose what to Restore'
-        TabOrder = 5
+        OnClick = rbPartialClick
+        TabOrder = 2
         TabStop = True
       end
       object cbType: TCheckBox
@@ -3878,55 +3866,55 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 164
         Width = 115
         Caption = ' Replace content'
-        TabOrder = 8
+        TabOrder = 3
       end
       object edtTitle: TEdit
         Left = 245
         Height = 27
         Top = 102
-        Width = 95
+        Width = 160
         ReadOnly = True
-        TabOrder = 3
+        TabOrder = 4
       end
       object edtDate: TEdit
         Left = 245
         Height = 27
         Top = 132
-        Width = 95
+        Width = 160
         ReadOnly = True
-        TabOrder = 6
+        TabOrder = 5
       end
       object edtMode: TEdit
         Left = 245
         Height = 27
         Top = 162
-        Width = 95
+        Width = 160
         ReadOnly = True
-        TabOrder = 9
+        TabOrder = 6
       end
       object edtVersion: TEdit
-        Left = 415
+        Left = 480
         Height = 27
         Top = 102
-        Width = 95
-        ReadOnly = True
-        TabOrder = 4
-      end
-      object edtTime: TEdit
-        Left = 415
-        Height = 27
-        Top = 132
-        Width = 95
+        Width = 160
         ReadOnly = True
         TabOrder = 7
       end
+      object edtTime: TEdit
+        Left = 480
+        Height = 27
+        Top = 132
+        Width = 160
+        ReadOnly = True
+        TabOrder = 8
+      end
       object edtType: TEdit
-        Left = 415
+        Left = 480
         Height = 27
         Top = 162
-        Width = 95
+        Width = 160
         ReadOnly = True
-        TabOrder = 10
+        TabOrder = 9
       end
       object lvTables: TListView
         Left = 12
@@ -3945,7 +3933,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         GridLines = True
         RowSelect = True
         SortType = stData
-        TabOrder = 11
+        TabOrder = 10
         ViewStyle = vsReport
       end
       object stProgressB: TStaticText
@@ -3954,7 +3942,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 508
         Width = 653
         Anchors = [akLeft, akRight, akBottom]
-        TabOrder = 12
+        TabOrder = 11
       end
       object edtBackupFile: TFileNameEdit
         Left = 100
@@ -3995,7 +3983,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         NumGlyphs = 1
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
-        TabOrder = 1
+        TabOrder = 0
         OnButtonClick = edtBackupFileButtonClick
         OnChange = edtBackupFileChange
       end
@@ -4005,6 +3993,20 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 64
         Width = 890
         Anchors = [akTop, akLeft, akRight]
+      end
+      object stMsgB: TLabel
+        Left = 12
+        Height = 48
+        Top = 8
+        Width = 821
+        Anchors = [akTop, akLeft, akRight]
+        AutoSize = False
+        Caption = 'LPMS First Run Utility: Enter or select the backup file to restore then select the required options before clicking on ''Restore'''
+        Font.Color = clBlue
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        WordWrap = True
       end
     end
     object Log: TTabSheet
@@ -5346,7 +5348,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
