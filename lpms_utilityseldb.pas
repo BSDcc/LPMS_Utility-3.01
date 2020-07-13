@@ -37,12 +37,15 @@ type
    btnReturn: TBitBtn;
    edtHostname: TEdit;
    edtPassword: TEdit;
-   edtStatic: TStaticText;
    edtUsername: TEdit;
    imgSmall: TImageList;
    Label1: TLabel;
    Label12: TLabel;
    Label2: TLabel;
+   Label3: TLabel;
+   procedure btnConnectClick(Sender: TObject);
+   procedure btnReturnClick(Sender: TObject);
+   procedure edtHostnameChange(Sender: TObject);
 
 private { Private Declarations }
 
@@ -60,12 +63,58 @@ var
 
 implementation
 
+   uses LPMS_UtilityApp;
+
 {$R *.lfm}
 
+{ TFLPMS_UtilitySelDB }
+
 //------------------------------------------------------------------------------
-// Executed when the Form is shown
+// Function to make sure the user provides all required information
 //------------------------------------------------------------------------------
+procedure TFLPMS_UtilitySelDB.edtHostnameChange(Sender: TObject);
+begin
+
+  if ((Trim(edtUsername.Text) = '') or (Trim(edtPassword.Text) = '') or (Trim(edtHostname.Text) = '')) then begin
+
+     btnConnect.Enabled := False;
+     btnConnect.Default := False;
+
+  end else begin
+
+     btnConnect.Enabled := True;
+     btnConnect.Default := True;
+
+  end;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Restore button
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilitySelDB.btnConnectClick(Sender: TObject);
+begin
+
+  FLPMS_UtilityApp.RestoreHost := edtHostname.Text;
+  FLPMS_UtilityApp.RestoreUser := edtUsername.Text;
+  FLPMS_UtilityApp.RestorePass := edtPassword.Text;
+
+  FLPMS_UtilityApp.DoRestore   := True;
+
+  Close;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Cancel button
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilitySelDB.btnReturnClick(Sender: TObject);
+begin
+
+  FLPMS_UtilityApp.DoRestore := False;
+  Close;
+
+end;
 
 //------------------------------------------------------------------------------
 end.
-

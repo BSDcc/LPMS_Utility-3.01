@@ -209,7 +209,6 @@ begin
 
       if (edtDBPrefix.Text = Copy(ThisDBPrefix,1,6)) or (Copy(ThisDBPrefix,1,6) = 'invali') then begin
 
-         FLPMS_UtilityApp.MultiCompany  := cbMultiCpy.Checked;
          FLPMS_UtilityApp.ThisDBPrefix  := edtDBPrefix.Text;
          FLPMS_UtilityApp.KeepRegString := RegString;
 

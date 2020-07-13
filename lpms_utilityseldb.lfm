@@ -2,55 +2,45 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   Left = 782
   Height = 220
   Top = 182
-  Width = 423
+  Width = 434
   Caption = 'LPMS UTILITY - SELECT HOST'
   ClientHeight = 220
-  ClientWidth = 423
+  ClientWidth = 434
+  Position = poScreenCenter
   LCLVersion = '2.0.8.0'
-  object edtStatic: TStaticText
-    Left = 10
-    Height = 74
-    Top = 6
-    Width = 397
-    Caption = 'Enter the name of the Host where the backup data must'#10'be restored to and a User-ID and Password with sufficient '#10'access privileges to create the Database and Tables '#10'required by LPMS on this Host'
-    Color = clDefault
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    ParentFont = False
-    ParentColor = False
-    TabOrder = 0
-  end
   object Label12: TLabel
     Left = 12
     Height = 17
     Top = 94
-    Width = 64
-    Caption = 'Host name:'
+    Width = 66
+    Caption = 'Host Name:'
     ParentColor = False
+    ParentFont = False
   end
   object edtHostname: TEdit
     Left = 108
     Height = 27
     Top = 90
-    Width = 301
+    Width = 312
     Anchors = [akTop, akLeft, akRight]
-    TabOrder = 1
+    OnChange = edtHostnameChange
+    TabOrder = 0
   end
   object edtUsername: TEdit
     Left = 108
     Height = 27
     Top = 120
-    Width = 301
+    Width = 312
     Anchors = [akTop, akLeft, akRight]
-    TabOrder = 2
+    OnChange = edtHostnameChange
+    TabOrder = 1
   end
   object Label1: TLabel
     Left = 12
     Height = 17
     Top = 124
-    Width = 65
-    Caption = 'User name:'
+    Width = 46
+    Caption = 'User ID:'
     ParentColor = False
   end
   object Label2: TLabel
@@ -65,11 +55,12 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
     Left = 108
     Height = 27
     Top = 150
-    Width = 301
+    Width = 312
     Anchors = [akTop, akLeft, akRight]
     EchoMode = emPassword
+    OnChange = edtHostnameChange
     PasswordChar = '*'
-    TabOrder = 3
+    TabOrder = 2
   end
   object Bevel1: TBevel
     Left = 0
@@ -78,26 +69,45 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
     Width = 423
   end
   object btnConnect: TBitBtn
-    Left = 252
+    Left = 263
     Height = 25
     Top = 185
     Width = 75
+    Anchors = [akRight, akBottom]
     Caption = 'Restore'
+    Enabled = False
     NumGlyphs = 3
     Images = imgSmall
     ImageIndex = 0
-    TabOrder = 4
+    OnClick = btnConnectClick
+    TabOrder = 3
   end
   object btnReturn: TBitBtn
-    Left = 334
+    Left = 345
     Height = 25
     Top = 185
     Width = 75
+    Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     NumGlyphs = 3
     Images = imgSmall
     ImageIndex = 3
-    TabOrder = 5
+    OnClick = btnReturnClick
+    TabOrder = 4
+  end
+  object Label3: TLabel
+    Left = 10
+    Height = 74
+    Top = 8
+    Width = 408
+    Anchors = [akTop, akLeft, akRight]
+    AutoSize = False
+    Caption = 'Enter the name of the Host where the backup data must be restored to and a User-ID and Password with sufficient  access privileges to create the Database and Tables  required by LPMS on this Host'
+    Font.Color = clBlue
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+    WordWrap = True
   end
   object imgSmall: TImageList
     left = 68

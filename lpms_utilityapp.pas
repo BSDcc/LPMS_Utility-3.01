@@ -23,7 +23,7 @@ uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
    ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
    IdTCPClient, StrUtils, DateTimePicker, LazFileUtils, sqldb, db, LCLType,
-   DOM, Process,
+   Process,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry, Windows, mysql56conn;
@@ -92,7 +92,6 @@ type
       btnProcessF: TButton;
       btnProcessL: TButton;
       btnProcessM: TButton;
-      btnRefresh: TSpeedButton;
       btnRegister: TButton;
       btnReload: TSpeedButton;
       btnSearchBoth: TSpeedButton;
@@ -266,15 +265,26 @@ type
       stProgress: TStaticText;
       stProgressB: TStaticText;
       Upgrade: TTabSheet;
+      procedure btnAllBClick(Sender: TObject);
       procedure btnCancelRClick(Sender: TObject);
+      procedure btnFirstClick(Sender: TObject);
+      procedure btnLastClick(Sender: TObject);
       procedure btnLockDClick(Sender: TObject);
       procedure btnLockSClick(Sender: TObject);
+      procedure btnNextClick(Sender: TObject);
+      procedure btnOpenLogClick(Sender: TObject);
+      procedure btnPrevClick(Sender: TObject);
       procedure btnProcessBClick(Sender: TObject);
       procedure btnProcessDClick(Sender: TObject);
       procedure btnProcessFClick(Sender: TObject);
+      procedure btnProcessLClick(Sender: TObject);
       procedure btnProcessMClick(Sender: TObject);
       procedure btnRegisterClick(Sender: TObject);
       procedure btnUnlockBClick(Sender: TObject);
+      procedure btnUnlockLClick(Sender: TObject);
+      procedure edtArchiveAcceptFileName(Sender: TObject; var Value: String);
+      procedure edtArchiveButtonClick(Sender: TObject);
+      procedure edtArchiveChange(Sender: TObject);
       procedure edtBackupFileButtonClick(Sender: TObject);
       procedure edtBackupFileChange(Sender: TObject);
       procedure edtHostNameChange(Sender: TObject);
@@ -285,9 +295,11 @@ type
       procedure edtNameChange(Sender: TObject);
       procedure edtPrefixMChange(Sender: TObject);
       procedure edtSQLFileButtonClick(Sender: TObject);
+      procedure edtUserLChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure imgRegisterClick(Sender: TObject);
+      procedure lvTablesItemChecked(Sender: TObject; Item: TListItem);
       procedure pgTabsChange(Sender: TObject);
       procedure rbFullClick(Sender: TObject);
       procedure rbPartialClick(Sender: TObject);
@@ -297,46 +309,42 @@ private  { Private Declarations }
 {$IFDEF WINDOWS}
    CallHWND       : integer;       // If <> 0 then it contains the calling program's Windows Handle so that it can be temporarily hidden
 {$ENDIF}
-   ArchiveActive  : boolean;       //
+   ArchiveActive  : boolean;       // Used by the Log function
    CanUpdate      : boolean;       // Semaphore to inhibit update processing
-   DateIsSet      : boolean;       //
+   DateIsSet      : boolean;       // Used by the Log function
    LockB_State    : boolean;       // Lock status of the Restore Tab
    LockC_State    : boolean;       // Lock status of the Convert Tab
    LockD_State    : boolean;       // Lock status of the SQL Tab
    LockS_State    : boolean;       // Lock status of the Setup Tab
    LockL_State    : boolean;       // Lock status of the Log Tab
    LockU_State    : boolean;       // Lock status of the Upgrade Tab
+   RestoreActive  : boolean;       // Semaphore to prevent user from clicking buttons or changing Tabs while a Restore is active
    SearchBoth     : boolean;       //
    SearchDesc     : boolean;       //
    SearchUser     : boolean;       //
-   Selected       : boolean;       //
+   Selected       : boolean;       // Used as a semaphore on the Restore tab to toggle selection of tables to be restored
    Sema           : boolean;       //
-   SemaSQL        : boolean;       //
    ClientContact  : string;        //
    ClientEmail    : string;        //
    ClientName     : string;        //
    ClientUnique   : string;        //
    ErrMsg         : string;        // Last error message
    FilesDir       : string;        //
-   HostName       : string;        //
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
    Password       : string;        //
-   Prefix         : string;        //
-   RestoreTables  : string;        //
+   Prefix         : string;        // Used by the Setup funtion as a working field to hold the DBPrefix
+   RestoreTables  : string;        // Used by the Restore function t hold the list of tables contained in a backup file
    ServerName     : string;        // The HostName where the LPMS_Server is running
    ServerPort     : string;        // The Port on which the LPMS_Server is listening
-   SQLFile        : string;        //
+   SQLFile        : string;        // Used by the Setup function to hold the name of the Table DDL defintions file
    ThisGUID       : string;        // Contains LPMS' existing GUID - used for silent installs
    ThisInstall    : string;        // FQDSN of the Silent Install utility
    UserName       : string;        //
    UserKey        : string;        // The LPMS Key stored in the Registry
    LogList        : TStringList;   //
-   RespList       : TStringList;   //
-   ExportSet      : TDOMNode;      //
-   TableSet       : TDOMNode;      //
-   ThisNode       : TDOMNode;      //
+   RespList       : TStringList;   // Holds the components of the response from the Server
 
 {$IFDEF WINDOWS}                   // Target is Winblows
    SQLCon  : TMySQL56Connection;
@@ -361,28 +369,32 @@ private  { Private Declarations }
    procedure SilentUpgrade();
    function  FindTable(ThisTable: string; idx1: integer) : integer;
    procedure GetList(FileName: string);
-   function  DM_Put_DB(S1: string; RunType: integer) : boolean;
+   procedure MoveItems();
+   function  DM_Connect_DB() : boolean;
    function  DM_Open_Connection() : boolean;
+   function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_PutSignature() : boolean;
+   function  SetDateTimeDef(ThisType: integer) : boolean;
+   function  ReadAllRecs(UserStr,DescStr,S2: string) : boolean;
+   function  ReadAllLogRecs(UserStr,DescStr,S2: string) : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
    procedure ProcessResponse(Response: string);
+   function  ReplaceQuote(S1: string; ThisType: integer) : string;
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
 
 public   { Publlic Declartions}
-   DoRestore      : boolean;       //
-   MultiCompany   : boolean;       //
+   DoRestore      : boolean;       // Used as a semaphore by the Restore function
    Proceed        : boolean;       // False when user clicked on 'Cancel' on the MultiCpy screen otherwise True
    DBPrefix       : string;        // The Database Prefix stored in the Registry
    KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
    PassPhrase     : string;        // Used by Input Query
    RegPath        : string;        // Path to the local INI file - Not used on Winblows
-   RestoreHost    : string;        //
-   RestorePass    : string;        //
-   RestoreUser    : string;        //
-   Result         : string;        //
+   RestoreHost    : string;        // Used by the Restore function to indicate the Host to which the Resotre must be done
+   RestorePass    : string;        // Used by the Restore function to hold the Password of the Restore Host
+   RestoreUser    : string;        // Used by the Restore function to hold the UserID of the Restore Host//   Result         : string;        //
    SecretPhrase   : string;        // Used by Vignere
-   ThisDBPrefix   : string;        //
-   ThisPass       : string;        //
+   ThisDBPrefix   : string;        // Contains the DBPrefix that was selected during start-up
+   ThisPass       : string;        // Used by 'OLD_ENCODING' to hold the Pass phrase
    ThisRes        : string;        // Result from InputQuery
 
 end;
@@ -451,8 +463,8 @@ var
    This_Key_Values    : REC_Key_Values;
    This_Key_Priv      : REC_Key_Priv;
    This_Unique_Values : REC_Unique_Values;
-   ImportList         : TStringList;   //
-   TableList          : TStringList;   //
+   ImportList         : TStringList;
+   TableList          : TStringList;
 
 {$IFDEF DARWIN}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.dylib';
@@ -505,8 +517,10 @@ var
 
 begin
 
-   CanUpdate := False;
-   Proceed   := True;
+   CanUpdate     := False;
+   Proceed       := True;
+   RestoreActive := False;
+   Selected      := False;
 
 //--- Set the Format Settings to override the system locale
 
@@ -590,10 +604,6 @@ begin
    SecretPhrase := 'BLUECRANE SOFTWARE DEVELOPMENT CC';
    PassPhrase   := 'BlueCrane Software Development CC';
 
-//--- Checek whether any parameters to do a Silent install were passed
-
-   //
-
 //--- Check whether we are dealing with a Multi Company situation
 
    FLPMS_UtilityMultiCpy := TFLPMS_UtilityMultiCpy.Create(Application);
@@ -644,7 +654,8 @@ begin
       for idx1 := 1 to ParamCount do
          Args.Add(ParamStr(idx1));
 
-//--- Call and execute the cmdlOptions function in the BSD_Utilities DLL
+//--- Call and execute the cmdlOptions function in the BSD_Utilities DLL to
+//--- determine whether parameters to do a Silent install were passed
 
       NumParms := cmdlOptions('G:M:P:H:', Args, Params);
 
@@ -655,7 +666,7 @@ begin
 
          while idx1 < Params.Count do begin
 
-            if Params.Strings[idx1] = 'G' then               // GUID for LPMS installation upgrade
+            if Params.Strings[idx1] = 'G' then              // GUID for LPMS installation upgrade
                ThisGUID := Params.Strings[idx1 + 1];
 
             if Params.Strings[idx1] = 'M' then              // Full path to "setup.exe" for new version
@@ -690,7 +701,7 @@ begin
    end;
 
 //--- Attempt a silent uninstall and upgrade of LPMS if both GUID and Setup
-//--- location was passed as parameters
+//--- location were passed as parameters
 
    if (ParmsFound = True) and ((ThisGUID <> '') and (ThisInstall <> '')) and (ThisPassPhrase = PassPhrase) then begin
 
@@ -776,11 +787,16 @@ const
    TAB_LOG         =  7;
 
 var
-   idx          : integer;
+   idx        : integer;
    ThisPrefix : string;
-   ThisList     : TListItem;
+   ThisList   : TListItem;
 
 begin
+
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
 
 //--- Reset the information on the Setup tab for safety reasons
 
@@ -888,12 +904,10 @@ begin
       edtKey.Text    := UserKey;
       edtPrefix.Text := ThisPrefix;
 
-//      edtNameChange(Sender);
-
       btnRegister.Default := True;
       btnCancelR.Caption  := 'Cancel';
       btnCancelR.Default  := False;
-      edtName.SetFocus();
+      edtName.SetFocus;
 
    end else if pgTabs.ActivePageIndex = TAB_SETUP then begin
 
@@ -932,7 +946,7 @@ begin
          btnCancelF.Caption  := 'Cancel';
          btnCancelF.Default  := False;
 
-         edtHostName.SetFocus();
+         edtHostName.SetFocus;
 
       end;
 
@@ -949,7 +963,7 @@ begin
       btnCancelM.Caption  := 'Cancel';
       btnCancelM.Default  := False;
 
-      edtPrefixM.SetFocus();
+      edtPrefixM.SetFocus;
 
    end else if pgTabs.ActivePageIndex = TAB_CONVERT then begin
 
@@ -993,7 +1007,7 @@ begin
          btnCancelC.Caption     := 'Cancel';
          btnCancelC.Default     := False;
 
-         edtHostNameC.SetFocus();
+         edtHostNameC.SetFocus;
 
       end;
 
@@ -1111,7 +1125,7 @@ begin
          btnCancelD.Caption  := 'Cancel';
          btnCancelD.Default  := False;
 
-         edtHostNameD.SetFocus();
+         edtHostNameD.SetFocus;
 
       end;
 
@@ -1156,11 +1170,9 @@ begin
 
          btnLockB.Visible      := False;
          btnUnlockB.Visible    := True;
-
          edtBackupFile.Enabled := True;
-//         btnOpenB.Enabled      := True;
 
-         edtBackupFile.SetFocus();
+         edtBackupFile.SetFocus;
 
       end;
 
@@ -1213,7 +1225,7 @@ begin
       DateIsSet              := False;
       ArchiveActive          := False;
 
-      edtUserL.SetFocus();
+      edtUserL.SetFocus;
 
    end;
 
@@ -1239,6 +1251,8 @@ begin
 
 end;
 
+(******************************************************************************)
+
 {==============================================================================}
 {--- Register Tab functions                                                 ---}
 {==============================================================================}
@@ -1263,7 +1277,7 @@ begin
    if Trim(edtEmail.Text) = '' then begin
 
       Application.MessageBox('Email is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtEmail.SetFocus();
+      edtEmail.SetFocus;
       Exit;
 
    end;
@@ -1271,7 +1285,7 @@ begin
    if Trim(edtNum.Text) = '' then begin
 
       Application.MessageBox('Contact Num is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtNum.SetFocus();
+      edtNum.SetFocus;
       Exit;
 
    end;
@@ -1279,7 +1293,7 @@ begin
    if Trim(edtCompany.Text) = '' then begin
 
       Application.MessageBox('Company is a required field - Please provide','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtCompany.SetFocus();
+      edtCompany.SetFocus;
       Exit;
 
    end;
@@ -1457,7 +1471,7 @@ begin
 
 //--- User wants to proceed
 
-   HostName := edtHostName.Text;
+//   HostName := edtHostName.Text;
    Prefix   := edtPrefixF.Text;
    SQLFile  := edtSQLFile.Text;
 
@@ -1813,7 +1827,7 @@ begin
    if Length(edtPrefixM.Text) <> 6 then begin
 
       Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtPrefixM.SetFocus();
+      edtPrefixM.SetFocus;
       Exit;
 
    end;
@@ -1847,7 +1861,7 @@ begin
    if PartValid = False then begin
 
       Application.MessageBox('Prefix is invalid. A valid Prefix is 6 characters in length and consists of 3 Alphabetic characters followed by 3 Numeric characters. Please provide a valid Prefix','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtPrefixM.SetFocus();
+      edtPrefixM.SetFocus;
       Exit;
 
    end;
@@ -1855,7 +1869,7 @@ begin
    if Length(Trim(edtKeyM.Text)) <> 38 then begin
 
       Application.MessageBox('Key is a required field and must be exactly 38 characters long - Please provide a valid Key','LPMS Utility',(MB_OK + MB_ICONSTOP));
-      edtKeyM.SetFocus();
+      edtKeyM.SetFocus;
       Exit;
 
    end;
@@ -1886,7 +1900,7 @@ begin
    btnProcessM.Default := False;
    btnCancelM.Caption  := 'Close';
    btnCancelM.Default  := True;
-   btnCancelM.SetFocus();
+   btnCancelM.SetFocus;
 
 end;
 
@@ -1962,6 +1976,10 @@ begin
    end;
 
 end;
+
+{==============================================================================}
+{--- Convert Tab functions                                                  ---}
+{==============================================================================}
 
 {==============================================================================}
 {--- Upgrade Tab functions                                                  ---}
@@ -2116,8 +2134,6 @@ begin
 
    end;
 
-   SemaSQL := False;
-
 //--- Execute the SQL Statement
 
    SQLQry1.Close();
@@ -2175,6 +2191,11 @@ end;
 procedure TFLPMS_UtilityApp.edtBackupFileButtonClick(Sender: TObject);
 begin
 
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
+
    edtBackupFile.Filter      := 'LPMS Backup Files (*.lpb)|*.lpb|All Files (*.*)|*.*';
    edtBackupFile.DefaultExt  := '.lpb';
    edtBackupFile.FilterIndex := 1;
@@ -2190,6 +2211,11 @@ var
    ThisList : TListItem;
 
 begin
+
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
 
 //--- Check whether the supplied file exists
 
@@ -2253,6 +2279,11 @@ var
 
 begin
 
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
+
    lvTables.Enabled := False;
    btnAllB.Enabled  := False;
 
@@ -2275,6 +2306,11 @@ var
 
 begin
 
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
+
    lvTables.Enabled := True;
    btnAllB.Enabled  := True;
 
@@ -2291,7 +2327,6 @@ begin
 
    end;
 
-
    btnProcessB.Enabled := Found;
    btnCancelB.Default  := not Found;
    btnProcessB.Default := Found;
@@ -2299,16 +2334,22 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-// User clicked on the Process button on the Restore tab
+// User clicked on the Restore button on the Restore tab
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnProcessBClick(Sender: TObject);
 var
-   idx1, idx2, idx3                            : integer;
-   RecCount                                    : integer = 0;
-   Found                                       : boolean = False;
-   S0, S1, ThisTable, SaveConStr, SaveHostName : string;
+   idx1, idx2, idx3  : integer;
+   RecCount          : integer = 0;
+   DoLoop            : boolean;
+   Found             : boolean = False;
+   S1, ThisTable     : string;
 
 begin
+
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
 
 //--- Check whether any items have been selected
 
@@ -2341,9 +2382,6 @@ begin
 
 //--- If we get here we can proceed with the Restore. Connect to the Database
 //--- using the credentials provided by the user.
-
-   SaveHostName := HostName;
-   HostName     := RestoreHost;
 
    SQLCon.HostName     := RestoreHost;
    SQLCon.UserName     := RestoreUser;
@@ -2380,9 +2418,11 @@ begin
 
       if Application.MessageBox(PChar('WARNING: Backup taken on "' + edtDate.Text + '" at "' + edtTime.Text + '" will overwrite existing information in Database "' + RestoreHost + '[' + ThisDBPrefix + ']".' + #10 + #10 + 'WARNING: This is a permanent operation and cannot be reversed once started. You can:' + #10 + #10 + #10 + 'Click [Yes] to continue with the Restore; or' + #10 + #10 + 'Click on [No] to return.'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
          Exit;
+      
+      RestoreActive := True;
 
       stProgressB.Caption := 'Writing Record no.: 1';
-      stProgressB.Refresh;
+      Application.ProcessMessages;
 
       for idx1 := 1 to ImportList.Count - 1 do begin
 
@@ -2391,18 +2431,20 @@ begin
          if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
             stProgressB.Caption := 'Writing Record no.: ' + IntToStr(RecCount);
-            stProgressB.Refresh;
+            Application.ProcessMessages;
+
             Application.MessageBox(PChar('Information message: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+            RestoreActive := False;
             Exit;
 
          end;
 
          Inc(RecCount);
 
-         if (RecCount mod 10) = 0 then begin
+         if (RecCount mod 100) = 0 then begin
 
             stProgressB.Caption := 'Writing Record no.: ' + IntToStr(RecCount);
-            stProgressB.Refresh();
+            Application.ProcessMessages;
 
          end;
 
@@ -2421,82 +2463,101 @@ begin
 
       if cbType.Checked = True then begin
 
-         if Application.MessageBox(PChar('WARNING: Backup taken on "' + edtDate.Text + '" at "' + edtTime.Text + '" will overwrite existing information in Database "' + RestoreHost + '[' + DBPrefix + ']".' + #10 + #10 + 'WARNING: This is a permanent operation and cannot be reversed once started. You can:' + #10 + #10 + #10 + 'Click [Yes] to continue with the Restore; or' + #10 + #10 + 'Click [No] to return.'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+         if Application.MessageBox(PChar('WARNING: Backup taken on "' + edtDate.Text + '" at "' + edtTime.Text + '" will overwrite existing information in Database "' + RestoreHost + '[' + ThisDBPrefix + ']".' + #10 + #10 + 'WARNING: This is a permanent operation and cannot be reversed once started. You can:' + #10 + #10 + #10 + 'Click [Yes] to continue with the Restore; or' + #10 + #10 + 'Click [No] to return.'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
 
       end;
 
+      RestoreActive := True;
+      TableList.Clear;
+
 //--- Insert the tables to be restored into the TableList
 
-      try
+      for  idx1 := 0 to lvTables.Items.Count - 1 do begin
 
-         TableList := TStringList.Create;
+         if lvTables.Items.Item[idx1].Checked = True then
+            TableList.Add(lvTables.Items.Item[idx1].Caption);
 
-         for  idx1 := 0 to lvTables.Items.Count - 1 do begin
+      end;
 
-            if lvTables.Items.Item[idx1].Checked = True then
-               TableList.Add(lvTables.Items.Item[idx1].Caption);
+      idx3 := 1;
+
+      for idx1 := 0 to TableList.Count - 1 do begin
+
+         idx2 := FindTable(TableList.Strings[idx1],idx3);
+
+         if idx2 = -1 then begin
+
+            Application.MessageBox(PChar('Unexpected error during Restore - Table "' + TableList.Strings[idx1] + '" is not in the Backup file.' + #10 + #10 + 'Restore process aborted'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+            RestoreActive := False;
+            Exit;
 
          end;
 
-         idx3 := 1;
+//--- Position at the next line to be pocessed and extract the first character
 
-         for idx1 := 0 to TableList.Count - 1 do begin
+         idx3 := idx2;
 
-            idx2 := FindTable(TableList.Strings[idx1],idx3);
+//--- If the first character is a comment then ignore it otherwise assume it
+//--- is a line indicatig the table to be restored
 
-            if idx2 = -1 then begin
+         if ImportList.Strings[idx3].Substring(0,1) = '#' then
+            break;
 
-               Application.MessageBox(PChar('Unexpected error during Restore - Table "' + TableList.Strings[idx1] + '" is not in the Backup file.' + #10 + #10 + 'Restore process aborted'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+         ThisTable := ImportList.Strings[idx3].SubString(1,999999);
+
+         stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: 1';
+         Application.ProcessMessages;
+
+//--- Move to the next line then check if 'Replace content' is unchecked in
+//--- which case we need to skip the Drop and Create statements (next 2 lines)
+
+         Inc(idx3);
+
+         if cbType.Checked = False then
+            idx3 := idx3 + 2;
+
+//--- From here we process all lines until we reach the next table indicator or
+//--- EOF
+
+         DoLoop := True;
+
+         while DoLoop = True do begin
+
+            if ImportList.Strings[idx3].SubString(0,1) = '1' then
+               S1 := ImportList.Strings[idx3].SubString(1,999999)
+            else begin
+
+               DoLoop := False;
+               Continue;
+
+            end;
+
+//--- Carry on and restore this record
+
+            if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+               stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
+               Application.ProcessMessages;
+
+               Application.MessageBox(PCHar('Information message: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+               RestoreActive := False;
                Exit;
 
             end;
 
-            idx3 := idx2;
+            Inc(RecCount);
 
-            S0 := ImportList.Strings[idx3].SubString(1,1);
-            S1 := ImportList.Strings[idx3].SubString(2,999999);
-            ThisTable := S1;
+            if (RecCount mod 100) = 0 then begin
 
-            stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: 1';
-            stProgressB.Refresh;
-
-            if cbType.Checked = False then
-               idx3 := idx3 + 3
-            else
-               Inc(idx3);
-
-            while StrToInt(ImportList.Strings[idx3].SubString(1,1)) <> LINE_TABLE do begin
-
-               S1 := ImportList.Strings[idx3].SubString(2,999999);
-
-               if DM_Put_DB(S1,TYPE_OTHER) = False then begin
-
-                  stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
-                  stProgressB.Refresh;
-                  Application.MessageBox(PCHar('Information message: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
-                  Exit;
-
-               end;
-
-               Inc(RecCount);
-
-               if (RecCount mod 10) = 0 then begin
-
-                  stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
-                  stProgressB.Refresh;
-
-               end;
-
-               Inc(idx3);
+               stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
+               Application.ProcessMessages;
 
             end;
 
+            Inc(idx3);
+
          end;
-
-      finally
-
-         TableList.Destroy;
 
       end;
 
@@ -2509,17 +2570,17 @@ begin
    else
       stProgressB.Caption := 'Restoring Table "' + ThisTable + '", Writing Record no.: ' + IntToStr(RecCount);
 
-   stProgressB.Refresh;
+   Application.ProcessMessages;
 
 //--- Close the database
 
    SQLQry1.Close;
    SQLCon.Close;
 
-   HostName := SaveHostName;
-
-   Application.MessageBox('Restore successfully completed','LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+   Application.MessageBox(PChar('Restore successfully completed. ' + IntToStr(RecCount) + ' Records restored'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
    stProgressB.Caption := '';
+
+   RestoreActive := False;
 
 end;
 
@@ -2532,10 +2593,13 @@ var
    S0, S1, FoundTable : string;
 
 begin
+
+   Result := -1;
+
    for idx2 := idx1 to ImportList.Count - 1 do begin
 
-      S0 := ImportList.Strings[idx2].SubString(1,1);
-      S1 := ImportList.Strings[idx2].SubString(2,999999);
+      S0 := ImportList.Strings[idx2].SubString(0,1);
+      S1 := ImportList.Strings[idx2].SubString(1,999999);
 
       if StrToInt(S0) = LINE_TABLE then
          FoundTable := S1;
@@ -2547,53 +2611,65 @@ begin
 
    end;
 
-   Result := -1;
-
 end;
-{
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // User clicked on the Toggle All button on the Restore tab
-//---------------------------------------------------------------------------
-void __fastcall TFLPMS_FirstRunApp::btnAllBClick(TObject *Sender)
-{
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnAllBClick(Sender: TObject);
 var
    idx1 : integer;
 
 begin
+
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
 
    Selected := not Selected;
 
    for idx1 := 0 to lvTables.Items.Count - 1 do
       lvTables.Items.Item[idx1].Checked := Selected;
 
-end;
-}
+   lvTables.Refresh;
 
-//---------------------------------------------------------------------------
+end;
+
+//------------------------------------------------------------------------------
 // User selected/unselected an item in the tables listview on the Restore tab
-//---------------------------------------------------------------------------
-void __fastcall TFLPMS_FirstRunApp::lvTablesItemChecked(TObject *Sender, TListItem *Item)
-{
-   int  idx1;
-   bool Found = false;
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.lvTablesItemChecked(Sender: TObject; Item: TListItem);
+var
+   idx1  : integer;
+   Found : boolean = False;
+
+begin
+
+//--- Ignore while a Restore is being executed
+
+   if RestoreActive = True then
+      Exit;
 
 //--- Check whether any items have been selected
 
-   for (idx1=0;idx1<lvTables->Items->Count;idx1++)
-   {
-      if (lvTables->Items->Item[idx1]->Checked == true)
-      {
-         Found = true;
-         break;
-      }
-   }
+   for idx1 := 0 to lvTables.Items.Count - 1 do begin
 
-   btnProcessB->Enabled = Found;
-   btnCancelB->Default  = !Found;
-   btnProcessB->Default = Found;
-}
-}
+      if lvTables.Items.Item[idx1].Checked = True then begin
+
+         Found := True;
+         break;
+
+      end;
+
+   end;
+
+   btnProcessB.Enabled := Found;
+   btnCancelB.Default  := not Found;
+   btnProcessB.Default := Found;
+
+end;
+
 //---------------------------------------------------------------------------
 // User clicked on the Lock/Unlock button on the Restore Tab
 //---------------------------------------------------------------------------
@@ -2675,10 +2751,485 @@ begin
 
 end;
 
+{==============================================================================}
+{--- Log Tab functions                                                      ---}
+{==============================================================================}
+
+//------------------------------------------------------------------------------
+// Common function to facilitate movement through the Billing records
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.MoveItems();
+var
+   idx, idx2, Dummy : integer;
+   ThisItem         : TListItem;
+
+begin
+
+   if lvLog.Items.Count > 0 then begin
+
+      ThisItem := lvLog.Items.Item[lvLog.ItemIndex];
+      lvLog.Items.Item[lvLog.ItemIndex].MakeVisible(False);
+
+//--- Populate the fields using the selected record
+
+      edtDateL.Text        := ThisItem.Caption;
+      edtTimeL.Text        := ThisItem.SubItems.Strings[0];
+      edtUser.Text         := ThisItem.SubItems.Strings[1];
+      edtDescriptionL.Text := ThisItem.SubItems.Strings[2];
+
+   end;
+
+   if lvLog.ItemIndex > 0 then begin
+
+      btnFirst.Enabled := true;
+      btnPrev.Enabled  := true;
+
+   end else begin
+
+      btnFirst.Enabled := false;
+      btnPrev.Enabled  := false;
+
+   end;
+
+   if lvLog.ItemIndex < (lvLog.Items.Count - 1) then begin
+
+      btnNext.Enabled := true;
+      btnLast.Enabled := true;
+
+   end else begin
+
+      btnNext.Enabled := false;
+      btnLast.Enabled := false;
+
+   end;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button to go to the first item
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnFirstClick(Sender: TObject);
+begin
+
+   if lvLog.Items.Count > 0 then begin
+
+      lvLog.ItemIndex := 0;
+      lvLog.Items.Item[lvLog.ItemIndex].Focused;
+
+   end;
+
+   MoveItems;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button to go to the previous item
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnPrevClick(Sender: TObject);
+begin
+
+   if lvLog.Items.Count > 0 then begin
+
+      lvLog.ItemIndex := lvLog.ItemIndex - 1;
+      lvLog.Items.Item[lvLog.ItemIndex].Focused;
+
+   end;
+
+   MoveItems;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button to go to the next item
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnNextClick(Sender: TObject);
+begin
+
+   if lvLog.Items.Count > 0 then begin
+
+      lvLog.ItemIndex := lvLog.ItemIndex + 1;
+      lvLog.Items.Item[lvLog.ItemIndex].Focused;
+
+   end;
+
+   MoveItems;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button to go to the last item
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnLastClick(Sender: TObject);
+begin
+
+   if lvLog.Items.Count > 0 then begin
+
+      lvLog.ItemIndex := lvLog.Items.Count - 1;
+      lvLog.Items.Item[lvLog.ItemIndex].Focused;
+
+   end;
+
+   MoveItems;
+
+end;
+
+//------------------------------------------------------------------------------
+// User entered the details for User, Password and Host
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtUserLChange(Sender: TObject);
+begin
+
+   if ((Trim(edtUserL.Text) <> '') and (Trim(edtPasswordL.Text) <> '') and (Trim(edtHostL.Text) <>'')) then begin
+
+      btnOpenLog.Enabled  := True;
+      btnProcessL.Enabled := True;
+
+   end else begin
+
+      btnOpenLog.Enabled      := False;
+
+      dtpSDate.Enabled        := False;
+      dtpSTime.Enabled        := False;
+      dtpEDate.Enabled        := False;
+      dtpETime.Enabled        := False;
+      btnReload.Enabled       := False;
+
+      edtSearchUser.Enabled   := False;
+      btnSearchUser.Enabled   := False;
+      edtSearchDesc.Enabled   := False;
+      btnSearchDesc.Enabled   := False;
+      btnSearchBoth.Enabled   := False;
+      chkMatchAny.Enabled     := False;
+
+      lvLog.Enabled          := False;
+      chkAutoRefresh.Enabled := False;
+      speInterval.Enabled    := False;
+
+      btnFirst.Enabled       := False;
+      btnPrev.Enabled        := False;
+      btnNext.Enabled        := False;
+      btnLast.Enabled        := False;
+
+      btnProcessL.Enabled    := False;
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button to load the current log
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnOpenLogClick(Sender: TObject);
+var
+   S1 : string;
+
+begin
+
+//--- Connect to the supplied database
+
+   if DM_Connect_DB = False then
+      Exit;
+
+//--- Set the Date and Time defaults
+
+   if DateIsSet = False then begin
+
+      if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+         Application.MessageBox('No log records found - LPMS Utility cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Application.Terminate;
+         Exit;
+
+      end;
+
+      DateIsSet := True;
+
+   end;
+
+//--- Set up the default search criteria
+
+   SearchBoth := True;
+   if ReadAllRecs('%','%',' OR ') = False then begin
+
+      Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+      if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+         Application.MessageBox('No log records found - LPMS Utility cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Application.Terminate;
+         Exit;
+
+      end;
+
+//--- Set up the default search criteria
+
+      SearchBoth := True;
+      if ReadAllRecs('%','%',' OR ') = False then begin
+
+         Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Application.Terminate;
+         Exit;
+
+      end;
+
+   end;
+
+   btnLastClick(Sender);
+
+//--- Enable the fields that may now be used
+
+   dtpSDate.Enabled  := True;
+   dtpSTime.Enabled  := True;
+   dtpEDate.Enabled  := True;
+   dtpETime.Enabled  := True;
+   btnReload.Enabled := True;
+
+   edtSearchUser.Enabled := True;
+   btnSearchUser.Enabled := True;
+   edtSearchDesc.Enabled := True;
+   btnSearchDesc.Enabled := True;
+   btnSearchBoth.Enabled := True;
+   chkMatchAny.Enabled   := True;
+
+   lvLog.Enabled          := True;
+   chkAutoRefresh.Enabled := True;
+   speInterval.Enabled    := True;
+
+//--- Clear the Archive File input field - this will automatically turn off
+//--- ArchiveActive
+
+   edtArchive.Clear;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Load button on he Display Log Pag
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnProcessLClick(Sender: TObject);
+begin
+
+//--- If ArchiveActive is true then we should possibly load an archive file,
+//--- however if any of the User, Password or Host fields are not empty then
+//--- we rather will load the current log
+
+   if ((ArchiveActive = True) and ((Trim(edtUserL.Text) = '') or (Trim(edtPasswordL.Text) = '') or (Trim(edtHostL.Text) = ''))) then begin
+
+      if Trim(edtArchive.Text) <> '' then
+         edtArchiveButtonClick(Sender);
+
+   end else begin
+
+      if ((Trim(edtUserL.Text) <> '') and (Trim(edtPasswordL.Text) <> '') and (Trim(edtHostL.Text) <> '')) then
+         btnOpenLogClick(Sender);
+
+   end;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Lock/Unlock button on the Display Log Tab
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnUnlockLClick(Sender: TObject);
+var
+   Passwd : string;
+
+begin
+
+//--- Check whether we can do the unlock - if edtSearchUser is disabled then
+//--- the ListView content is not valid
+
+   if LockL_State = True then begin
+
+      if edtSearchUser.Enabled = False then
+         Exit;
+
+   end;
+
+//--- Now go ahead and do the Lock/Unlock
+
+   if LockL_State = True then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then begin
+
+         LockL_State        := False;
+         btnLockL.Visible   := False;
+         btnUnlockL.Visible := True;
+
+      end;
+
+   end else begin
+
+      LockL_State        := True;
+      btnLockL.Visible   := True;
+      btnUnlockL.Visible := False;
+
+   end;
+
+   btnAll.Enabled     := not LockL_State;
+   btnArchive.Enabled := not LockL_State;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the button embedded in the Archive File field
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtArchiveButtonClick(Sender: TObject);
+begin
+
+   edtArchive.Filter      := 'LPMS Log Archive (*.lla)|*.lla|All Files (*.*)|*.*';
+   edtArchive.DefaultExt  := '.lla';
+   edtArchive.FilterIndex := 1;
+
+end;
+
+//------------------------------------------------------------------------------
+// User entered a Log Archive file name
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtArchiveChange(Sender: TObject);
+begin
+
+   if Trim(edtArchive.Text) = '' then
+      ArchiveActive := False
+   else
+      ArchiveActive := True;
+
+end;
+
+//------------------------------------------------------------------------------
+// User selected an Archive File
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtArchiveAcceptFileName(Sender: TObject; var Value: String);
+begin
+
+   edtArchive.Text := Value;
+
+//--- Set the Date and Time defaults
+
+   if DateIsSet = False then begin
+
+      if SetDateTimeDef(TYPE_ARCHIVE) = False then begin
+
+         Application.MessageBox(PChar('No log records found. You can:' + #10 + #10 + #10 + 'Select a different Log Archive; or' + #10 + #10 + 'Aadjust the Start and End Dates/Times'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Exit;
+
+      end;
+
+      DateIsSet := True;
+
+   end;
+
+//--- Set up the default search criteria
+
+   SearchBoth := True;
+
+   if ReadAllLogRecs('%','%',' OR ') = False then begin
+
+      Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+      if SetDateTimeDef(TYPE_ARCHIVE) = False then begin
+
+         Application.MessageBox(PChar('No log records found. You can:' + #10 + #10 + #10 + 'Select a different Log Archive; or' + #10 + #10 + 'Adjust the Start and End Dates/Times'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Exit;
+
+      end;
+
+//--- Set up the default search criteria
+
+      SearchBoth := True;
+
+      if ReadAllLogRecs('%','%',' OR ') = False then begin
+
+         Application.MessageBox(PChar('No log records found. You can:' + #10 + #10 + #10 + 'Select a different Log Archive; or' + #10 + #10 + 'Adjust the Start and End Dates/Times'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Exit;
+
+      end;
+
+
+   end;
+
+   btnLastClick(Sender);
+
+//--- Enable the fields that may now be used
+
+   dtpSDate.Enabled       := True;
+   dtpSTime.Enabled       := True;
+   dtpEDate.Enabled       := True;
+   dtpETime.Enabled       := True;
+   btnReload.Enabled      := True;
+
+   edtSearchUser.Enabled  := True;
+   btnSearchUser.Enabled  := True;
+   edtSearchDesc.Enabled  := True;
+   btnSearchDesc.Enabled  := True;
+   btnSearchBoth.Enabled  := True;
+   chkMatchAny.Enabled    := True;
+
+   lvLog.Enabled          := True;
+   chkAutoRefresh.Enabled := True;
+   speInterval.Enabled    := True;
+
+//--- Disable AutoRefresh when displaying an archive
+
+   chkAutoRefresh.Enabled := False;
+   chkAutoRefresh.Checked := False;
+
+//--- Enable the Process buttons
+
+   btnProcessL.Enabled    := True;
+
+end;
+
+(******************************************************************************)
 
 {==============================================================================}
 {--- Database functions                                                     ---}
 {==============================================================================}
+
+//------------------------------------------------------------------------------
+// Function used by Log Display to connect to a datastore
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.DM_Connect_DB() : boolean;
+var
+   S1 : string;
+
+begin
+
+//--- Connect to the supplied host
+
+   SQLCon.HostName     := edtHostL.Text;
+   SQLCon.UserName     := edtUserL.Text;
+   SQLCon.Password     := edtPasswordL.Text;
+   SQLCon.DatabaseName := 'mysql';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
+   SQLDs1.DataSet      := SQLQry1;
+
+   if DM_Open_Connection() = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Result := False;
+
+   end;
+
+//--- Select the database associated with the DBPRefix
+
+   S1 := 'USE ' + ThisDBPrefix + '_LPMS';
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Result := False;
+
+   end;
+
+   Result := True;
+
+end;
 
 //---------------------------------------------------------------------------
 // Function to open a connection to the datastore
@@ -2782,9 +3333,246 @@ begin
 
 end;
 
+(******************************************************************************)
+
 {==============================================================================}
 {--- Support functions                                                      ---}
 {==============================================================================}
+
+//------------------------------------------------------------------------------
+// Function to set up the default search criteria on the Log Display tab
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.SetDateTimeDef(ThisType: integer) : boolean;
+var
+   NumLines              : integer = 0;
+   LogLine, S1, FileName : string;
+   LogFile               : TextFile;
+
+begin
+
+   if ThisType = TYPE_ARCHIVE then begin
+
+//--- Read the the first record from the Archive
+
+      AssignFile(LogFile,edtArchive.Text);
+      Reset(LogFile);
+
+
+      ReadLn(LogFile,LogLine);
+
+      if Trim(LogLine) <> '' then begin
+
+         LogList := Disassemble(LogLine,TYPE_PLAIN);
+
+         dtpSDate.Date := StrToDate(LogList.Strings[0]);
+         dtpSTime.Time := StrToTime(LogList.Strings[1]);
+         dtpEDate.Date := Now;
+         dtpETime.Time := Now;
+
+         Inc(NumLines);
+
+      end;
+
+
+      CloseFile(LogFile);
+
+      if NumLines = 0 then
+         Result := False;
+
+   end else begin
+
+//--- Read all records from the log to determine the date of the first record
+
+      S1 := 'SELECT Log_Date FROM log ORDER BY Log_Date ASC';
+
+      if DM_Put_DB(S1,TYPE_SELECT) = False then begin
+
+         Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+         Result := False;
+
+      end;
+
+//--- If the log is empty then we must return to avoid errors
+
+      if SQLQry1.RecordCount = 0 then
+         Result := False;
+
+//--- Get the date of the first log record
+
+      SQLQry1.First;
+
+      dtpSDate.Date := StrToDate(SQLQry1.FieldByName('Log_Date').AsString);
+      dtpSTime.Time := StrToTime('00:00:00');
+      dtpEDate.Date := Now;
+      dtpETime.Time := Now;
+
+   end;
+
+   Result := True;
+
+end;
+
+//---------------------------------------------------------------------------
+// Function to read all the log records into the ListView. S2 indicates
+// whether the filter should match both User and Description
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.ReadAllRecs(UserStr,DescStr,S2: string) : boolean;
+var
+   S1, S3, SDateTime, EDateTime : string;
+   ThisList                     : TListItem;
+
+begin
+
+//--- Prepare the Date and Time strings for demarcating the information to show
+
+   SDateTime := FormatDateTime(DefaultFormatSettings.ShortDateFormat,dtpSDate.Date) + FormatDateTime(DefaultFormatSettings.LongTimeFormat,dtpSTime.Time);
+   EDateTime := FormatDateTime(DefaultFormatSettings.ShortDateFormat,dtpEDate.Date) + FormatDateTime(DefaultFormatSettings.LongTimeFormat,dtpETime.Time);
+
+//--- Determine whether we should filter on User, Description or Both
+
+   if SearchBoth = True then begin
+
+      S3 := '(Log_User LIKE "' + UserStr + '"' + S2 + 'Log_Activity LIKE "' +
+            DescStr + '")';
+
+   end else if SearchUser = True then begin
+
+      S3 := '(Log_User LIKE "' + UserStr + '")';
+
+   end else begin
+
+      S3 := '(Log_Activity LIKE "' + DescStr + '")';
+
+   end;
+
+   SearchBoth := False;
+   SearchUser := False;
+   SearchDesc := False;
+
+//--- Load the data
+
+   S1 := 'SELECT * FROM log WHERE (CONCAT(Log_Date, Log_Time) >= "' +
+         SDateTime + '" AND CONCAT(Log_Date, Log_Time) <= "' + EDateTime +
+         '") AND ' + S3 + ' ORDER BY CONCAT(Log_Date, Log_Time) ASC';
+
+   if DM_Put_DB(S1,TYPE_SELECT) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Result := False;
+
+   end;
+
+//--- Return False if no records were found
+
+   if SQLQry1.RecordCount = 0 then
+      Result := False;
+
+   SQLQry1.First;
+   lvLog.Clear;
+   Sema := False;
+
+   while SQLQry1.Eof = False do begin
+
+      ThisList := lvLog.Items.Add;
+
+      ThisList.Caption := SQLQry1.FieldByName('Log_Date').AsString;
+      ThisList.SubItems.Add(SQLQry1.FieldByName('Log_Time').AsString);
+      ThisList.SubItems.Add(ReplaceQuote(SQLQry1.FieldByName('Log_User').AsString,TYPE_READ));
+      ThisList.SubItems.Add(ReplaceQuote(SQLQry1.FieldByName('Log_Activity').AsString,TYPE_READ));
+      ThisList.SubItems.Add(ReplaceQuote(SQLQry1.FieldByName('Create_By').AsString,TYPE_READ));
+      ThisList.SubItems.Add(SQLQry1.FieldByName('Create_Date').AsString);
+      ThisList.SubItems.Add(SQLQry1.FieldByName('Create_Time').AsString);
+      ThisList.SubItems.Add(ReplaceQuote(SQLQry1.FieldByName('TimeStamp').AsString,TYPE_READ));
+      ThisList.SubItems.Add(SQLQry1.FieldByName('Log_Key').AsString);
+
+      SQLQry1.Next;
+
+   end;
+
+   if lvLog.Items.Count = 1 then
+      S1 := ''
+   else
+      S1 := 's';
+
+   stMsg.Caption := IntToStr(lvLog.Items.Count) + ' Log Record' + S1 + ' in Current Log';
+   Result := True;
+
+end;
+
+//------------------------------------------------------------------------------
+// Function to read all the log records from an Archive into the ListView.
+// S2 indicates whether the filter should match both User and Description
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.ReadAllLogRecs(UserStr,DescStr,S2: string) : boolean;
+var
+   NumLines                                        : integer = 0;
+   LogLine, SDateTime, EDateTime, ThisDateTime, S1 : string;
+   LogFile                                         : TextFile;
+   ThisList                                        : TListItem;
+
+begin
+
+   if FileExists(edtArchive.Text) = False then
+      Exit;
+
+//--- Prepare the Date and Time strings for demarcating the information to show
+
+   SDateTime := FormatDateTime(DefaultFormatSettings.ShortDateFormat,dtpSDate.Date) + FormatDateTime(DefaultFormatSettings.LongTimeFormat,dtpSTime.Time) + '.000';
+   EDateTime := FormatDateTime(DefaultFormatSettings.ShortDateFormat,dtpEDate.Date) + FormatDateTime(DefaultFormatSettings.LongTimeFormat,dtpETime.Time) + '.999';
+
+//--- Read the archived records into the ListView
+
+   AssignFile(LogFile,edtArchive.Text);
+   Reset(LogFile);
+
+   lvLog.Clear();
+   Sema := false;
+
+   while not EOF(LogFile) do begin
+
+      ReadLn(LogFile,LogLine);
+      LogList := Disassemble(LogLine,TYPE_PLAIN);
+
+//--- Build the Date and Time constraints
+
+      ThisDateTime := LogList.Strings[0] + LogList.Strings[1];
+
+      if ((ThisDateTime >= SDateTime) and (ThisDateTime <= EDateTime)) then begin
+
+         ThisList := lvLog.Items.Add();
+
+         ThisList.Caption := LogList.Strings[0];
+         ThisList.SubItems.Add(LogList.Strings[1]);
+         ThisList.SubItems.Add(ReplaceQuote(LogList.Strings[2],TYPE_READ));
+         ThisList.SubItems.Add(ReplaceQuote(LogList.Strings[3],TYPE_READ));
+         ThisList.SubItems.Add(ReplaceQuote(LogList.Strings[4],TYPE_READ));
+         ThisList.SubItems.Add(LogList.Strings[5]);
+         ThisList.SubItems.Add(LogList.Strings[6]);
+         ThisList.SubItems.Add(ReplaceQuote(LogList.Strings[7],TYPE_READ));
+         ThisList.SubItems.Add(LogList.Strings[8]);
+
+         Inc(NumLines);
+
+      end;
+
+      LogList.Free;
+
+   end;
+
+   CloseFile(LogFile);
+
+   if NumLines = 0 then
+      Result := False;
+
+   if lvLog.Items.Count = 1 then
+      S1 := ''
+   else
+      S1 := 's';
+
+   stMsg.Caption := IntToStr(lvLog.Items.Count) + ' Log Record' + S1 + ' in "' + edtArchive.Text + '"';
+   Result := True;
+
+end;
 
 //------------------------------------------------------------------------------
 // Function to Request a PassPhrase from the User
@@ -2810,109 +3598,6 @@ begin
    Result := ThisRes;
 
 end;
-
-{
-//------------------------------------------------------------------------------
-// Function to Mask/Unmask a field that will be stored in a plain file
-//
-// InputField contains the field to be masked/unmasked and the processed field
-// is returned as the Result of the function
-//
-// MaskType determines whether InputField is masked or unmasked
-// See MASK_TYPES above
-//------------------------------------------------------------------------------
-function TFLPMS_UtilityApp.MaskField(InputField: string; MaskType: integer): string;
-var
-   idx1             : integer;
-   S2               : string;
-   S1               : array[1..64] of char;
-   Hi1, Hi2, HL, Lo : Word;
-
-begin
-
-   Result := '';
-
-   case MaskType of
-
-//--- Mask the Input Field
-
-      TYPE_MASK: begin
-
-         S1   := InputField;
-         S2   := '';
-         idx1 := 1;
-
-         while (S1[idx1] <> #0) do begin
-
-//--- Get copies of the current character
-
-            Hi1 := Word(S1[idx1]);
-            Lo  := Word(S1[idx1]);
-
-//--- Move the 4 high bits to the right and mask out the four left bits
-
-            Hi1 := Hi1 shr 4;
-            Lo  := Lo and %00001111;
-
-//--- Turn the Hi and Lo parts into displayable characters
-
-            Hi1 := Hi1 or %01000000;
-            Lo  := Lo  or %01000000;
-
-//--- Add them to the result string
-
-            S2 := S2 + char(Hi1) + char(Lo);
-
-            inc(idx1);
-
-         end;
-
-         Result := S2;
-
-      end;
-
-//--- Unmask the input field
-
-      TYPE_UNMASK : begin
-
-         S1   := InputField;
-         S2   := '';
-         idx1 := 1;
-
-         while (S1[idx1] <> #0) do begin
-
-      //--- Get copies of the next 2 characters
-
-            Hi1 := Word(S1[idx1]);
-            Inc(idx1);
-            Hi2 := Word(S1[idx1]);
-            Inc(idx1);
-
-      //--- Move the 4 low bits of the first to the left and mask the 4 low bits then
-      //--- mask the 4 high bits of the second
-
-            Hi1 := Hi1 shl 4;
-            Hi1 := Hi1 and %11110000;
-            Hi2 := Hi2 and %00001111;
-
-      //--- Merge the 2 characters
-
-            HL := Hi1 or Hi2;
-
-      //--- Add it to the result string
-
-            S2 := S2 + char(HL);
-
-         end;
-
-         Result := S2;
-
-      end;
-
-   end;
-
-end;
-}
 
 //------------------------------------------------------------------------------
 // Process the response from the Server
@@ -3007,6 +3692,30 @@ begin
 
 end;
 
+//------------------------------------------------------------------------------
+// Function to manage replacement of single quotes to avoid SQL errors
+//------------------------------------------------------------------------------
+function TFLPMS_UtilityApp.ReplaceQuote(S1: string; ThisType: integer) : string;
+begin
+
+   if ThisType = TYPE_READ then begin
+
+      S1 := AnsiReplaceStr(S1,'&quot','''');
+      S1 := AnsiReplaceStr(S1,'&slash','\');
+      S1 := AnsiReplaceStr(S1,'§', '\');        // Retained for backwards compatibility
+
+   end else begin
+
+      S1 := AnsiReplaceStr(S1,'''','&quot');
+      S1 := AnsiReplaceStr(S1,'\','&slash');
+
+   end;
+
+   Result := S1;
+
+end;
+
+
 //---------------------------------------------------------------------------
 // Function to Disassemble a message or Log entry
 //---------------------------------------------------------------------------
@@ -3027,103 +3736,6 @@ begin
    Result := Tokens;
 
 end;
-
-{
-//------------------------------------------------------------------------------
-// Function to do a Vignere Cypher
-//------------------------------------------------------------------------------
-function TFLPMS_UtilityApp.Vignere(ThisType: integer; Phrase: string; const Key: string) : string;
-const
-   OrdBigA = Ord('A');
-   OrdBigZ = Ord('Z');
-   OrdSmlA = Ord('a');
-   OrdSmlZ = Ord('z');
-
-var
-   idx1, idx2, PThisChr, NThisChr, PhraseLen, ThisKeyLen : integer;
-   Encrypted                                             : string;
-   TempKey, NewPhrase                                    : WideString;
-
-begin
-
-//--- Remove all characters that do not fall within [A..Z] and [a..z]
-
-   TempKey := '';
-
-   for idx1 := 1 to Length(Key) do begin
-
-      if ((InRange(Ord(Key[idx1]), OrdBigA, OrdBigZ)) or (InRange(Ord(Key[idx1]), OrdSmlA, OrdSmlZ))) = True then
-         TempKey := TempKey + Key[idx1];
-
-   end;
-
-   PhraseLen  := Length(Phrase);
-   ThisKeyLen := Length(TempKey);
-
-//--- Now extend or limit the Key to the same length as the Phrase
-
-   idx2   := 1;
-   NewPhrase := '';
-
-   for idx1 := 1 to PhraseLen do begin
-
-      if idx2 > ThisKeyLen then
-         idx2 := 1;
-
-      NewPhrase := NewPhrase + TempKey[idx2];
-      Inc(idx2);
-
-   end;
-
-//--- Do the Encryption or Decryption depending on the value of Type. Only
-//--- characters between A-Z and a-z are transformed. The rest are left as is.
-
-   Encrypted := '';
-
-   case ThisType of
-
-      CYPHER_ENC: begin
-
-         for idx1 := 1 to PhraseLen do begin
-
-            PThisChr := Ord(Phrase[idx1]);
-            NThisChr := Ord(NewPhrase[idx1]);
-
-            if ((PThisChr >= OrdBigA) and (PThisChr <= OrdBigZ)) then
-               Encrypted := Encrypted + Chr(((PThisChr + NThisChr) mod 26) + OrdBigA)
-            else if ((PThisChr >= OrdSmlA) and (PThisChr <= OrdSmlZ)) then
-               Encrypted := Encrypted + Chr(((PThisChr + NThisChr) mod 26) + OrdSmlA)
-            else
-               Encrypted := Encrypted + Phrase[idx1];
-
-         end;
-
-      end;
-
-      CYPHER_DEC: begin
-
-         for idx1 := 1 to PhraseLen do begin
-
-            PThisChr := Ord(Phrase[idx1]);
-            NThisChr := Ord(NewPhrase[idx1]);
-
-            if ((PThisChr >= OrdBigA) and (PThisChr <= OrdBigZ)) then
-               Encrypted := Encrypted + Chr(((PThisChr - NThisChr + 26) mod 26) + OrdBigA)
-            else if ((PThisChr >= OrdSmlA) and (PThisChr <= OrdSmlZ)) then
-               Encrypted := Encrypted + Chr(((PThisChr - NThisChr + 14) mod 26) + OrdSmlA)
-            else
-               Encrypted := Encrypted + Phrase[idx1];
-
-         end;
-
-      end;
-
-   end;
-
-   Result := Encrypted;
-
-end;
-}
 
 //------------------------------------------------------------------------------
 end.
