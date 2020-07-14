@@ -1,7 +1,7 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 779
+  Left = 457
   Height = 570
-  Top = 108
+  Top = 104
   Width = 890
   ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Log
+    ActivePage = Register
     Align = alClient
-    TabIndex = 7
+    TabIndex = 0
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -4516,6 +4516,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           00BA4800FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnReloadClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -4561,6 +4562,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           6CA5776CFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFA77E70A98073A4786EFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnSearchUserClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -4607,6 +4609,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           6CA5776CFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFA77E70A98073A4786EFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnSearchDescClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -4645,6 +4648,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           6CA5776CFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFA77E70A98073A4786EFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnSearchBothClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -4867,6 +4871,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFA42626A42626FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnAllClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -4905,6 +4910,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FFFF00FFFF00FFB1908EB1908EB1908EB1908EB1908EB1908EFF00FFFF
           00FF004B00004B00FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnArchiveClick
         ShowHint = True
         ParentShowHint = False
       end
@@ -5180,6 +5186,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         RowSelect = True
         TabOrder = 17
         ViewStyle = vsReport
+        OnClick = lvLogClick
       end
       object stMsg: TStaticText
         Left = 100
@@ -5208,6 +5215,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 136
         Anchors = [akLeft, akBottom]
         Caption = ' Auto refresh every  '
+        OnClick = chkAutoRefreshClick
         TabOrder = 19
       end
       object edtUserL: TEdit
@@ -5289,6 +5297,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Alignment = taRightJustify
         Anchors = [akLeft, akBottom]
         AutoSize = False
+        OnChange = speIntervalChange
         TabOrder = 20
         Value = 60
       end
@@ -5330,7 +5339,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
@@ -5353,6 +5362,20 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Port = 0
     ReadTimeout = -1
     left = 336
+    top = 384
+  end
+  object timTimer: TTimer
+    Enabled = False
+    OnTimer = timTimerTimer
+    left = 616
+    top = 384
+  end
+  object sdArchive: TSaveDialog
+    Title = 'Create or Select LPMS Log Archive File'
+    DefaultExt = '.lla'
+    Filter = 'LPMS Log Archive (*.lla)|*.lla|All Files (*.*)|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    left = 672
     top = 384
   end
 end

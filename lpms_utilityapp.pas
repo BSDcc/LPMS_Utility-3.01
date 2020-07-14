@@ -114,6 +114,7 @@ type
       chkAutoRefresh: TCheckBox;
       chkMatchAny: TCheckBox;
       Convert: TTabSheet;
+      sdArchive: TSaveDialog;
       stMsgB: TLabel;
       tcpClient: TIdTCPClient;
       saAbout: TSplashAbout;
@@ -264,8 +265,11 @@ type
       stMsgL: TStaticText;
       stProgress: TStaticText;
       stProgressB: TStaticText;
+      timTimer: TTimer;
       Upgrade: TTabSheet;
       procedure btnAllBClick(Sender: TObject);
+      procedure btnAllClick(Sender: TObject);
+      procedure btnArchiveClick(Sender: TObject);
       procedure btnCancelRClick(Sender: TObject);
       procedure btnFirstClick(Sender: TObject);
       procedure btnLastClick(Sender: TObject);
@@ -280,8 +284,13 @@ type
       procedure btnProcessLClick(Sender: TObject);
       procedure btnProcessMClick(Sender: TObject);
       procedure btnRegisterClick(Sender: TObject);
+      procedure btnReloadClick(Sender: TObject);
+      procedure btnSearchBothClick(Sender: TObject);
+      procedure btnSearchDescClick(Sender: TObject);
+      procedure btnSearchUserClick(Sender: TObject);
       procedure btnUnlockBClick(Sender: TObject);
       procedure btnUnlockLClick(Sender: TObject);
+      procedure chkAutoRefreshClick(Sender: TObject);
       procedure edtArchiveAcceptFileName(Sender: TObject; var Value: String);
       procedure edtArchiveButtonClick(Sender: TObject);
       procedure edtArchiveChange(Sender: TObject);
@@ -299,11 +308,14 @@ type
       procedure FormCreate(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure imgRegisterClick(Sender: TObject);
+      procedure lvLogClick(Sender: TObject);
       procedure lvTablesItemChecked(Sender: TObject; Item: TListItem);
       procedure pgTabsChange(Sender: TObject);
       procedure rbFullClick(Sender: TObject);
       procedure rbPartialClick(Sender: TObject);
+      procedure speIntervalChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
+      procedure timTimerTimer(Sender: TObject);
 
 private  { Private Declarations }
 {$IFDEF WINDOWS}
@@ -374,12 +386,14 @@ private  { Private Declarations }
    function  DM_Open_Connection() : boolean;
    function  DM_Put_DB(S1: string; RunType: integer) : boolean;
    function  DM_PutSignature() : boolean;
+   function  DeleteItem(Key: integer) : boolean;
    function  SetDateTimeDef(ThisType: integer) : boolean;
    function  ReadAllRecs(UserStr,DescStr,S2: string) : boolean;
    function  ReadAllLogRecs(UserStr,DescStr,S2: string) : boolean;
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
    procedure ProcessResponse(Response: string);
    function  ReplaceQuote(S1: string; ThisType: integer) : string;
+   function  Assemble(List: TStringList) : string;
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
 
 public   { Publlic Declartions}
@@ -2751,6 +2765,22 @@ begin
 
 end;
 
+//---------------------------------------------------------------------------
+// User clicked on the Listview
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.lvLogClick(Sender: TObject);
+begin
+
+//--- Check whether anything was selected
+
+   if lvLog.ItemIndex = -1 then
+      Exit;
+
+   MoveItems;
+   edtUser.SetFocus;
+
+end;
+
 {==============================================================================}
 {--- Log Tab functions                                                      ---}
 {==============================================================================}
@@ -3150,7 +3180,6 @@ begin
 
       end;
 
-
    end;
 
    btnLastClick(Sender);
@@ -3182,6 +3211,402 @@ begin
 //--- Enable the Process buttons
 
    btnProcessL.Enabled    := True;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Reload button
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnReloadClick(Sender: TObject);
+begin
+
+   if ArchiveActive = False then begin
+
+//--- Connect to the supplied database
+
+      if DM_Connect_DB = False then
+         Exit;
+
+      edtSearchUser.Text  := '';
+      edtSearchDesc.Text  := '';
+      SearchUser          := False;
+      SearchDesc          := False;
+      SearchBoth          := False;
+      chkMatchAny.Checked := False;
+
+//--- Set up the default search criteria
+
+      SearchBoth := True;
+
+      if ReadAllRecs('%','%',' OR ') = False then begin
+
+         Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+         if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+            Application.MessageBox('No log records found - LPMS Utility cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+//--- Set up the default search criteria
+
+         SearchBoth := True;
+
+         if ReadAllRecs('%','%',' OR ') = False then begin
+
+            Application.MessageBox('No log records found - LPMS Utility cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+      end;
+
+      btnLastClick(Sender);
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button to filter by User
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnSearchUserClick(Sender: TObject);
+begin
+
+   if ArchiveActive = False then begin
+
+//--- Connect to the supplied database
+
+      if DM_Connect_DB = False then
+         Exit;
+
+      SearchBoth := False;
+      SearchDesc := False;
+      SearchUser := True;
+
+//--- Filter records by the value supplied in the SearchUser field. If the
+//--- search fails then display a message and do another search on all records
+
+      if ReadAllRecs('%' + edtSearchUser.Text + '%','%','') = False then begin
+
+         Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+         if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+//--- Set up the default search criteria
+
+         SearchBoth := True;
+
+         if ReadAllRecs('%','%',' OR ') = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+      end;
+
+      btnLastClick(Sender);
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button to filter by Description
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnSearchDescClick(Sender: TObject);
+begin
+
+   if ArchiveActive = False then begin
+
+//--- Connect to the supplied database
+
+      if DM_Connect_DB = False then
+         Exit;
+
+      SearchBoth := False;
+      SearchUser := False;
+      SearchDesc := True;
+
+//--- Filter records by the value supplied in the SearchDesc field. If the
+//--- search fails then display a message and do another search on all records
+
+      if ReadAllRecs('%','%' + edtSearchDesc.Text + '%','') = False then begin
+
+         Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+         if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+//--- Set up the default search criteria
+
+         SearchBoth := True;
+
+         if ReadAllRecs('%','%',' OR ') = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+      end;
+
+      btnLastClick(Sender);
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button to filter by both user and description
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnSearchBothClick(Sender: TObject);
+var
+   S2 : string;
+
+begin
+
+   if ArchiveActive = False then begin
+
+      SearchDesc := False;
+      SearchUser := False;
+      SearchBoth := True;
+
+      if chkMatchAny.Checked = True then
+         S2 := ' OR '
+      else
+         S2 := ' AND ';
+
+//--- Connect to the supplied database
+
+      if DM_Connect_DB = False then
+         Exit;
+
+//--- Filter records by the value supplied in both the SearchUser field and the
+//--- SearchDesc field. If the search fails then display a message and do
+//--- another search on all records
+
+      if ReadAllRecs('%' + edtSearchUser.Text + '%','%' + edtSearchDesc.Text + '%',S2) = False then begin
+
+         Application.MessageBox('No log records found - Click OK to continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+
+//--- Recalibrate
+
+         if SetDateTimeDef(TYPE_CURRENT) = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+//--- Set up the default search criteria
+
+         SearchBoth := True;
+
+         if ReadAllRecs('%','%',' OR ') = False then begin
+
+            Application.MessageBox('No log records found - FirstRun cannot continue...','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            Application.Terminate;
+            Exit;
+
+         end;
+
+      end;
+
+      btnLastClick(Sender);
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// The user selected/deseleted the checkbox to refresh the log display
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.chkAutoRefreshClick(Sender: TObject);
+begin
+
+   if chkAutoRefresh.Checked = True then begin
+
+      timTimer.Interval := speInterval.Value * 1000;
+      timTimer.Enabled  := True;
+
+   end else
+      timTimer.Enabled := False;
+
+end;
+
+//---------------------------------------------------------------------------
+// The Timer to update the log display popped
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.timTimerTimer(Sender: TObject);
+begin
+
+   DateIsSet := False;
+   btnOpenLogClick(Sender);
+
+end;
+
+//---------------------------------------------------------------------------
+// User adjusted the auto refresh interval. Toggle the AutoRefresh setting
+// to ensure the new interval is activated
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.speIntervalChange(Sender: TObject);
+begin
+
+   chkAutoRefresh.Checked := not chkAutoRefresh.Checked;
+   chkAutoRefresh.Checked := not chkAutoRefresh.Checked;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Select/Deselect All button next to the ListView
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnAllClick(Sender: TObject);
+var
+   idx : integer;
+
+begin
+
+   Sema := not Sema;
+
+   for idx := 0 to lvLog.Items.Count - 1 do
+      lvLog.Items.Item[idx].Checked := Sema;
+
+   lvLog.Refresh;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Archive button next to the ListView
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnArchiveClick(Sender: TObject);
+var
+   idx1, SaveIdx          : integer;
+   ThisSel                : boolean = False;
+   LogFile                : TextFile;
+   S1, ThisLine, FileName : string;
+   SaveList               : TStringList;
+begin
+
+//--- We cannot do an archive if the ListView contains the contents of an Archive
+
+   if ArchiveActive = True then
+      Exit;
+
+//--- Check whether anything is selected
+
+   for idx1 := 0 to lvLog.Items.Count - 1 do begin
+
+      if lvLog.Items.Item[idx1].Checked = True then begin
+
+         ThisSel := True;
+         break;
+
+      end;
+
+   end;
+
+   if ThisSel = False then
+      Exit;
+
+//--- If we get here then there is at least one log record selected
+
+   sdArchive.FileName := FormatDateTime('yyyyMMdd',Now) + ' - LPMS Log Archive (' + ThisDBPrefix + ').lla';
+
+   if sdArchive.Execute = True then
+      FileName := sdArchive.FileName
+   else
+      Exit;
+
+   AssignFile(LogFile,FileName);
+   ReWrite(LogFile);
+
+   try
+
+      SaveList := TStringList.Create;
+
+      for idx1 := 0 to lvLog.Items.Count - 1 do begin
+
+         if lvLog.Items.Item[idx1].Checked = True then begin
+
+            stMsg.Caption := 'Processing: "' + lvLog.Items.Item[idx1].Caption + ' ' + lvLog.Items.Item[idx1].SubItems.Strings[0] + ' ' + lvLog.Items.Item[idx1].SubItems.Strings[1] + ' ' + lvLog.Items.Item[idx1].SubItems.Strings[2] + '"';
+            Application.ProcessMessages;
+
+            SaveList.Add(lvLog.Items.Item[idx1].Caption);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[0]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[1]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[2]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[3]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[4]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[5]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[6]);
+            SaveList.Add(lvLog.Items.Item[idx1].SubItems.Strings[7]);
+
+            ThisLine := Assemble(SaveList);
+            WriteLn(LogFile,ThisLine);
+            SaveList.Clear;
+
+         end;
+
+      end;
+
+   //--- Close the archive file and delete the dynamic StringList
+
+      CloseFile(LogFile);
+
+   finally
+
+      SaveList.Free;
+
+   end;
+
+//--- Now delete the checked records then refresh the display
+//--- Connect to the supplied database
+
+   if DM_Connect_DB = False then
+      Exit;
+
+   for idx1 := 0 to lvLog.Items.Count - 1 do begin
+
+      if lvLog.Items.Item[idx1].Checked = True then
+         DeleteItem(StrToInt(lvLog.Items.Item[idx1].SubItems.Strings[7]));
+
+   end;
+
+   SaveIdx   := lvLog.ItemIndex;
+   DateIsSet := False;
+   btnOpenLogClick(Sender);
+
+   if SaveIdx >= lvLog.Items.Count then
+      lvLog.ItemIndex := lvLog.Items.Count - 1
+   else
+      lvLog.ItemIndex := SaveIdx;
+
+   lvLogClick(Sender);
 
 end;
 
@@ -3326,6 +3751,31 @@ begin
 
       Application.MessageBox(PChar('Unexpected error: ' + ErrMsg),'LPMS Utility',(MB_OK + MB_ICONSTOP));
       Exit;
+
+   end;
+
+   Result := True;
+
+end;
+
+//---------------------------------------------------------------------------
+// Function to delete a given log record (used after successful archive)
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.DeleteItem(Key: integer) : boolean;
+var
+   S1 : string;
+
+begin
+
+   S1 := 'DELETE FROM log WHERE Log_Key = ' + IntToStr(Key);
+
+//--- Delete the Record
+
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+      Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Result := False;
+      Exit
 
    end;
 
@@ -3526,7 +3976,7 @@ begin
    Reset(LogFile);
 
    lvLog.Clear();
-   Sema := false;
+   Sema := False;
 
    while not EOF(LogFile) do begin
 
@@ -3715,6 +4165,27 @@ begin
 
 end;
 
+//---------------------------------------------------------------------------
+// Function to Assemble a Log entry
+//---------------------------------------------------------------------------
+function TFLPMS_UtilityApp.Assemble(List: TStringList) : string;
+var
+   idx   : integer;
+   Delim : string = '|';
+   Str   : string = '';
+
+begin
+
+   for idx := 0 to List.Count - 1 do begin
+
+      Str := Str + List.Strings[idx];
+      Str := Str + Delim;
+
+   end;
+
+   Result := Str;
+
+end;
 
 //---------------------------------------------------------------------------
 // Function to Disassemble a message or Log entry
