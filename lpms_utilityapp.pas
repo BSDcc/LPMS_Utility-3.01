@@ -114,6 +114,7 @@ type
       chkAutoRefresh: TCheckBox;
       chkMatchAny: TCheckBox;
       Convert: TTabSheet;
+      stMsgL: TLabel;
       sdArchive: TSaveDialog;
       stMsgB: TLabel;
       tcpClient: TIdTCPClient;
@@ -262,7 +263,6 @@ type
       StaticText5: TStaticText;
       StaticText6: TStaticText;
       stMsg: TStaticText;
-      stMsgL: TStaticText;
       stProgress: TStaticText;
       stProgressB: TStaticText;
       timTimer: TTimer;
@@ -901,7 +901,7 @@ begin
       chkAutoRefresh.Checked := False;
       chkMatchAny.Checked    := False;
       speInterval.Value      := 60;
-      stMsgL.Caption         := 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load''' + #10 + 'to display the contents';
+      stMsgL.Caption         := 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents';
 
    end;
 
@@ -3183,6 +3183,8 @@ begin
    end;
 
    btnLastClick(Sender);
+
+   DateIsSet := False;
 
 //--- Enable the fields that may now be used
 

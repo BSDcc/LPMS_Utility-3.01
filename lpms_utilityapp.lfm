@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Register
+    ActivePage = Maintenance
     Align = alClient
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -4954,7 +4954,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
         OnClick = btnCancelRClick
-        TabOrder = 21
+        TabOrder = 20
       end
       object btnProcessL: TButton
         Left = 797
@@ -4965,23 +4965,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Caption = 'Load'
         Default = True
         OnClick = btnProcessLClick
-        TabOrder = 22
-      end
-      object stMsgL: TStaticText
-        Left = 12
-        Height = 48
-        Top = 12
-        Width = 820
-        Anchors = [akTop, akLeft, akRight]
-        Caption = 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents'
-        DoubleBuffered = False
-        Font.Color = clBlue
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ParentDoubleBuffered = False
-        TabOrder = 0
+        TabOrder = 21
       end
       object dtpSDate: TDateTimePicker
         Left = 100
@@ -4993,7 +4977,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxDate = 2958465
         MinDate = -53780
         AutoSize = False
-        TabOrder = 6
+        TabOrder = 5
         TrailingSeparator = False
         TextForNullDate = 'NULL'
         LeadingZeros = True
@@ -5016,7 +5000,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxDate = 2958465
         MinDate = -53780
         AutoSize = False
-        TabOrder = 7
+        TabOrder = 6
         TrailingSeparator = False
         TextForNullDate = 'NULL'
         LeadingZeros = True
@@ -5040,7 +5024,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxDate = 2958465
         MinDate = -53780
         AutoSize = False
-        TabOrder = 8
+        TabOrder = 7
         TrailingSeparator = False
         TextForNullDate = 'NULL'
         LeadingZeros = True
@@ -5063,7 +5047,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MaxDate = 2958465
         MinDate = -53780
         AutoSize = False
-        TabOrder = 9
+        TabOrder = 8
         TrailingSeparator = False
         TextForNullDate = 'NULL'
         LeadingZeros = True
@@ -5082,7 +5066,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 162
         Width = 114
-        TabOrder = 10
+        TabOrder = 9
       end
       object edtSearchDesc: TEdit
         Left = 340
@@ -5090,7 +5074,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 162
         Width = 345
         Anchors = [akTop, akLeft, akRight]
-        TabOrder = 11
+        TabOrder = 10
       end
       object chkMatchAny: TCheckBox
         Left = 745
@@ -5100,7 +5084,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 127
         Anchors = [akTop, akRight]
         Caption = 'Match Any Criteria'
-        TabOrder = 12
+        TabOrder = 11
       end
       object edtUser: TEdit
         Left = 588
@@ -5108,7 +5092,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 192
         Width = 176
         ReadOnly = True
-        TabOrder = 15
+        TabOrder = 14
       end
       object edtDateL: TEdit
         Left = 100
@@ -5116,7 +5100,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 192
         Width = 160
         ReadOnly = True
-        TabOrder = 13
+        TabOrder = 12
       end
       object edtTimeL: TEdit
         Left = 344
@@ -5124,7 +5108,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 192
         Width = 160
         ReadOnly = True
-        TabOrder = 14
+        TabOrder = 13
       end
       object edtDescriptionL: TEdit
         Left = 100
@@ -5133,7 +5117,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 772
         Anchors = [akTop, akLeft, akRight]
         ReadOnly = True
-        TabOrder = 16
+        TabOrder = 15
       end
       object lvLog: TListView
         Left = 100
@@ -5184,7 +5168,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         GridLines = True
         HideSelection = False
         RowSelect = True
-        TabOrder = 17
+        TabOrder = 16
         ViewStyle = vsReport
         OnClick = lvLogClick
       end
@@ -5196,7 +5180,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akLeft, akBottom]
         AutoSize = True
         Caption = ' 0 Log Records'
-        TabOrder = 18
+        TabOrder = 17
       end
       object btnOpenLog: TButton
         Left = 100
@@ -5205,7 +5189,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 114
         Caption = 'Current Log'
         OnClick = btnOpenLogClick
-        TabOrder = 4
+        TabOrder = 3
       end
       object chkAutoRefresh: TCheckBox
         Left = 100
@@ -5216,7 +5200,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akLeft, akBottom]
         Caption = ' Auto refresh every  '
         OnClick = chkAutoRefreshClick
-        TabOrder = 19
+        TabOrder = 18
       end
       object edtUserL: TEdit
         Left = 100
@@ -5224,7 +5208,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 72
         Width = 114
         OnChange = edtUserLChange
-        TabOrder = 1
+        TabOrder = 0
       end
       object edtPasswordL: TEdit
         Left = 310
@@ -5234,7 +5218,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         EchoMode = emPassword
         OnChange = edtUserLChange
         PasswordChar = '*'
-        TabOrder = 2
+        TabOrder = 1
       end
       object edtHostL: TEdit
         Left = 525
@@ -5243,7 +5227,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 347
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtUserLChange
-        TabOrder = 3
+        TabOrder = 2
       end
       object edtArchive: TFileNameEdit
         Left = 310
@@ -5285,7 +5269,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         NumGlyphs = 1
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
-        TabOrder = 5
+        TabOrder = 4
         OnButtonClick = edtArchiveButtonClick
         OnChange = edtArchiveChange
       end
@@ -5298,7 +5282,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akLeft, akBottom]
         AutoSize = False
         OnChange = speIntervalChange
-        TabOrder = 20
+        TabOrder = 19
         Value = 60
       end
       object Label43: TLabel
@@ -5316,6 +5300,20 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 64
         Width = 890
         Anchors = [akTop, akLeft, akRight]
+      end
+      object stMsgL: TLabel
+        Left = 12
+        Height = 48
+        Top = 12
+        Width = 826
+        Anchors = [akTop, akLeft, akRight]
+        AutoSize = False
+        Caption = 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents'
+        Font.Color = clBlue
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        WordWrap = True
       end
     end
   end
@@ -5339,7 +5337,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
