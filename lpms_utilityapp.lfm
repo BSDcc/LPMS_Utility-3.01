@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Maintenance
+    ActivePage = Convert
     Align = alClient
-    TabIndex = 2
+    TabIndex = 3
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -1467,6 +1467,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnUnlockCClick
       end
       object btnUnlockC: TSpeedButton
         Left = 12
@@ -1575,6 +1576,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FF818181818181818181818181818181FF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnUnlockCClick
       end
       object Label9: TLabel
         Left = 12
@@ -1853,6 +1855,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
+        OnClick = btnProcessCClick
         TabOrder = 14
       end
       object btnCancelC: TButton
@@ -1871,6 +1874,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 52
         Width = 752
         Anchors = [akTop, akLeft, akRight]
+        OnChange = edtHostNameCChange
         TabOrder = 1
       end
       object edtUserNameC: TEdit
@@ -1878,6 +1882,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 82
         Width = 100
+        OnChange = edtHostNameCChange
         TabOrder = 2
       end
       object edtPasswordC: TEdit
@@ -1886,6 +1891,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 112
         Width = 100
         EchoMode = emPassword
+        OnChange = edtHostNameCChange
         PasswordChar = '*'
         TabOrder = 3
       end
@@ -1924,6 +1930,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 172
         Width = 100
+        OnChange = edtHostNameCChange
         ReadOnly = True
         TabOrder = 5
       end
@@ -1933,6 +1940,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 172
         Width = 60
         Caption = 'Get'
+        OnClick = btnGetClick
         TabOrder = 6
       end
       object stProgress: TStaticText
@@ -5337,7 +5345,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
