@@ -107,7 +107,6 @@ type
       cbDebug: TCheckBox;
       cbIgnore: TCheckBox;
       cbMultiCpy: TCheckBox;
-      cbNewEncode: TCheckBox;
       cbNewPass: TCheckBox;
       cbPersist: TCheckBox;
       cbType: TCheckBox;
@@ -385,7 +384,7 @@ private  { Private Declarations }
    procedure SilentUpgrade();
    function  FindTable(ThisTable: string; idx1: integer) : integer;
    procedure GetList(FileName: string);
-   procedure DoNewEncoding();
+//   procedure DoNewEncoding();
    procedure DoNewStylePass();
    procedure DoMultiCompany();
    procedure MoveItems();
@@ -2002,9 +2001,9 @@ end;
 {--- Convert Tab functions                                                  ---}
 {==============================================================================}
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // User clicked on the Lock/Unlock button on the Convert page
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnUnlockCClick(Sender: TObject);
 var
    Passwd : string;
@@ -2034,878 +2033,970 @@ begin
 
 end;
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // User clicked on the Process button on the Convert page
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnProcessCClick(Sender: TObject);
 var
    idx1, Len        : integer;
-   S1, S2, CurrDate : string;
+   S1, S2, CurrDate, ThisStr : string;
    ThisList         : TStringList;
 
 begin
 
-{
+//--- Build the DB connection string
 
-//--- Open a connection to the datastore named in HostName
+   SQLCon.HostName     := edtHostNameC.Text;
+   SQLCon.UserName     := edtUserNameC.Text;
+   SQLCon.Password     := edtPasswordC.Text;
+   SQLCon.DatabaseName := edtPrefixC.Text + '_LPMS';
+   SQLTran.DataBase    := SQLCon;
+   SQLQry1.Transaction := SQLTran;
 
-   CSMySQL  := 'Provider=MSDASQL.1;Persist Security Info=False;Data Source=BSD_MySQL;User ID=' + edtUserNameC.Text + ';Password=' + edtPasswordC.Text + ';Server=';
-   HostName := edtHostNameC.Text;
    Prefix   := edtPrefixC.Text;
 
-   if ((DM_Open_Connection()) = False)
-   {
+   if DM_Open_Connection = False then begin
+
       Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
       Exit;
-   }
+
+   end;
 
 //--- Select the Database to use
 
    S1 := 'USE ' + Prefix + '_LPMS';
-   if (DM_Put_DB(S1,TYPE_OTHER) = False)
-   {
+   if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
       Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
       Exit;
-   }
+
+   end;
 
 //--- Check if MultiCompany Support is selected and if so whether a DBPrefix was
 //--- specified
 
-   if (cbMultiCpy.Checked = True)
-   {
-      if (edtNewPrefixC.Text.IsEmpty() = True)
-      {
-         Application.MessageBox(''New Prefix:' must be specified if 'Multi Company Support' is selected.','LPMS Utility',(MB_OK + MB_ICONSTOP));
+   if cbMultiCpy.Checked = True then begin
+
+      if Trim(edtNewPrefixC.Text) = '' then begin
+
+         Application.MessageBox('"New Prefix:" must be specified if "Multi Company Support" is selected.','LPMS Utility',(MB_OK + MB_ICONSTOP));
          edtNewPrefixC.SetFocus;
          Exit;
-      }
-   }
+
+      end;
+
+   end;
 
 //--- Convert from 2.2.1 to 3.0.1
 
-   if (edtCurrVersion.Text = '2.2.1')
-   {
+   if edtCurrVersion.Text = '2.2.1' then begin
+
 
 //--- Update the 'control' table
 
-      stProgress.Caption := 'Converting 'control' Table';
+      stProgress.Caption := 'Converting "control" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE control ADD COLUMN Control_';
 
       S2 := S1 + 'DoBilling Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'UpBilling Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Switch1 Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Switch2 Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Switch3 Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Switch4 Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Switch5 Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := 'UPDATE control SET Control_UpBilling := 1 WHERE Control_UserType := 'Administrator'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S2 := 'UPDATE control SET Control_DoBilling := 1 WHERE Control_FeeEarner := 1';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      end;
+
+      S2 := 'UPDATE control SET Control_UpBilling = 1 WHERE Control_UserType = "Administrator"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'DELETE FROM control WHERE Control_UserID := 'Backup Administrator'';
-      S2 := 'INSERT INTO control (Control_UserID, Control_Password, Control_Name, Control_Email, Control_UserType, Control_FeeEarner, Control_DoBilling, Control_UpBilling, Control_Switch1, Control_Switch2, Control_Switch3, Control_Switch4, Control_Switch5, Control_Unique, Create_By, Create_Date, Create_Time) Values('Backup Administrator', '«ßÞÉµÓ‘Ÿ', 'Default Backup Administrator', 'lpms@bluecrane.cc', 'Administrator', 0, 0, 0, 1, 0, 0, 0, 0, 0, 'LPMS_FirstRun', '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss',Now()) + '')';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S2 := 'UPDATE control SET Control_DoBilling = 1 WHERE Control_FeeEarner = 1';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      end;
+
+      S1 := 'DELETE FROM control WHERE Control_UserID = "Backup Administrator"';
+      S2 := 'INSERT INTO control (Control_UserID, Control_Password, Control_Name, Control_Email, Control_UserType, Control_FeeEarner, Control_DoBilling, Control_UpBilling, Control_Switch1, Control_Switch2, Control_Switch3, Control_Switch4, Control_Switch5, Control_Unique, Create_By, Create_Date, Create_Time) Values("Backup Administrator", "«ßÞÉµÓ‘Ÿ", "Default Backup Administrator", "lpms@bluecrane.cc", "Administrator", 0, 0, 0, 1, 0, 0, 0, 0, 0, "LPMS_FirstRun", "' +
+           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '", "'  +
+           FormatDateTime('HH:mm:ss',Now) + '")';
+
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'tracking' table to enable Collections
 
-      stProgress.Caption := 'Converting 'tracking' Table';
+      stProgress.Caption := 'Converting "tracking" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE tracking ADD COLUMN Tracking_';
 
       S2 := S1 + 'IntDate VarChar (32)';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Capital Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Int Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Comm Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Contingency Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Fees Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Prescribed Integer (11) DEFAULT 1';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       CurrDate := FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now());
-      S2 := 'UPDATE tracking SET Tracking_IntDate := '' + CurrDate +
-           '', Tracking_Comm := 10.00, Tracking_Int := 15.50, Tracking_Contingency := 25.00, Tracking_Prescribed := 1';
+      S2 := 'UPDATE tracking SET Tracking_IntDate = "' + CurrDate +
+           '", Tracking_Comm = 10.00, Tracking_Int = 15.50, Tracking_Contingency = 25.00, Tracking_Prescribed = 1';
 
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := 'UPDATE tracking SET Tracking_FileType := 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := 'UPDATE tracking SET Tracking_FileType = 0';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'notes' table
 
-      stProgress.Caption := 'Converting 'notes' Table';
+      stProgress.Caption := 'Converting "notes" Table';
       Application.ProcessMessages;
 
-      S1 := 'ALTER TABLE notes ADD COLUMN Notes_User VarChar (255) DEFAULT 'System'';
-      S2 := 'UPDATE notes SET Notes_User := 'System'';
+      S1 := 'ALTER TABLE notes ADD COLUMN Notes_User VarChar (255) DEFAULT "System"';
+      S2 := 'UPDATE notes SET Notes_User = "System"';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'customers' table
 
-      stProgress.Caption := 'Converting 'customers' Table';
+      stProgress.Caption := 'Converting "customers" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE customers ADD COLUMN Cust_FreeText VarChar (1024)';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'doccntl' table
 
-      stProgress.Caption := 'Converting 'doccntl' Table';
+      stProgress.Caption := 'Converting "doccntl" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE doccntl ADD COLUMN DocCntl_Facility VarChar(512)';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE doccntl ADD COLUMN DocCntl_Container VarChar(255)';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE doccntl ADD COLUMN DocCntl_Box VarChar(255)';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE doccntl ADD COLUMN DocCntl_Status Integer(11)';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      S2 := 'UPDATE doccntl SET DocCntl_Status := 0 WHERE (DocCntl_DateIn := 'Checked Out' OR DocCntl_DateIn := 'Unset')';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S2 := 'UPDATE doccntl SET DocCntl_Status := 1 WHERE (DocCntl_DateOut <> 'Service' AND DocCntl_DateIn <> 'Checked Out' AND DocCntl_DateIn <> 'Unset')';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      end;
 
-      S2 := 'UPDATE doccntl SET DocCntl_Status := 2 WHERE DocCntl_DateOut := 'Service'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S2 := 'UPDATE doccntl SET DocCntl_Status = 0 WHERE (DocCntl_DateIn = "Checked Out" OR DocCntl_DateIn = "Unset")';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := 'UPDATE doccntl SET DocCntl_Status = 1 WHERE (DocCntl_DateOut <> "Service" AND DocCntl_DateIn <> "Checked Out" AND DocCntl_DateIn <> "Unset")';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
+
+      S2 := 'UPDATE doccntl SET DocCntl_Status = 2 WHERE DocCntl_DateOut = "Service"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Insert the 'collect' table
 
-      stProgress.Caption := 'Creating 'collect' Table';
+      stProgress.Caption := 'Creating "collect" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE collect (Collect_Key int(11) NOT NULL AUTO_INCREMENT, Collect_Type int(11) DEFAULT NULL, Collect_Class int(11) DEFAULT NULL, Collect_Date varchar(32) DEFAULT NULL, Collect_Item varchar(128) DEFAULT NULL, Collect_AccountType int(11) DEFAULT NULL, Collect_Description varchar(1024) DEFAULT NULL, Collect_UnitType int(11) DEFAULT NULL, Collect_Units double DEFAULT NULL, Collect_Calculation int(11) DEFAULT NULL, Collect_Label int(11) DEFAULT NULL, Collect_Inc1 int(11) DEFAULT NULL, Collect_Inc2 int(11) DEFAULT NULL, Collect_Minimum double DEFAULT NULL, Collect_Maximum double DEFAULT NULL, Collect_Fixed double DEFAULT NULL, Collect_Rate double DEFAULT NULL, Collect_DrCr int(11) DEFAULT NULL, Collect_Amount double DEFAULT NULL, Collect_Owner varchar(10) DEFAULT NULL, Collect_Related varchar(10) DEFAULT NULL, Collect_FeeEarner int(11) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Collect_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Collect_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+      S1 := 'CREATE TABLE collect (Collect_Key int(11) NOT NULL AUTO_INCREMENT, Collect_Type int(11) DEFAULT NULL, Collect_Class int(11) DEFAULT NULL, Collect_Date varchar(32) DEFAULT NULL, Collect_Item varchar(128) DEFAULT NULL, Collect_AccountType int(11) DEFAULT NULL, Collect_Description varchar(1024) DEFAULT NULL, Collect_UnitType int(11) DEFAULT NULL, Collect_Units double DEFAULT NULL, Collect_Calculation int(11) DEFAULT NULL, Collect_Label int(11) DEFAULT NULL, Collect_Inc1 int(11) DEFAULT NULL, Collect_Inc2 int(11) DEFAULT NULL, Collect_Minimum double DEFAULT NULL, Collect_Maximum double DEFAULT NULL, Collect_Fixed double DEFAULT NULL, Collect_Rate double DEFAULT NULL, Collect_DrCr int(11) DEFAULT NULL, Collect_Amount double DEFAULT NULL, Collect_Owner varchar(10) DEFAULT NULL, Collect_Related varchar(10) DEFAULT NULL, Collect_FeeEarner int(11) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Collect_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Collect_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert the 'invoices' table
 
-      stProgress.Caption := 'Creating 'invoices' Table';
+      stProgress.Caption := 'Creating "invoices" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE invoices (Inv_Key int(11) NOT NULL AUTO_INCREMENT, Inv_Invoice varchar(32) DEFAULT NULL, Inv_File varchar(10) DEFAULT NULL, Inv_Amount varchar(32) DEFAULT '0.00', Inv_Description varchar(255) DEFAULT NULL, Inv_HostName varchar(512) DEFAULT NULL, Inv_SDate varchar(10) DEFAULT NULL, Inv_EDate varchar(10) DEFAULT NULL, Inv_AcctType int(11) DEFAULT NULL, Inv_ShowRelated int(11) DEFAULT NULL, Inv_Fees VarChar(32) DEFAULT '0.00', Inv_Disburse VarChar(32) DEFAULT '0.00', Inv_Expenses VarChar(32) DEFAULT '0.00', Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Inv_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Inv_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;';
+      S1 := 'CREATE TABLE invoices (Inv_Key int(11) NOT NULL AUTO_INCREMENT, Inv_Invoice varchar(32) DEFAULT NULL, Inv_File varchar(10) DEFAULT NULL, Inv_Amount varchar(32) DEFAULT "0.00", Inv_Description varchar(255) DEFAULT NULL, Inv_HostName varchar(512) DEFAULT NULL, Inv_SDate varchar(10) DEFAULT NULL, Inv_EDate varchar(10) DEFAULT NULL, Inv_AcctType int(11) DEFAULT NULL, Inv_ShowRelated int(11) DEFAULT NULL, Inv_Fees VarChar(32) DEFAULT "0.00", Inv_Disburse VarChar(32) DEFAULT "0.00", Inv_Expenses VarChar(32) DEFAULT "0.00", Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Inv_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Inv_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'lpms' table
 
-      stProgress.Caption := 'Converting 'lpms' Table';
+      stProgress.Caption := 'Converting "lpms" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE lpms ADD COLUMN ';
 
       S2 := S1 + 'InvoiceIdx Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := S1 + 'InvoicePref VarChar(8) DEFAULT 'Inv'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := S1 + 'InvoicePref VarChar(8) DEFAULT "Inv"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
       S2 := S1 + 'Blocked Integer(11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'Reason VarChar(1024)';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billing' table to change 'Trust Transfer (Fees)' to 'Trust Transfer (Business)'
 
-      stProgress.Caption := 'Updating 'billing' Table';
+      stProgress.Caption := 'Updating "billing" Table';
       Application.ProcessMessages;
 
-      S1 := 'UPDATE billing SET B_Item := 'Trust Transfer (Business)' WHERE B_Item := 'Trust Transfer (Fees)'';
+      S1 := 'UPDATE billing SET B_Item = "Trust Transfer (Business)" WHERE B_Item = "Trust Transfer (Fees)"';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billingitems' table to change 'Trust Transfer (Fees)' to 'Trust Transfer (Business)'
 
-      stProgress.Caption := 'Updating 'billingitems' Table';
+      stProgress.Caption := 'Updating "billingitems" Table';
       Application.ProcessMessages;
 
-      S1 := 'UPDATE billingitems SET Bi_Item := 'Trust Transfer (Business)' WHERE Bi_Item := 'Trust Transfer (Fees)'';
+      S1 := 'UPDATE billingitems SET Bi_Item = "Trust Transfer (Business)" WHERE Bi_Item = "Trust Transfer (Fees)"';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert the 'payments' table
 
-      stProgress.Caption := 'Creating 'payments' Table';
+      stProgress.Caption := 'Creating "payments" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE payments (Pay_Key int(11) NOT NULL AUTO_INCREMENT, Pay_Invoice varchar(32) DEFAULT NULL, Pay_Date varchar(10) DEFAULT 'Not Paid', Pay_Amount varchar(32) DEFAULT '0.00', Pay_File varchar(10) DEFAULT NULL, Pay_Note varchar(1024) DEFAULT NULL, Pay_Billing varchar(128) DEFAULT 'No Billing', Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Pay_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Pay_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+      S1 := 'CREATE TABLE payments (Pay_Key int(11) NOT NULL AUTO_INCREMENT, Pay_Invoice varchar(32) DEFAULT NULL, Pay_Date varchar(10) DEFAULT "Not Paid", Pay_Amount varchar(32) DEFAULT "0.00", Pay_File varchar(10) DEFAULT NULL, Pay_Note varchar(1024) DEFAULT NULL, Pay_Billing varchar(128) DEFAULT "No Billing", Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Pay_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Pay_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the database version
 
       stProgress.Caption := 'Updating database version';
       Application.ProcessMessages;
 
-      S2 := 'UPDATE lpms SET Version := '3.0.1'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S2 := 'UPDATE lpms SET Version = "3.0.1"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       SQLQry1.Close();
       SQLCon.Close();
 
-      Application.MessageBox(PChar('Database '' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']' updated from version '' + edtCurrVersion.Text + '' to version '' + edtNewVersion.Text + '''),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+      Application.MessageBox(PChar('Database "' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']" updated from version "' + edtCurrVersion.Text + '" to version "' + edtNewVersion.Text + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
 
       stProgress.Caption := '';
       Application.ProcessMessages;
-   }
+
+   end;
 
 //--- Convert from any version less than 3.2.0
 
-   if (edtCurrVersion.Text < '3.2.0')
-   {
+   if edtCurrVersion.Text < '3.2.0' then begin
+
 
 //--- Update the 'invoices' table
 
-      stProgress.Caption := 'Converting 'invoices' Table';
+      stProgress.Caption := 'Converting "invoices" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE invoices ADD COLUMN Inv_';
 
-      S2 := S1 + 'Fees VarChar(32) DEFAULT '0.00'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      S2 := S1 + 'Fees VarChar(32) DEFAULT "0.00"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := S1 + 'Disburse VarChar(32) DEFAULT '0.00'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S2 := S1 + 'Expenses VarChar(32) DEFAULT '0.00'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      end;
+
+      S2 := S1 + 'Disburse VarChar(32) DEFAULT "0.00"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := S1 + 'Expenses VarChar(32) DEFAULT "0.00"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Insert the 'payments' table
 
-      stProgress.Caption := 'Creating 'payments' Table';
+      stProgress.Caption := 'Creating "payments" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE payments (Pay_Key int(11) NOT NULL AUTO_INCREMENT, Pay_Invoice varchar(32) DEFAULT NULL, Pay_Date varchar(10) DEFAULT 'Not Paid', Pay_Amount varchar(32) DEFAULT '0.00', Pay_File varchar(10) DEFAULT NULL, Pay_Note varchar(1024) DEFAULT NULL, Pay_Billing varchar(128) DEFAULT 'No Billing', Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Pay_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Pay_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+      S1 := 'CREATE TABLE payments (Pay_Key int(11) NOT NULL AUTO_INCREMENT, Pay_Invoice varchar(32) DEFAULT NULL, Pay_Date varchar(10) DEFAULT "Not Paid", Pay_Amount varchar(32) DEFAULT "0.00", Pay_File varchar(10) DEFAULT NULL, Pay_Note varchar(1024) DEFAULT NULL, Pay_Billing varchar(128) DEFAULT "No Billing", Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Pay_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Pay_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'payments' table to add Pay_Billing
 
-      stProgress.Caption := 'Updating 'payments' Table';
+      stProgress.Caption := 'Updating "payments" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE payments ADD COLUMN Pay_';
 
-      S2 := S1 + 'Billing VarChar(128) DEFAULT 'No Billing'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S2 := S1 + 'Billing VarChar(128) DEFAULT "No Billing"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billing' table to change 'Trust Transfer (Fees)' to 'Trust Transfer (Business)'
 
-      stProgress.Caption := 'Updating 'billing' Table';
+      stProgress.Caption := 'Updating "billing" Table';
       Application.ProcessMessages;
 
-      S1 := 'UPDATE billing SET B_Item := 'Trust Transfer (Business)' WHERE B_Item := 'Trust Transfer (Fees)'';
+      S1 := 'UPDATE billing SET B_Item = "Trust Transfer (Business)" WHERE B_Item = "Trust Transfer (Fees)"';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billing' table to add the Expense column
 
       S1 := 'ALTER TABLE billing ADD COLUMN B_Expense Double DEFAULT 0';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billing' table to add 'Reserved Deposit' functionality
 
       S1 := 'ALTER TABLE billing ADD COLUMN B_';
 
       S2 := S1 + 'ReserveDep Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'ReserveAmt Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := S1 + 'ReserveReason VarChar(1024) DEFAULT 'No Reserved Deposit'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := S1 + 'ReserveReason VarChar(1024) DEFAULT "No Reserved Deposit"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'collect' table to add the Expense column
 
-      stProgress.Caption := 'Updating 'collect' Table';
+      stProgress.Caption := 'Updating "collect" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE collect ADD COLUMN Collect_Expense Double DEFAULT 0';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'collect' table to add 'Reserved Deposit' functionality
 
       S1 := 'ALTER TABLE collect ADD COLUMN Collect_';
 
       S2 := S1 + 'ReserveDep Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S2 := S1 + 'ReserveAmt Double DEFAULT 0';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := S1 + 'ReserveReason VarChar(1024) DEFAULT 'No Reserved Deposit'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := S1 + 'ReserveReason VarChar(1024) DEFAULT "No Reserved Deposit"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'billingitems' table to change 'Trust Transfer (Fees)' to 'Trust Transfer (Business)'
 
-      stProgress.Caption := 'Updating 'billingitems' Table';
+      stProgress.Caption := 'Updating "billingitems" Table';
       Application.ProcessMessages;
 
-      S1 := 'UPDATE billingitems SET Bi_Item := 'Trust Transfer (Business)' WHERE Bi_Item := 'Trust Transfer (Fees)'';
+      S1 := 'UPDATE billingitems SET Bi_Item = "Trust Transfer (Business)" WHERE Bi_Item = "Trust Transfer (Fees)"';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billingitems' table to add the Expense column
 
       S1 := 'ALTER TABLE billingitems ADD COLUMN Bi_Expense Double DEFAULT 0';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'tracking' table to add the Prescribed interest column
 
-      stProgress.Caption := 'Updating 'tracking' Table';
+      stProgress.Caption := 'Updating "tracking" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE tracking ADD COLUMN Tracking_';
 
       S2 := S1 + 'Prescribed Integer (11) DEFAULT 1';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      S2 := 'UPDATE tracking SET Tracking_Prescribed := 1';
-
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
+
+      S2 := 'UPDATE tracking SET Tracking_Prescribed = 1';
+
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
 
 //--- Update the 'customers' table to add the FreeText column if it does not exist
 
-      stProgress.Caption := 'Updating 'customers' Table';
+      stProgress.Caption := 'Updating "customers" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE customers ADD COLUMN Cust_FreeText VarChar (1024) DEFAULT NULL';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-/*
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
+
+{
 //--- Convert Passwords to New Style Passwords if the flag was checked
 
-      DoNewStylePass();
+      DoNewStylePass;
 
 //--- Convert to Multi Company support if cbMuliCpy is checked
 
-      DoMultiCompany();
+      DoMultiCompany;
 
 //--- Update the database version
 
       stProgress.Caption := 'Updating database version';
       Application.ProcessMessages;
 
-      S2 := 'UPDATE lpms SET Version := '3.1.0'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S2 := 'UPDATE lpms SET Version = "3.1.0"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       Application.MessageBox(PChar('Database '' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']' updated from version '' + edtCurrVersion.Text + '' to version '' + edtNewVersion.Text + '''),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
 
       stProgress.Caption := '';
       Application.ProcessMessages;
-   }
+
+   end;
 
 //--- Add additional items that were added since 3.1.0 originally went live
 
-   if (edtCurrVersion.Text = '3.1.0')
-   {
+   if edtCurrVersion.Text = '3.1.0' then begin
+
 
 //--- Convert Passwords to New Style Passwords if the flag was checked
 
-      DoNewStylePass();
+      DoNewStylePass;
 
 //--- Convert to Multi Company support if cbMuliCpy is checked
 
-      DoMultiCompany();
-*/
+      DoMultiCompany;
+}
 
 //--- Add the Instant Message table
 
-      stProgress.Caption := 'Creating 'im' Table';
+      stProgress.Caption := 'Creating "im" Table';
       Application.ProcessMessages;
 
 //--- Insert the 'im' table
 
       S1 := 'CREATE TABLE im (Im_Key int(11) NOT NULL AUTO_INCREMENT, Im_Date varchar(10) DEFAULT NULL, Im_Time varchar(12) DEFAULT NULL, Im_From varchar(64) DEFAULT NULL, Im_To varchar(64) DEFAULT NULL, Im_Message varchar(512) DEFAULT NULL, Im_Status int(11) DEFAULT NULL, PRIMARY KEY (Im_Key)) ENGINE=MyISAM ROW_FORMAT=dynamic DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Add a default message for each user
 
-      ThisList := new TStringList;
+      try
 
-      S1 := 'SELECT Control_UserID FROM control ORDER BY Control_UserID';
-      if (DM_Put_DB(S1,TYPE_SELECT) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+         ThisList := TStringList.Create;
 
-      SQLQry1.First();
-      for (idx1=0;idx1 < SQLQry1.RecordCount;idx1++)
-      {
-         ThisList.Add(SQLQry1.FieldByName('Control_UserID').AsString);
-         SQLQry1.Next();
-      }
+         S1 := 'SELECT Control_UserID FROM control ORDER BY Control_UserID';
+         if DM_Put_DB(S1,TYPE_SELECT) = False then begin
 
-      for (idx1=0;idx1 < ThisList.Count;idx1++)
-      {
-         S2 := 'Hi ' + ThisList.Strings[idx1] + ', Welcome to LPMS Internal Messaging. To send a message is easy - Select a User from the list on the Left, type your message and then click on 'Send'';
-
-         S1 := 'INSERT INTO im (Im_Date, Im_Time, Im_From, Im_To, Im_Message, Im_Status) Values('' +
-              FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-              FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility', '' +
-              ThisList.Strings[idx1] + '', '' + ReplaceQuote(S2,TYPE_WRITE) +
-              '', ' + IM_UNREAD + ')';
-
-         if (DM_Put_DB(S1,TYPE_OTHER) = False)
-         {
-            if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+            if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
                Exit;
-         }
 
-         S2 := 'You can change the interval for automatically checking new messages and the colours in which messages are dislayed by clicking on the 'IM Prefs' button in the 'Functions' section on the 'Preferences' Screen. Unread messages are displayed in Bold';
+         end;
 
-         S1 := 'INSERT INTO im (Im_Date, Im_Time, Im_From, Im_To, Im_Message, Im_Status ) Values('' +
-              FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-              FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility', '' +
-              ThisList.Strings[idx1] + '', '' + ReplaceQuote(S2,TYPE_WRITE) +
-              '', ' + IM_UNREAD + ')';
+         SQLQry1.First;
 
-         if (DM_Put_DB(S1,TYPE_OTHER) = False)
-         {
-            if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-               Exit;
-         }
-      }
+         for idx1 := 1 to SQLQry1.RecordCount do begin
 
-      delete ThisList;
+            ThisList.Add(SQLQry1.FieldByName('Control_UserID').AsString);
+            SQLQry1.Next;
+
+         end;
+
+         for idx1 := 0 to ThisList.Count - 1 do begin
+
+            S2 := 'Hi ' + ThisList.Strings[idx1] + ', Welcome to LPMS Internal Messaging. To send a message is easy - Select a User from the list on the Left, type your message and then click on [Send]';
+
+            S1 := 'INSERT INTO im (Im_Date, Im_Time, Im_From, Im_To, Im_Message, Im_Status) Values("' +
+                  FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) +
+                  '", "'  + FormatDateTime('HH:mm:ss.zzz',Now) +
+                  '", "LPMS_Utility", "' + ThisList.Strings[idx1] + '", "' +
+                  ReplaceQuote(S2,TYPE_WRITE) + '", ' + IntToStr(IM_UNREAD) + ')';
+
+            if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+               if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+                  Exit;
+
+            end;
+
+            S2 := 'You can change the interval for automatically checking new messages and the colours in which messages are dislayed by clicking on the [IM Prefs] button in the <Functions> section on the <Preferences> Screen. Unread messages are displayed in Bold';
+
+            S1 := 'INSERT INTO im (Im_Date, Im_Time, Im_From, Im_To, Im_Message, Im_Status ) Values("' +
+                  FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) +
+                  '", "'  + FormatDateTime('HH:mm:ss.zzz',Now) +
+                  '", "LPMS_Utility", "' + ThisList.Strings[idx1] + '", "' +
+                  ReplaceQuote(S2,TYPE_WRITE) + '", ' + IntToStr(IM_UNREAD) + ')';
+
+            if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+               if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+                  Exit;
+
+            end;
+
+         end;
+
+      finally
+
+         ThisList.Free;
+
+      end;
 
 //--- Insert the 'tbinterest' table
 
-      stProgress.Caption := 'Creating 'tbinterest' Table';
+      stProgress.Caption := 'Creating "tbinterest" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE tbinterest (TbInt_Key int(11) NOT NULL AUTO_INCREMENT, TbInt_SetName varchar(1024) DEFAULT 'Not Defined', TbInt_EffectiveDate varchar(10) DEFAULT NULL, TbInt_Rate double DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', PRIMARY KEY (TbInt_Key)) ENGINE=MyISAM DEFAULT CHARSET=latin1';
+      S1 := 'CREATE TABLE tbinterest (TbInt_Key int(11) NOT NULL AUTO_INCREMENT, TbInt_SetName varchar(1024) DEFAULT "Not Defined", TbInt_EffectiveDate varchar(10) DEFAULT NULL, TbInt_Rate double DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", PRIMARY KEY (TbInt_Key)) ENGINE=MyISAM DEFAULT CHARSET=latin1';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert default interest rates sets
 
-      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values('Before 01 August 2014', '1980/01/01', 15.00, '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values("Before 01 August 2014", "1980/01/01", 15.00, "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) +
+            '", "' + FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values('Efective 01 August 2014', '2014/08/01', 9.00, '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values("Efective 01 August 2014", "2014/08/01", 9.00, "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) +
+            '", "' + FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
+
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values('Effective 01 March 2016', '2016/03/01', 10.25, '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'INSERT INTO tbinterest (TbInt_SetName, TbInt_EffectiveDate, TbInt_Rate, Create_Date, Create_Time, Create_By) Values("Effective 01 March 2016", "2016/03/01", 10.25, "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) +
+            '", "' + FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
+
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert the 'tbbilling' table
 
-      stProgress.Caption := 'Creating 'tbbilling' Table';
+      stProgress.Caption := 'Creating "tbbilling" Table';
       Application.ProcessMessages;
 
       FilesDir := ExtractFilePath(Application.ExeName);
-      FilesDir := AnsiReplaceStr(FilesDir,'\\Bin\\','\\Files\\');
-      FilesDir := AnsiReplaceStr(FilesDir,'\\Release\\','\\Files\\');
-      FilesDir := AnsiReplaceStr(FilesDir,'\\Debug\\','\\Files\\');
+      FilesDir := AnsiReplaceStr(FilesDir,'\Bin\','\Files\');
+      FilesDir := AnsiReplaceStr(FilesDir,'\Release\','\Files\');
+      FilesDir := AnsiReplaceStr(FilesDir,'\Debug\','\Files\');
 
-      S1 := 'CREATE TABLE tbbilling (TbBilling_Key int(11) NOT NULL AUTO_INCREMENT, TbBilling_SetName varchar(1024) DEFAULT NULL, TbBilling_EffectiveDate varchar(10) DEFAULT NULL, TbBilling_Definition varchar(1024) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', PRIMARY KEY (TbBilling_Key)) ENGINE=MyISAM DEFAULT CHARSET=latin1';
+      S1 := 'CREATE TABLE tbbilling (TbBilling_Key int(11) NOT NULL AUTO_INCREMENT, TbBilling_SetName varchar(1024) DEFAULT NULL, TbBilling_EffectiveDate varchar(10) DEFAULT NULL, TbBilling_Definition varchar(1024) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", PRIMARY KEY (TbBilling_Key)) ENGINE=MyISAM DEFAULT CHARSET=latin1';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert default billing definition sets
 
-      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values('Before 01 August 2014', '1980/01/01', '' + ReplaceQuote(FilesDir,TYPE_WRITE) + 'Before 01 August 2014.lbd', '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values("Before 01 August 2014", "1980/01/01", "' + (ReplaceQuote(FilesDir,TYPE_WRITE) + 'Before 01 August 2014.lbd') + '", "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) + '", "' +
+            FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values('Efective 01 August 2014', '2014/08/01', '' + ReplaceQuote(FilesDir,TYPE_WRITE) + 'Effective 01 August 2014', '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values("Efective 01 August 2014", "2014/08/01", "' + (ReplaceQuote(FilesDir,TYPE_WRITE) + 'Effective 01 August 2014') + '", "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) + '", "' +
+            FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
+
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values('Effective 01 March 2016', '2016/03/01', '' + ReplaceQuote(FilesDir,TYPE_WRITE) + 'Effective 01 March 2016', '' +
-           FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-           FormatDateTime('HH:mm:ss.zzz',Now()) + '', 'LPMS_Utility')';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'INSERT INTO tbbilling (TbBilling_SetName, TbBilling_EffectiveDate, TbBilling_Definition, Create_Date, Create_Time, Create_By) Values("Effective 01 March 2016", "2016/03/01", "' + (ReplaceQuote(FilesDir,TYPE_WRITE) + 'Effective 01 March 2016') + '", "' +
+            FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) + '", "' +
+            FormatDateTime('HH:mm:ss.zzz',Now) + '", "LPMS_Utility")';
+
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Insert the 'symvars' table
 
-      stProgress.Caption := 'Creating 'symvars' Table';
+      stProgress.Caption := 'Creating "symvars" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE symvars (Sym_Key int(11) unsigned zerofill NOT NULL AUTO_INCREMENT, Sym_Owner varchar(64) NOT NULL, Sym_Variable varchar(128) NOT NULL, Sym_Value varchar(512) NOT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', PRIMARY KEY (Sym_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1';
+      S1 := 'CREATE TABLE symvars (Sym_Key int(11) unsigned zerofill NOT NULL AUTO_INCREMENT, Sym_Owner varchar(64) NOT NULL, Sym_Variable varchar(128) NOT NULL, Sym_Value varchar(512) NOT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", PRIMARY KEY (Sym_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1';
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Add 'Blocked' field to Users table
 
-      stProgress.Caption := 'Updating 'control' Table';
+      stProgress.Caption := 'Updating "control" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE control ADD COLUMN Control_Blocked Integer (11) DEFAULT 0';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the database version
 
       stProgress.Caption := 'Updating database version';
       Application.ProcessMessages;
 
-      S2 := 'UPDATE lpms SET Version := '3.2.0'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      S2 := 'UPDATE lpms SET Version = "3.2.0"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      Application.MessageBox(PChar('Database '' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']' updated from version '' + edtCurrVersion.Text + '' to version 3.2.0''),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
+
+      Application.MessageBox(PChar('Database "' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']" updated from version "' + edtCurrVersion.Text + '" to version 3.2.0"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
 
       stProgress.Caption := '';
       Application.ProcessMessages;
-   }
+
+   end;
 
 //--- Convert to version 3.2.1
 
-   if (edtCurrVersion.Text < '3.2.1')
-   {
+   if edtCurrVersion.Text < '3.2.1' then begin
+
 
 //===
 //=== Todo Change the way the File Path is stored (Store only the File name)
@@ -2913,381 +3004,398 @@ begin
 
 //--- Update the 'users' table to add Logging
 
-      stProgress.Caption := 'Converting 'control' Table';
+      stProgress.Caption := 'Converting "control" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE control ADD COLUMN Control_Logging Integer (11) DEFAULT 3';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'ALTER TABLE control ADD COLUMN Control_Rate double DEFAULT '0.00'';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'ALTER TABLE control ADD COLUMN Control_Rate double DEFAULT 0.00';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'users' table to add 'Do Quote' for every user
 
-      S1 := 'UPDATE control SET Control_Switch4 := 1';
+      S1 := 'UPDATE control SET Control_Switch4 = 1';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'invoices' table
 
-      stProgress.Caption := 'Converting 'invoices' Table';
+      stProgress.Caption := 'Converting "invoices" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE invoices ADD COLUMN Inv_Related varchar (10)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Select the unique File names in the Invoices table and add to a list
 
       S1 := 'SELECT DISTINCT Inv_File FROM invoices ORDER BY Inv_File';
-      if (DM_Put_DB(S1,TYPE_SELECT) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if DM_Put_DB(S1,TYPE_SELECT) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      ThisList := new TStringList;
-      SQLQry1.First();
+      end;
 
-      for (idx1=0;idx1 < SQLQry1.RecordCount;idx1++)
-      {
-         ThisList.Add(SQLQry1.FieldByName('Inv_File').AsString);
-         SQLQry1.Next();
-      }
+      try
+
+         ThisList := TStringList.Create;
+         SQLQry1.First;
+
+         for idx1 := 1 to SQLQry1.RecordCount do begin
+
+            ThisList.Add(SQLQry1.FieldByName('Inv_File').AsString);
+            SQLQry1.Next;
+
+         end;
 
 //--- Get the related file information for each unique File in the Invoice table
 //--- and add this to the list - each entry consist of xxxxxxyyyyyy where xxxxxx
 //--- is the File name and yyyyyy is the Related file
 
-      for (idx1 := 0; idx1 < ThisList.Count; idx1++)
-      {
-         S1 := 'SELECT Tracking_Related FROM tracking WHERE Tracking_Name := '' + ThisList.Strings[idx1] + ''';
+         for idx1 := 0 to ThisList.Count - 1 do begin
 
-         if (DM_Put_DB(S1,TYPE_SELECT) = False)
-         {
-            if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-               Exit;
-         }
+            S1 := 'SELECT Tracking_Related FROM tracking WHERE Tracking_Name = "' + ThisList.Strings[idx1] + '"';
 
-         ThisList.Strings[idx1] := ThisList.Strings[idx1] + SQLQry1.FieldByName('Tracking_Related').AsString;
-      }
+            if DM_Put_DB(S1,TYPE_SELECT) = False then begin
+
+               if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+                  Exit;
+
+            end;
+
+            ThisList.Strings[idx1] := ThisList.Strings[idx1] + SQLQry1.FieldByName('Tracking_Related').AsString;
+
+         end;
 
 //--- Update the invoices table with the related file names
 
-      if (ThisList.Count <= 1)
-         Len := 1;
-      else
-         Len := ThisList.Strings[0].Length() / 2;
+         if ThisList.Count <= 1 then
+            Len := 1
+         else
+            Len := ThisList.Strings[0].Length div 2;
 
-      for (idx1 := 0; idx1 < ThisList.Count; idx1++)
-      {
-         S1 := 'UPDATE invoices SET Inv_Related := '' +
-              ThisList.Strings[idx1].SubString(Len + 1, 99) +
-              '' WHERE Inv_File := '' + ThisList.Strings[idx1].SubString(1,Len) +
-              ''';
+         for idx1 := 0 to ThisList.Count - 1 do begin
 
-         if (DM_Put_DB(S1,TYPE_OTHER) = False)
-         {
-            if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-               Exit;
-         }
-      }
+            S1 := 'UPDATE invoices SET Inv_Related = "' +
+                 ThisList.Strings[idx1].SubString(Len + 1, 99) +
+                 '" WHERE Inv_File = "' +
+                 ThisList.Strings[idx1].SubString(1,Len) + '"';
 
-      delete ThisList;
+            if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+               if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+                  Exit;
+
+            end;
+
+         end;
+
+      finally
+
+         ThisList.Free;
+
+      end;
 
 //--- Add the Log table
 
-      stProgress.Caption := 'Creating 'log' Table';
+      stProgress.Caption := 'Creating "log" Table';
       Application.ProcessMessages;
 
       S1 := 'CREATE TABLE log (Log_Key int(11) NOT NULL AUTO_INCREMENT, Log_Date varchar(20) NOT NULL, Log_Time varchar(20) NOT NULL, Log_User  varchar(255) NOT NULL, Log_Activity varchar(4096) NOT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, TimeStamp varchar(128) NOT NULL, PRIMARY KEY (Log_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Add the Quotes table
 
-      stProgress.Caption := 'Creating 'quotes' Table';
+      stProgress.Caption := 'Creating "quotes" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE quotes (Q_Key int(11) NOT NULL AUTO_INCREMENT, Q_Quote varchar(32) DEFAULT NULL, Q_Type int(11) DEFAULT NULL, Q_Class int(11) DEFAULT NULL, Q_Date varchar(32) DEFAULT NULL, Q_Item varchar(128) DEFAULT NULL, Q_AccountType int(11) DEFAULT NULL, Q_Description varchar(1024) DEFAULT NULL, Q_UnitType int(11) DEFAULT NULL, Q_Units double DEFAULT NULL, Q_Calculation int(11) DEFAULT NULL, Q_Label int(11) DEFAULT NULL, Q_Inc1 int(11) DEFAULT NULL, Q_Inc2 int(11) DEFAULT NULL, Q_Minimum double DEFAULT NULL, Q_Maximum double DEFAULT NULL, Q_Fixed double DEFAULT NULL, Q_Rate double DEFAULT NULL, Q_Expense double DEFAULT '0', Q_DrCr int(11) DEFAULT NULL, Q_Amount double DEFAULT NULL, Q_Owner varchar(10) DEFAULT NULL, Q_Related varchar(10) DEFAULT NULL, Q_FeeEarner int(11) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Q_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Q_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC';
+      S1 := 'CREATE TABLE quotes (Q_Key int(11) NOT NULL AUTO_INCREMENT, Q_Quote varchar(32) DEFAULT NULL, Q_Type int(11) DEFAULT NULL, Q_Class int(11) DEFAULT NULL, Q_Date varchar(32) DEFAULT NULL, Q_Item varchar(128) DEFAULT NULL, Q_AccountType int(11) DEFAULT NULL, Q_Description varchar(1024) DEFAULT NULL, Q_UnitType int(11) DEFAULT NULL, Q_Units double DEFAULT NULL, Q_Calculation int(11) DEFAULT NULL, Q_Label int(11) DEFAULT NULL, Q_Inc1 int(11) DEFAULT NULL, Q_Inc2 int(11) DEFAULT NULL, Q_Minimum double DEFAULT NULL, Q_Maximum double DEFAULT NULL, Q_Fixed double DEFAULT NULL, Q_Rate double DEFAULT NULL, Q_Expense double DEFAULT "0", Q_DrCr int(11) DEFAULT NULL, Q_Amount double DEFAULT NULL, Q_Owner varchar(10) DEFAULT NULL, Q_Related varchar(10) DEFAULT NULL, Q_FeeEarner int(11) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Q_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Q_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Add the Accept table
 
-      stProgress.Caption := 'Creating 'accept' Table';
+      stProgress.Caption := 'Creating "accept" Table';
       Application.ProcessMessages;
 
-      S1 := 'CREATE TABLE accept (Accept_Key int(11) NOT NULL AUTO_INCREMENT, Accept_File varchar(32) DEFAULT NULL, Accept_Quote varchar(32) DEFAULT NULL, Accept_Accepted int(11) DEFAULT NULL, Accept_Date varchar(32) DEFAULT NULL, Accept_HostName varchar(255) DEFAULT NULL, Accept_Description varchar(255) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT 'Not Modified', Modify_Time varchar(32) DEFAULT 'Not Modified', Modify_By varchar(64) DEFAULT 'Not Modified', Accept_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Accept_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC';
+      S1 := 'CREATE TABLE accept (Accept_Key int(11) NOT NULL AUTO_INCREMENT, Accept_File varchar(32) DEFAULT NULL, Accept_Quote varchar(32) DEFAULT NULL, Accept_Accepted int(11) DEFAULT NULL, Accept_Date varchar(32) DEFAULT NULL, Accept_HostName varchar(255) DEFAULT NULL, Accept_Description varchar(255) DEFAULT NULL, Create_Date varchar(32) DEFAULT NULL, Create_Time varchar(32) DEFAULT NULL, Create_By varchar(64) DEFAULT NULL, Modify_Date varchar(32) DEFAULT "Not Modified", Modify_Time varchar(32) DEFAULT "Not Modified", Modify_By varchar(64) DEFAULT "Not Modified", Accept_TimeStamp varchar(128) DEFAULT NULL, PRIMARY KEY (Accept_Key)) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the notes table then distinguish between billing related and file
 //--- notes
 
-      stProgress.Caption := 'Converting 'notes' Table';
+      stProgress.Caption := 'Converting "notes" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE notes ADD COLUMN Notes_Type int(11) NOT NULL';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-//--- First we set all Notes Types to Fle Notes
+      end;
 
-      S1 := 'UPDATE notes SET Notes_Type := 1';
+//--- First we set all Notes Types to File Notes
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'UPDATE notes SET Notes_Type = 1';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Then we try and identify Billing Notes and set Notes Type for these
 //--- records to Billing Notes
 
-      S1 := 'UPDATE notes SET Notes_Type := 2 WHERE ((Notes_Note LIKE 'Inserted new payment record on %') OR (Notes_Note LIKE 'Inserted new billing record on %') OR (Notes_Note LIKE 'Updated existing payment record on %') OR (Notes_Note LIKE 'Updated existing billing record on %') OR (Notes_Note LIKE 'Deleted existing billing record on %') OR (Notes_Note LIKE 'Deleted existing payment record on %'))';
+      S1 := 'UPDATE notes SET Notes_Type = 2 WHERE ((Notes_Note LIKE "Inserted new payment record on %") OR (Notes_Note LIKE "Inserted new billing record on %") OR (Notes_Note LIKE "Updated existing payment record on %") OR (Notes_Note LIKE "Updated existing billing record on %") OR (Notes_Note LIKE "Deleted existing billing record on %") OR (Notes_Note LIKE "Deleted existing payment record on %"))';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Split 'Trust Transfer (Business)' to distinguish between 'Fees/Disb/Exp'
 //--- and 'Other' transfers
 
-      stProgress.Caption := 'Updating 'billingitems' Table';
+      stProgress.Caption := 'Updating "billingitems" Table';
       Application.ProcessMessages;
 
-      S1 := 'UPDATE billingitems SET Bi_Item := 'Trust Transfer (Business - Fees/Disb/Exp)' WHERE Bi_Item := 'Trust Transfer (Business)'';
+      S1 := 'UPDATE billingitems SET Bi_Item = "Trust Transfer (Business - Fees/Disb/Exp)" WHERE Bi_Item = "Trust Transfer (Business)"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- First check whether the 'Trust Transfer (Business - Other)' class already
 //--- exist to avoid duplicates
 
-      S1 := 'SELECT Bi_Key FROM billingitems WHERE Bi_Item := 'Trust Transfer (Business - Other)'';
+      S1 := 'SELECT Bi_Key FROM billingitems WHERE Bi_Item = "Trust Transfer (Business - Other)"';
+      if DM_Put_DB(S1,TYPE_SELECT) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_SELECT) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      if (SQLQry1.RecordCount = 0)
-      {
-         S1 := 'INSERT INTO billingitems (Bi_Type, Bi_Class, Bi_User, Bi_Item, Bi_Description, Bi_UnitType, Bi_Units, Bi_Calculation, Bi_Label, Bi_Inc1, Bi_Inc2, Bi_Minimum, Bi_Maximum, Bi_Fixed, Bi_Rate, Bi_DrCr, Create_Date, Create_Time, Create_By, Bi_TimeStamp, Bi_Expense) Values(3, 24, '', 'Trust Transfer (Business - Other)', 'Transfer from Trust to Business for [Other][ on instruction of Client]', 6, '1', 8, 0, 0, 0, '0', '0', '0', '0', 1, '' +
-              FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now()) + '', ''  +
-              FormatDateTime('HH:mm:ss',Now()) + '', 'LPMS_Utility', '' +
-              FormatDateTime('yyyy/MM/ddHH:mm:ss:zzz',Now()) + '+LPMS_Utility' +
-              '', '0')';
+      end;
 
-         if (DM_Put_DB(S1,TYPE_OTHER) = False)
-         {
-            if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      if SQLQry1.RecordCount = 0 then begin
+
+         S1 := 'INSERT INTO billingitems (Bi_Type, Bi_Class, Bi_User, Bi_Item, Bi_Description, Bi_UnitType, Bi_Units, Bi_Calculation, Bi_Label, Bi_Inc1, Bi_Inc2, Bi_Minimum, Bi_Maximum, Bi_Fixed, Bi_Rate, Bi_DrCr, Create_Date, Create_Time, Create_By, Bi_TimeStamp, Bi_Expense) Values(3, 24, "", "Trust Transfer (Business - Other)", "Transfer from Trust to Business for [Other][ on instruction of Client]", 6, "1", 8, 0, 0, 0, "0", "0", "0", "0", 1, "' +
+                FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now) +
+                '", "' + FormatDateTime('HH:mm:ss',Now) +
+                '", "LPMS_Utility", "' +
+                FormatDateTime('yyyy/MM/ddHH:mm:ss:zzz',Now) + '+LPMS_Utility' +
+                '", "0")';
+
+         if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+            if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
                Exit;
-         }
-      }
 
-      S1 := 'UPDATE billing SET B_Item := 'Trust Transfer (Business - Fees/Disb/Exp)' WHERE B_Item := 'Trust Transfer (Business)'';
+         end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      end;
+
+      S1 := 'UPDATE billing SET B_Item = "Trust Transfer (Business - Fees/Disb/Exp)" WHERE B_Item = "Trust Transfer (Business)"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'billing' table
 
-      stProgress.Caption := 'Converting 'billing' Table';
+      stProgress.Caption := 'Converting "billing" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE billing ADD COLUMN B_ToFile varchar (32)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE billing ADD COLUMN B_Unique varchar (128)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE billing ADD COLUMN B_InvestAcct varchar (32)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'UPDATE billing SET B_ReserveReason := '' WHERE ((B_Class <> 7) AND (B_Class <> 11))';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'UPDATE billing SET B_ReserveReason = "" WHERE ((B_Class <> 7) AND (B_Class <> 11))';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'collect' table
 
-      stProgress.Caption := 'Converting 'collect' Table';
+      stProgress.Caption := 'Converting "collect" Table';
       Application.ProcessMessages;
 
       S1 := 'ALTER TABLE collect ADD COLUMN Collect_ToFile varchar (32)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE collect ADD COLUMN Collect_Unique varchar (128)';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'prefix' table to add File Type and Folder Colour
 
-      stProgress.Caption := 'Converting 'prefix' Table';
+      stProgress.Caption := 'Converting "prefix" Table';
       Application.ProcessMessages;
 
-      S1 := 'ALTER TABLE prefix ADD COLUMN Prefix_FileType varchar (32) DEFAULT 'Other'';
+      S1 := 'ALTER TABLE prefix ADD COLUMN Prefix_FileType varchar (32) DEFAULT "Other"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
       S1 := 'ALTER TABLE prefix ADD COLUMN Prefix_FolderCol int (11) DEFAULT 0';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the 'lpms' table
 
-      stProgress.Caption := 'Converting 'lpms' Table';
+      stProgress.Caption := 'Converting "lpms" Table';
       Application.ProcessMessages;
 
-      S1 := 'ALTER TABLE lpms ADD COLUMN QuoteIdx double DEFAULT '0'';
+      S1 := 'ALTER TABLE lpms ADD COLUMN QuoteIdx double DEFAULT "0"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
 
-      S1 := 'ALTER TABLE lpms ADD COLUMN QuotePref varchar (8) DEFAULT 'Q'';
+      end;
 
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'ALTER TABLE lpms ADD COLUMN QuotePref varchar (8) DEFAULT "Q"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Correct the spelling of 'practise' in lpms
 
-      S1 := 'UPDATE lpms SET Signature := 'Legal Practice Management System - LPMS'';
-      if (DM_Put_DB(S1,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
+      S1 := 'UPDATE lpms SET Signature = "Legal Practice Management System - LPMS"';
+      if DM_Put_DB(S1,TYPE_OTHER) = False then begin
+
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
             Exit;
-      }
+
+      end;
 
 //--- Update the database version
 
       stProgress.Caption := 'Updating database version';
       Application.ProcessMessages;
 
-      S2 := 'UPDATE lpms SET Version := '3.2.1'';
-      if (DM_Put_DB(S2,TYPE_OTHER) = False)
-      {
-         if (Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '"' + ', Click 'Yes' to continue or 'No' to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO)
-            Exit;
-      }
+      S2 := 'UPDATE lpms SET Version = "3.2.1"';
+      if DM_Put_DB(S2,TYPE_OTHER) = False then begin
 
-      Application.MessageBox(PChar('Database '' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']' updated from version '' + edtCurrVersion.Text + '' to version '' + edtNewVersion.Text + '''),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
+         if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click [Yes] to continue; or' + #10 + #10 + 'Click [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+            Exit;
+
+      end;
+
+      Application.MessageBox(PChar('Database "' + edtHostNameC.Text + '[' + edtPrefixC.Text + ']" updated from version "' + edtCurrVersion.Text + '" to version "' + edtNewVersion.Text + '"'),'LPMS Utility',(MB_OK + MB_ICONINFORMATION));
 
       stProgress.Caption := '';
       Application.ProcessMessages;
-   }
+
+   end;
 
 //--- Convert Password Encoding to New Encoding if the flag was checked
 
-#ifdef NEW_ENCODING
-   DoNewEncoding();
-#endif
+//#ifdef NEW_ENCODING
+//   DoNewEncoding;
+//#endif
 
 //--- Convert Passwords to New Style Passwords if the flag was checked
 
-   DoNewStylePass();
+   DoNewStylePass;
 
 //--- Convert to Multi Company support if cbMuliCpy is checked
 
-   DoMultiCompany();
+   DoMultiCompany;
 
-   SQLQry1.Close();
-   SQLCon.Close();
+   SQLQry1.Close;
+   SQLCon.Close;
 
    btnProcessC.Enabled := False;
    edtCurrVersion.Text := edtNewVersion.Text;
-}
 
 end;
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // A Field on the Convert page changed
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.edtHostNameCChange(Sender: TObject);
 var
    FldCount : integer = 0;
@@ -3321,9 +3429,9 @@ begin
 
 end;
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // User clicked on the button to get the current database version
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnGetClick(Sender: TObject);
 var
    S1 : string;
@@ -3391,22 +3499,23 @@ begin
 //--- Process the New Style Passwords and New Encode checkboxes
 
    cbNewPass.Checked   := False;
-   cbNewEncode.Checked := False;
+//   cbNewEncode.Checked := False;
 
    if edtCurrVersion.Text >= '3.0.2' then begin
 
       cbNewPass.Visible   := True;
-      cbNewEncode.Visible := True;
+//      cbNewEncode.Visible := True;
 
    end else begin
 
       cbNewPass.Visible   := False;
-      cbNewEncode.Visible := False;
+//      cbNewEncode.Visible := False;
 
    end;
 
 end;
 
+{
 //---------------------------------------------------------------------------
 // Convert to do new style encoding
 //---------------------------------------------------------------------------
@@ -3473,7 +3582,7 @@ begin
       for idx1 := 1 to SQLQry1.RecordCount do begin
 
          Pass_Rec := PassList[idx1];
-         S1 := 'UPDATE control SET Control_Password := "' + Pass_Rec.Password + '" WHERE Control_Key := ' + IntToStr(Pass_Rec.Key);
+         S1 := 'UPDATE control SET Control_Password = "' + Pass_Rec.Password + '" WHERE Control_Key = ' + IntToStr(Pass_Rec.Key);
 
          if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
@@ -3513,10 +3622,13 @@ begin
    end;
 
 end;
+}
 
-//---------------------------------------------------------------------------
-// Convert to new style passwords
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// Convert to new style passwords. As of LPMS Version 3.1.0 the login passwords
+// are encrypted using the Vignere coder/encoder from JEDI/JVCL. The aim here
+// is to convert from the JEDI/JVCL version to the BSD Vignere coder/encoder.
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.DoNewStylePass();
 type
 
@@ -3526,15 +3638,15 @@ type
    end;
 
 var
-   idx1                     : integer;
-   NewStylePass, DoNewStyle : boolean;
-   S1                       : string;
-   PassList                 : array of REC_Pass_Struct;
-   Pass_Rec                 : REC_Pass_Struct;
+   idx1       : integer;
+   DoNewStyle : boolean = True;
+   S1         : string;
+   PassList   : array of REC_Pass_Struct;
+   Pass_Rec   : REC_Pass_Struct;
 {$IFDEF WINDOWS}
-   RegIni                   : TRegistryIniFile;
+   RegIni     : TRegistryIniFile;
 {$ELSE}
-   RegIni                   : TINIFile;
+   RegIni     : TINIFile;
 {$ENDIF}
 
 begin
@@ -3554,20 +3666,25 @@ begin
 
 //--- Check if the NewStylePassword Key exists and warn user if it does
 
-         NewStylePass := RegIni.ValueExists('Preferences','NewStylePass');
+         if (RegIni.ValueExists('Preferences','NewStylePass') = True) then begin
 
-         if NewStylePass = True then begin
+            if (RegIni.ReadBool('Preferences','NewStylePass',False) = True) then begin
 
-            NewStylePass := RegIni.ReadBool('Preferences','NewStylePass',False);
+               if Application.MessageBox(PChar('WARNING: New Style Password registry key already exists. Proceeding with a conversion to New Style Passwords may result in an inability to log into LPMS. You can:' + #10 + #10 + #10 + 'Click on [Yes] to proceed; or' + #10 + #10 + 'Click on [No] to skip'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
+                  DoNewStyle := False;
 
-            if Application.MessageBox(PChar('WARNING: New Style Password registry key already exists. Proceeding with a conversion to New Style Passwords may result in an inability to log into LPMS. You can:' + #10 + #10 + #10 + 'Click on [Yes] to proceed; or' + #10 + #10 + 'Click on [No] to skip'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
-               DoNewStyle := False
-            else
-               DoNewStyle := True;
+            end;
 
          end;
 
          if DoNewStyle = True then begin
+
+//--- Call an external utility to convert from JEDI/JVCL Vignere to plain text
+
+            //
+
+//--- Now we can proceed to encode the plain text passwords using the BSD
+//--- Vignere coder/encoder
 
             S1 := 'SELECT * FROM control';
 
@@ -3588,7 +3705,7 @@ begin
 
                Pass_Rec.Password := SQLQry1.FieldByName('Control_Password').AsString;
                Pass_Rec.Key      := SQLQry1.FieldByName('Control_Key').AsInteger;
-               Pass_Rec.Password := MaskField(Pass_Rec.Password,TYPE_MASK);
+               Pass_Rec.Password := Vignere(CYPHER_ENC,Pass_Rec.Password,SecretPhrase);
 
                PassList[idx1] := Pass_Rec;
 
@@ -3602,7 +3719,7 @@ begin
 
                Pass_Rec := PassList[idx1];
 
-               S1 := 'UPDATE control SET Control_Password := "' + Pass_Rec.Password + '" WHERE Control_Key := ' + IntToStr(Pass_Rec.Key);
+               S1 := 'UPDATE control SET Control_Password = "' + Pass_Rec.Password + '" WHERE Control_Key = ' + IntToStr(Pass_Rec.Key);
                if DM_Put_DB(S1,TYPE_OTHER) = False then begin
 
                   if Application.MessageBox(PChar('Unexpected error: "' + ErrMsg + '". You can:' + #10 + #10 + #10 + 'Click on [Yes] to continue; or' + #10 + #10 + 'Click on [No] to abort'),'LPMS Utility',(MB_YESNO + MB_ICONSTOP)) = ID_NO then
@@ -3626,91 +3743,100 @@ begin
 
 end;
 
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Set up for Multi Company support
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.DoMultiCompany();
 var
-   idx1, ThisIntVal                      : integer;
-   ThisFltVal                            : double;
-   SingleCpyReg, MultiCpyReg, ThisStrVal : string;
-   LocalDBPrefix, T1, T2                 : string;
+   idx1, ThisIntVal          : integer;
+   ThisFltVal                : double;
+   ThisStrVal, LocalDBPrefix : string;
 {$IFDEF WINDOWS}
-   RegIniSgl,RegIniMul                   : TRegistryIniFile;
+   RegIniSgl,RegIniMul       : TRegistryIniFile;
 {$ELSE}
-   RegIniSgl, RegIniMul                  : TINIFile;
+   RegIniSgl, RegIniMul      : TINIFile;
 {$ENDIF}
+{$INCLUDE 'LPMS_Registry.inc'}
 
 begin
 
-{
-#include 'LPMS_Registry.inc'
+   if cbMultiCpy.Checked = True then begin
 
-   if (cbMultiCpy.Checked = True)
-   {
       stProgress.Caption := 'Converting to Multi Company';
       Application.ProcessMessages;
 
-      SingleCpyReg := 'Software\\BlueCrane Software\\LPMS 3';
-      MultiCpyReg  := 'Software\\BlueCrane Software\\LPMS 3\\' + edtNewPrefixC.Text;
+      try
 
-      RegIniSgl := new TRegistryIniFile(SingleCpyReg);
-      RegIniMul := new TRegistryIniFile(MultiCpyReg);
+{$IFDEF WINDOWS}
+         RegIniSgl := TRegistryIniFile.Create('Software\BlueCrane Software\LPMS 3');
+         RegIniMul := TRegistryIniFile.Create('Software\BlueCrane Software\LPMS 3\' + edtNewPrefixC.Text);
+{$ELSE}
+         RegIniSgl := TINIFile.Create(RegPath + 'LPMS 3.ini');
+         RegIniMul := TINIFile.Create(RegPath + edtNewPrefixC.Text + '.ini');
+{$ENDIF}
 
 //--- Transfer the Character Keys from the Single Location to the Multi location
 
-      for (idx1 := 0; idx1 < IdxChar; idx1++)
-      {
-         if (RegIniSgl.ValueExists('Preferences',DefChar[idx1]))
-         {
-            ThisStrVal := RegIniSgl.ReadString('Preferences',DefChar[idx1],'Not Found');
-            RegIniMul.WriteString('Preferences',DefChar[idx1],ThisStrVal);
-         }
-      }
+         for idx1 := 1 to Length(DefChar) do begin
+
+            if RegIniSgl.ValueExists('Preferences',DefChar[idx1]) then begin
+
+               ThisStrVal := RegIniSgl.ReadString('Preferences',DefChar[idx1],'Not Found');
+               RegIniMul.WriteString('Preferences',DefChar[idx1],ThisStrVal);
+
+            end;
+
+         end;
 
 //--- Add the Integer Keys to the list
 
-      for (idx1 := 0; idx1 < IdxInt; idx1++)
-      {
-         if (RegIniSgl.ValueExists('Preferences',DefInt[idx1]))
-         {
-            ThisIntVal := RegIniSgl.ReadInteger('Preferences',DefInt[idx1],0);
-            RegIniMul.WriteInteger('Preferences',DefInt[idx1],ThisIntVal);
-         }
-      }
+         for idx1 := 1 to Length(DefInt) do begin
+
+            if RegIniSgl.ValueExists('Preferences',DefInt[idx1]) then begin
+
+               ThisIntVal := RegIniSgl.ReadInteger('Preferences',DefInt[idx1],0);
+               RegIniMul.WriteInteger('Preferences',DefInt[idx1],ThisIntVal);
+
+            end;
+
+         end;
 
 //--- Add the Float Keys to the list
 
-      for (idx1 := 0; idx1 < IdxFloat; idx1++)
-      {
-         if (RegIniSgl.ValueExists('Preferences',DefFloat[idx1]))
-         {
-            ThisFltVal := RegIniSgl.ReadFloat('Preferences',DefFloat[idx1],0L);
-            RegIniMul.WriteFloat('Preferences',DefFloat[idx1],ThisFltVal);
-         }
-      }
+         for idx1 := 1 to Length(DefFloat) do begin
+
+            if RegIniSgl.ValueExists('Preferences',DefFloat[idx1]) then begin
+
+               ThisFltVal := RegIniSgl.ReadFloat('Preferences',DefFloat[idx1],0.00);
+               RegIniMul.WriteFloat('Preferences',DefFloat[idx1],ThisFltVal);
+
+            end;
+
+         end;
 
 //--- Insert the Multi Company flag
 
-      RegIniSgl.WriteString('Preferences','MultiCompany','1');
+         RegIniSgl.WriteString('Preferences','MultiCompany','1');
 
 //--- Insert DBPrefix for the new Multi Company
 
-#ifdef NEW_ENCODING
-   LocalDBPrefix := Vignere(CYPHER_ENC,AnsiString(edtNewPrefixC.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now())),ThisPass);
-   T1 := LocalDBPrefix.SubString(1,6);
-   T2 := LocalDBPrefix.SubString(7,99);
-   LocalDBPrefix := T1 + EncodePass(T2);
-#else
-   LocalDBPrefix := jvCipher.EncodeString(ThisPass,(edtNewPrefixC.Text + FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now())));
-#endif
+{$IFDEF OLD_ENCODING}
+         LocalDBPrefix := jvCipher.EncodeString(ThisPass,(edtNewPrefixC.Text + MaskField(FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now),TYPE_MASK)));
+{$ELSE}
+         LocalDBPrefix := Vignere(CYPHER_ENC,edtNewPrefixC.Text,SecretPhrase) + MaskField(FormatDateTime(DefaultFormatSettings.ShortDateFormat,Now),TYPE_MASK);
+{$ENDIF}
 
-      RegIniMul.WriteString('Preferences','DBPrefix',LocalDBPrefix);
+         RegIniMul.WriteString('Preferences','DBPrefix',LocalDBPrefix);
 
-      delete RegIniSgl;
-      delete RegIniMul;
-   }
-}
+      finally
+
+         RegIniSgl.Destroy;
+         RegIniMul.Destroy;
+
+      end;
+
+   end;
+
 end;
 
 {==============================================================================}

@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Convert
+    ActivePage = Setup
     Align = alClient
-    TabIndex = 3
+    TabIndex = 1
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -1856,7 +1856,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akRight, akBottom]
         Caption = 'Process'
         OnClick = btnProcessCClick
-        TabOrder = 14
+        TabOrder = 13
       end
       object btnCancelC: TButton
         Left = 715
@@ -1866,7 +1866,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
         OnClick = btnCancelRClick
-        TabOrder = 13
+        TabOrder = 12
       end
       object edtHostNameC: TEdit
         Left = 120
@@ -1949,7 +1949,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 262
         Width = 4
         AutoSize = True
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbMultiCpy: TCheckBox
         Left = 226
@@ -1957,7 +1957,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 234
         Width = 157
         Caption = ' Multi Company Support'
-        TabOrder = 11
+        TabOrder = 10
         Visible = False
       end
       object edtNewPrefixC: TEdit
@@ -1965,7 +1965,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Height = 27
         Top = 232
         Width = 100
-        TabOrder = 10
+        TabOrder = 9
       end
       object cbNewPass: TCheckBox
         Left = 226
@@ -1974,15 +1974,6 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 144
         Caption = ' New Style Passwords'
         TabOrder = 8
-        Visible = False
-      end
-      object cbNewEncode: TCheckBox
-        Left = 388
-        Height = 21
-        Top = 204
-        Width = 135
-        Caption = ' New Style Encoding'
-        TabOrder = 9
         Visible = False
       end
       object Bevel4: TBevel
@@ -5345,7 +5336,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy

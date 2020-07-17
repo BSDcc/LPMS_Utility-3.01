@@ -109,7 +109,7 @@
         <PackageName Value="LCL"/>
       </Item5>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="LPMS_Utility.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -125,7 +125,9 @@
       <Unit2>
         <Filename Value="../BSD_Utilities/lpms_inputquery.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="FLPMS_InputQuery"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
         <UnitName Value="LPMS_InputQuery"/>
       </Unit2>
       <Unit3>
@@ -144,6 +146,10 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="LPMS_UtilitySelDB"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="LPMS_Registry.inc"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

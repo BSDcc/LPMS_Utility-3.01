@@ -21,7 +21,7 @@ interface
 //------------------------------------------------------------------------------
 uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, LCLType,
-   ExtCtrls,
+   ExtCtrls, Buttons,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry;
@@ -39,8 +39,11 @@ type
    TFLPMS_UtilityMultiCpy = class(TForm)
    Bevel1: TBevel;
       btnCancel: TButton;
+      btnLockS: TSpeedButton;
       btnOK: TButton;
+      btnUnlockS: TSpeedButton;
       cbMultiCpy: TCheckBox;
+      cbUpdateEncoding: TCheckBox;
       edtDBPrefix: TEdit;
       Label1: TLabel;
       procedure btnCancelClick(Sender: TObject);
