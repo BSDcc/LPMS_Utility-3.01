@@ -53,9 +53,9 @@ type
       procedure FormShow(Sender: TObject);
 
 private  { Private Declarations }
-{$IFDEF WINDOWS}
+//{$IFDEF WINDOWS}
    Lock_State   : boolean;          // Semaphore to control the Lock/Unlock button status
-{$ENDIF}
+//{$ENDIF}
    MultiCompany : boolean;          // Indicates whether Multi Company was selected;
    DBPrefix     : string;           // Holds the chosen DBPrefix
 

@@ -1341,7 +1341,7 @@ begin
 
    end else begin
 
-      Application.MessageBox(PChar('Unexpected or invalid response from Server: "' + Response + '"'),'LPMS Utility',(MB_OK + MB_ICONSTOP));
+      Application.MessageBox(PChar('Unexpected or invalid response from Server:' + #10 + #10  + Response),'LPMS Utility',(MB_OK + MB_ICONSTOP));
       tcpClient.Disconnect;
       Exit;
 

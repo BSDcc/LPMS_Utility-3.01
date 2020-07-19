@@ -8,18 +8,18 @@ object FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy
   ClientWidth = 383
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '2.0.6.0'
+  LCLVersion = '2.0.8.0'
   object Label1: TLabel
     Left = 8
-    Height = 15
+    Height = 17
     Top = 12
-    Width = 47
+    Width = 52
     Caption = 'DBPrefix:'
     ParentColor = False
   end
   object edtDBPrefix: TEdit
     Left = 80
-    Height = 23
+    Height = 27
     Top = 8
     Width = 121
     MaxLength = 6
@@ -28,9 +28,9 @@ object FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy
   end
   object cbMultiCpy: TCheckBox
     Left = 216
-    Height = 19
+    Height = 21
     Top = 10
-    Width = 151
+    Width = 157
     Caption = ' Multi Company Support'
     TabOrder = 1
   end
@@ -62,9 +62,9 @@ object FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy
   end
   object cbUpdateEncoding: TCheckBox
     Left = 80
-    Height = 19
+    Height = 21
     Top = 40
-    Width = 111
+    Width = 118
     Caption = 'Update Encoding'
     Enabled = False
     TabOrder = 2
