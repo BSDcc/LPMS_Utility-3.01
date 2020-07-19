@@ -37,21 +37,25 @@ type
    { TFLPMS_UtilityMultiCpy }
 
    TFLPMS_UtilityMultiCpy = class(TForm)
-   Bevel1: TBevel;
+      Bevel1: TBevel;
       btnCancel: TButton;
-      btnLockS: TSpeedButton;
+      btnLock: TSpeedButton;
       btnOK: TButton;
-      btnUnlockS: TSpeedButton;
+      btnUnlock: TSpeedButton;
       cbMultiCpy: TCheckBox;
       cbUpdateEncoding: TCheckBox;
       edtDBPrefix: TEdit;
       Label1: TLabel;
       procedure btnCancelClick(Sender: TObject);
       procedure btnOKClick(Sender: TObject);
+      procedure btnUnlockClick(Sender: TObject);
       procedure edtDBPrefixChange(Sender: TObject);
       procedure FormShow(Sender: TObject);
 
 private  { Private Declarations }
+{$IFDEF WINDOWS}
+   Lock_State   : boolean;          // Semaphore to control the Lock/Unlock button status
+{$ENDIF}
    MultiCompany : boolean;          // Indicates whether Multi Company was selected;
    DBPrefix     : string;           // Holds the chosen DBPrefix
 
@@ -75,13 +79,13 @@ var
    FLPMS_UtilityMultiCpy: TFLPMS_UtilityMultiCpy;
 
 {$IFDEF DARWIN}
-   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.dylib';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.dylib';
 {$ENDIF}
 {$IFDEF WINDOWS}
-   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'BSD_Utilities.dll';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'BSD_Utilities.dll';
 {$ENDIF}
 {$IFDEF LINUX}
-   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; external 'libbsd_utilities.so';
+   function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.so';
 {$ENDIF}
 
 implementation
@@ -111,6 +115,19 @@ var
 {$ENDIF}
 
 begin
+
+//--- The Facility to Update the encoding of DBPrefix only works under Winblows
+
+{$IFDEF WINDOWS}
+   cbUpdateEncoding.Visible := True;
+   btnLock.Visible          := True;
+   btnUnlock.Visible        := False;
+   Lock_State               := True;
+{$ELSE}
+   cbUpdateEncoding.Visible := False;
+   btnLock.Visible          := False;
+   btnUnlock.Visible        := False;
+{$ENDIF}
 
 {$IFDEF WINDOWS}
    RegIni := TRegistryIniFile.Create(RegString);
@@ -226,6 +243,42 @@ begin
    Application.MessageBox('''DBPrefix'' is invalid or spelled incorrectly.','LPMS Utility',(MB_OK + MB_ICONSTOP));
    RegIni.Destroy;
    Exit;
+
+end;
+
+//------------------------------------------------------------------------------
+// User clicked on the Lock/Unlock button on the Prefix selection screen
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityMultiCpy.btnUnlockClick(Sender: TObject);
+var
+   Passwd : string;
+   PassPhrase : string = 'BlueCrane Software Development CC';
+
+begin
+
+   if Lock_State = True then begin
+
+      Passwd := FLPMS_UtilityApp.InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then begin
+
+         Lock_State        := False;
+         btnLock.Visible   := False;
+         btnUnlock.Visible := True;
+
+      end;
+
+   end else begin
+
+      Lock_State        := True;
+      btnLock.Visible   := True;
+      btnUnlock.Visible := False;
+
+      cbUpdateEncoding.Checked := False;
+
+   end;
+
+   cbUpdateEncoding.Enabled := not Lock_State;
 
 end;
 

@@ -34,6 +34,7 @@ begin
 
       ImportList.Free;
       TableList.Free;
+      FLPMS_UtilityApp.saAbout.Free;
 
    end;
 

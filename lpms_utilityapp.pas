@@ -348,7 +348,7 @@ private  { Private Declarations }
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
-   Password       : string;        //
+//   Password       : string;        //
    Prefix         : string;        // Used by the Setup funtion as a working field to hold the DBPrefix
    RestoreTables  : string;        // Used by the Restore function t hold the list of tables contained in a backup file
    ServerName     : string;        // The HostName where the LPMS_Server is running
@@ -396,7 +396,6 @@ private  { Private Declarations }
    function  SetDateTimeDef(ThisType: integer) : boolean;
    function  ReadAllRecs(UserStr,DescStr,S2: string) : boolean;
    function  ReadAllLogRecs(UserStr,DescStr,S2: string) : boolean;
-   function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
    procedure ProcessResponse(Response: string);
    function  ReplaceQuote(S1: string; ThisType: integer) : string;
    function  Assemble(List: TStringList) : string;
@@ -416,6 +415,8 @@ public   { Publlic Declartions}
    ThisDBPrefix   : string;        // Contains the DBPrefix that was selected during start-up
    ThisPass       : string;        // Used by 'OLD_ENCODING' to hold the Pass phrase
    ThisRes        : string;        // Result from InputQuery
+
+   function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
 
 end;
 
