@@ -507,6 +507,7 @@ var
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.so';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.so';
    function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.so';
+   function  SimpleVignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.so';
 {$ENDIF}
 
 implementation
@@ -535,6 +536,8 @@ var
 {$ELSE}
    RegIni                    : TINIFile;
 {$ENDIF}
+
+   Temp : string;
 
 begin
 
@@ -1334,7 +1337,7 @@ begin
    if Response = 'LPMS Server Ready' then begin
 
       PlainReq := '4|' + edtName.Text + '|' + edtEmail.Text + '|' + edtNum.Text + '|' + edtCompany.Text + '|' + edtUnique.Text + '|' + edtPrefix.Text + '|';
-      CodedReq := Vignere(CYPHER_ENC,PlainReq,SecretPhrase);
+      CodedReq := SimpleVignere(CYPHER_ENC,PlainReq,SecretPhrase);
       tcpClient.IOHandler.WriteLn(CodedReq);
       Response := tcpClient.IOHandler.ReadLn;
       ProcessResponse(Response);
@@ -6045,7 +6048,7 @@ var
 begin
 
    if ThisType = TYPE_CODED then
-      ThisStr := Vignere(CYPHER_DEC,Str,SecretPhrase)
+      ThisStr := SimpleVignere(CYPHER_DEC,Str,SecretPhrase)
    else
       ThisStr := Str;
 
