@@ -1,7 +1,7 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 457
+  Left = 461
   Height = 570
-  Top = 104
+  Top = 119
   Width = 890
   ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
@@ -24,9 +24,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Register
+    ActivePage = Log
     Align = alClient
-    TabIndex = 0
+    TabIndex = 7
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
@@ -307,7 +307,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object StaticText4: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Enter the information below then click ''Register'' to register this copy of LPMS'
@@ -953,7 +953,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object StaticText1: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Enter the information below then click ''Process'' to set up a new environment for LPMS'
@@ -1263,7 +1263,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object StaticText2: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Provide or Change the ''Prefix'' and or ''Key'' below then click on ''Update'' to update.'
@@ -1906,7 +1906,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object StaticText3: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Enter the information below then click on the [Get] button to retrieve the current Data Base version'
@@ -2334,6 +2334,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnUnlockUClick
       end
       object btnUnlockU: TSpeedButton
         Left = 12
@@ -2442,6 +2443,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           FFFF00FF818181818181818181818181818181FF00FFFF00FFFF00FFFF00FFFF
           00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         }
+        OnClick = btnUnlockUClick
       end
       object Label30: TLabel
         Left = 364
@@ -2468,12 +2470,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
+        OnClick = btnUpgradeUClick
         TabOrder = 15
       end
       object StaticText5: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Upgrade Utility: Select the desired options below then click on ''Process'' to Store/Restore upgrade information'
@@ -2488,12 +2491,12 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 109
         Top = 52
-        Width = 133
+        Width = 220
         Columns = <        
           item
             AutoSize = True
             Caption = 'Alpha Keys'
-            Width = 116
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2501,15 +2504,15 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ViewStyle = vsReport
       end
       object lvNumeric: TListView
-        Left = 153
+        Left = 242
         Height = 109
         Top = 52
-        Width = 133
+        Width = 220
         Columns = <        
           item
             AutoSize = True
             Caption = 'Numeric Keys'
-            Width = 116
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2517,25 +2520,27 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ViewStyle = vsReport
       end
       object rbSave: TRadioButton
-        Left = 441
+        Left = 700
         Height = 21
         Top = 68
         Width = 53
         Caption = ' Save'
         Checked = True
+        OnClick = rbSaveClick
         TabOrder = 5
         TabStop = True
       end
       object rbRestore: TRadioButton
-        Left = 441
+        Left = 700
         Height = 21
         Top = 86
         Width = 69
         Caption = ' Restore'
+        OnClick = rbRestoreClick
         TabOrder = 6
       end
       object cbPersist: TCheckBox
-        Left = 441
+        Left = 700
         Height = 21
         Top = 105
         Width = 95
@@ -2543,7 +2548,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 7
       end
       object cbIgnore: TCheckBox
-        Left = 441
+        Left = 700
         Height = 21
         Top = 123
         Width = 133
@@ -2551,7 +2556,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 8
       end
       object cbDebug: TCheckBox
-        Left = 441
+        Left = 700
         Height = 21
         Top = 142
         Width = 98
@@ -2559,15 +2564,15 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 9
       end
       object lvExclude: TListView
-        Left = 294
+        Left = 472
         Height = 109
         Top = 52
-        Width = 133
+        Width = 220
         Columns = <        
           item
             AutoSize = True
             Caption = 'Exclude List'
-            Width = 116
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2590,49 +2595,44 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 11
       end
       object rbSilent: TRadioButton
-        Left = 441
+        Left = 700
         Height = 21
         Top = 50
         Width = 54
         Caption = 'Silent'
+        OnClick = rbSilentClick
         TabOrder = 4
       end
-      object edtFolder: TFileNameEdit
+      object Bevel5: TBevel
+        Left = 0
+        Height = 2
+        Top = 45
+        Width = 890
+        Anchors = [akTop, akLeft, akRight]
+      end
+      object Label44: TLabel
+        Left = 12
+        Height = 17
+        Top = 260
+        Width = 34
+        Caption = 'GUID:'
+        ParentColor = False
+      end
+      object edtGUID: TEdit
+        Left = 120
+        Height = 27
+        Top = 256
+        Width = 752
+        TabOrder = 13
+        Text = '{47A47B9B-8562-4A31-B06E-806D9E26A148}'
+      end
+      object edtFolder: TDirectoryEdit
         Left = 120
         Height = 27
         Top = 166
         Width = 752
-        FilterIndex = 0
-        HideDirectories = False
+        ShowHidden = False
         ButtonWidth = 23
-        Glyph.Data = {
-          36030000424D3803000000000000360000002800000010000000100000000100
-          18000000000000000000120B0000120B00000000000000000000FF00FF0274AC
-          0274AC0274AC0274AC0274AC0274AC0274AC0274AC0274AC0274AC0274AC0274
-          AC0274ACFF00FFFF00FF0274AC138AC457B7E06BCBF84BBFF74ABFF74ABFF74A
-          BFF74ABFF64ABFF74ABFF64BC0F72398CC0274ACFF00FFFF00FF0274AC33AAE0
-          2392C489D9FA54C7F854C7F753C7F854C7F754C7F854C7F854C7F853C7F7279D
-          CE6ACBE50274ACFF00FF0274AC57CAF80274AC99E3FB5ED1FA5ED1FA5ED1FA5E
-          D1FA5ED1FA5FD1FA5ED1F85ED1F82CA1CE99EDF70274ACFF00FF0274AC5ED3FA
-          0B81B782D5EF79E0FA6ADCFA69DCFB69DCFB6ADCFB69DCFB69DCFA6ADDFB2FA6
-          CF9FF0F70274ACFF00FF0274AC68DAFB2BA4D14AB2D797EBFC74E5FB74E5FB74
-          E5FC74E5FC74E5FB74E5FC046B0B33A9CFA3F4F752BBD70274AC0274AC70E3FB
-          5CD1EF1184B6FCFFFFB8F4FEBAF4FEBAF4FEBAF4FEB8F4FE046B0B25AA42046B
-          0BD4F7FACAF3F70274AC0274AC7AEBFE7AEBFC0A7FB50274AC0274AC0274AC02
-          74AC0274AC046B0B38CE6547E77F29B44A046B0B0274AC0274AC0274AC83F2FE
-          82F3FE82F3FE83F2FC83F3FE82F3FE83F2FE046B0B2DC0513FDC6E3ED86E46E5
-          7B28B04A046B0BFF00FF0274ACFEFEFE89FAFF89FAFE89FAFE8AF8FE8AFAFE04
-          6B0B046B0B046B0B046B0B3CD86A2EBF53046B0B046B0B046B0BFF00FF0274AC
-          FEFEFE8FFEFF8FFEFF8FFEFF0273A32BA4D12BA4D12BA4D1046B0B35D35E20A7
-          3A046B0BFF00FFFF00FFFF00FFFF00FF0274AC0274AC0274AC0274ACFF00FFFF
-          00FFFF00FFFF00FF046B0B28C24A046B0BFF00FFFF00FFFF00FFFF00FFFF00FF
-          FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF046B0B17A42B19A730046B
-          0BFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-          00FFFF00FF046B0B11A122046B0BFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
-          FF00FFFF00FFFF00FFFF00FFFF00FF046B0B046B0B046B0B046B0BFF00FFFF00
-          FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF046B0B046B0B04
-          6B0B046B0BFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
-        }
         NumGlyphs = 1
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
@@ -2677,14 +2677,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         NumGlyphs = 1
         Anchors = [akTop, akLeft, akRight]
         MaxLength = 0
-        TabOrder = 13
-      end
-      object Bevel5: TBevel
-        Left = 0
-        Height = 2
-        Top = 45
-        Width = 890
-        Anchors = [akTop, akLeft, akRight]
+        TabOrder = 16
+        OnButtonClick = edtSetupLocButtonClick
       end
     end
     object SQL: TTabSheet
@@ -3167,7 +3161,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object StaticText6: TStaticText
         Left = 12
         Height = 29
-        Top = 12
+        Top = 8
         Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS First Run Utility: Enter the database information below together with a valid SQL statement then click on ''Process'''
@@ -3237,7 +3231,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtSQLD: TComboBox
         Left = 120
-        Height = 23
+        Height = 27
         Top = 172
         Width = 751
         Anchors = [akTop, akLeft, akRight]
@@ -5303,7 +5297,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object stMsgL: TLabel
         Left = 12
         Height = 48
-        Top = 12
+        Top = 8
         Width = 826
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
@@ -5336,7 +5330,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy

@@ -99,7 +99,7 @@ begin
   FLPMS_UtilityApp.RestoreUser := edtUsername.Text;
   FLPMS_UtilityApp.RestorePass := edtPassword.Text;
 
-  FLPMS_UtilityApp.DoRestore   := True;
+  FLPMS_UtilityApp.DoRest   := True;
 
   Close;
 
@@ -111,7 +111,7 @@ end;
 procedure TFLPMS_UtilitySelDB.btnReturnClick(Sender: TObject);
 begin
 
-  FLPMS_UtilityApp.DoRestore := False;
+  FLPMS_UtilityApp.DoRest := False;
   Close;
 
 end;

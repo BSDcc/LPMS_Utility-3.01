@@ -21,7 +21,7 @@ interface
 //------------------------------------------------------------------------------
 uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout,
+   ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout, Zipper,
    IdTCPClient, StrUtils, DateTimePicker, LazFileUtils, sqldb, db, LCLType,
    Process,
 
@@ -113,6 +113,10 @@ type
       chkAutoRefresh: TCheckBox;
       chkMatchAny: TCheckBox;
       Convert: TTabSheet;
+      edtFolder: TDirectoryEdit;
+      edtGUID: TEdit;
+      edtSetupLoc: TFileNameEdit;
+      Label44: TLabel;
       stMsgL: TLabel;
       sdArchive: TSaveDialog;
       stMsgB: TLabel;
@@ -170,8 +174,6 @@ type
       edtVersion: TEdit;
       edtArchive: TFileNameEdit;
       edtBackupFile: TFileNameEdit;
-      edtFolder: TFileNameEdit;
-      edtSetupLoc: TFileNameEdit;
       edtSQLFile: TFileNameEdit;
       imgMaintenance: TImage;
       imgSetup: TImage;
@@ -292,12 +294,15 @@ type
       procedure btnUnlockBClick(Sender: TObject);
       procedure btnUnlockCClick(Sender: TObject);
       procedure btnUnlockLClick(Sender: TObject);
+      procedure btnUnlockUClick(Sender: TObject);
+      procedure btnUpgradeUClick(Sender: TObject);
       procedure chkAutoRefreshClick(Sender: TObject);
       procedure edtArchiveAcceptFileName(Sender: TObject; var Value: String);
       procedure edtArchiveButtonClick(Sender: TObject);
       procedure edtArchiveChange(Sender: TObject);
       procedure edtBackupFileButtonClick(Sender: TObject);
       procedure edtBackupFileChange(Sender: TObject);
+      procedure edtFolderAcceptDirectory(Sender: TObject; var Value: String);
       procedure edtHostNameCChange(Sender: TObject);
       procedure edtHostNameChange(Sender: TObject);
       procedure edtHostNameDChange(Sender: TObject);
@@ -306,6 +311,7 @@ type
       procedure edtKeyMKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure edtNameChange(Sender: TObject);
       procedure edtPrefixMChange(Sender: TObject);
+      procedure edtSetupLocButtonClick(Sender: TObject);
       procedure edtSQLFileButtonClick(Sender: TObject);
       procedure edtUserLChange(Sender: TObject);
       procedure FormCreate(Sender: TObject);
@@ -316,6 +322,9 @@ type
       procedure pgTabsChange(Sender: TObject);
       procedure rbFullClick(Sender: TObject);
       procedure rbPartialClick(Sender: TObject);
+      procedure rbRestoreClick(Sender: TObject);
+      procedure rbSaveClick(Sender: TObject);
+      procedure rbSilentClick(Sender: TObject);
       procedure speIntervalChange(Sender: TObject);
       procedure SQLQry1AfterOpen(DataSet: TDataSet);
       procedure timTimerTimer(Sender: TObject);
@@ -339,16 +348,11 @@ private  { Private Declarations }
    SearchUser     : boolean;       // Used on the Log Tab to search onlu User
    Selected       : boolean;       // Used as a semaphore on the Restore tab to toggle selection of tables to be restored
    Sema           : boolean;       // Used as a semaphore to toggel select/deselect of Log entries on the Log Tab
-   ClientContact  : string;        //
-   ClientEmail    : string;        //
-   ClientName     : string;        //
-   ClientUnique   : string;        //
    ErrMsg         : string;        // Last error message
-   FilesDir       : string;        //
+   FilesDir       : string;        // Used by Upgrade function to store the name of variable tables such as Default Interest Rates ans Party-and-Party Fees
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
-//   Password       : string;        //
    Prefix         : string;        // Used by the Setup funtion as a working field to hold the DBPrefix
    RestoreTables  : string;        // Used by the Restore function t hold the list of tables contained in a backup file
    ServerName     : string;        // The HostName where the LPMS_Server is running
@@ -356,7 +360,6 @@ private  { Private Declarations }
    SQLFile        : string;        // Used by the Setup function to hold the name of the Table DDL defintions file
    ThisGUID       : string;        // Contains LPMS' existing GUID - used for silent installs
    ThisInstall    : string;        // FQDSN of the Silent Install utility
-   UserName       : string;        //
    UserKey        : string;        // The LPMS Key stored in the Registry
    LogList        : TStringList;   // Used as a string list to get the results of the Dissassemble function and by the RedAllLogRecords function
    RespList       : TStringList;   // Holds the components of the response from the Server
@@ -402,7 +405,7 @@ private  { Private Declarations }
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
 
 public   { Publlic Declartions}
-   DoRestore      : boolean;       // Used as a semaphore by the Restore function
+   DoRest         : boolean;       // Used as a semaphore by the Restore function
    Proceed        : boolean;       // False when user clicked on 'Cancel' on the MultiCpy screen otherwise True
    DBPrefix       : string;        // The Database Prefix stored in the Registry
    KeepRegString  : string;        // Holds the actual Registry location depending on the platform and the value of MultiCompany
@@ -442,6 +445,9 @@ const
    TYPE_CURRENT       = 2;
    TYPE_MASK          = 0;
    TYPE_UNMASK        = 1;
+   RT_OPEN            = 0;
+   RT_RESTORE         = 1;
+
 
 type
 
@@ -493,6 +499,7 @@ var
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'libbsd_utilities.dylib';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'libbsd_utilities.dylib';
    function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.dylib';
+   function  SimpleVignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'libbsd_utilities.dylib';
 {$ENDIF}
 {$IFDEF WINDOWS}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'BSD_Utilities.dll';
@@ -500,6 +507,7 @@ var
    function  DoDecode(var Decode_Key_Priv: REC_Key_Priv): integer; stdcall; external 'BSD_Utilities.dll';
    function  GetUnique(var Get_Unique_Values: REC_Unique_Values): integer; stdcall; external 'BSD_Utilities.dll';
    function  Vignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'BSD_Utilities.dll';
+   function  SimpleVignere(ThisType: integer; Phrase: string; const Key: string) : string; stdcall; external 'BSD_Utilities.dll';
 {$ENDIF}
 {$IFDEF LINUX}
    function  cmdlOptions(OptList : string; CmdLine, ParmStr : TStringList): integer; stdcall; external 'libbsd_utilities.so';
@@ -537,14 +545,12 @@ var
    RegIni                    : TINIFile;
 {$ENDIF}
 
-   Temp : string;
-
 begin
 
-   CanUpdate     := False;
-   Proceed       := True;
-   RestoreActive := False;
-   Selected      := False;
+   CanUpdate      := False;
+   Proceed        := True;
+   RestoreActive  := False;
+   Selected       := False;
 
 //--- Set the Format Settings to override the system locale
 
@@ -659,16 +665,17 @@ begin
    UserKey         := RegIni.ReadString('Preferences','Key','');
    ServerName      := RegIni.ReadString('Preferences','KeyHost','');
    ServerPort      := RegIni.ReadString('Preferences','KeyPort','');
-   LPMSUpgrade     := RegIni.ReadString('Preferences','LPMSUpgrade',AppendPathDelim(ExtractFilePath(Application.ExeName)) + 'LPMS_Upgrade.exe');
+   LPMSUpgrade     := RegIni.ReadString('Preferences','LPMSUpgrade',AppendPathDelim(ExtractFilePath(Application.ExeName)) + 'LPMS_Upgrade');
    DBPrefix        := RegIni.ReadString('Preferences','DBPrefix','invalid');
 
    RegIni.Destroy;
 
-//--- Check whether any paramters were passed and retrieve if so
-
 {$IFDEF WINDOWS}
    CallHWND := 0;
+   LPMS_Upgrade := LPMS_Upgrade + '.exe';
 {$ENDIF}
+
+//--- Check whether any paramters were passed and retrieve if so
 
    try
 
@@ -769,7 +776,6 @@ begin
    btnProcessM.Enabled := False;
    btnUpgradeU.Enabled := False;
 
-
 //--- Retrieve this PC's Mac Addresses (Up to 6)
 
    NumUnique := GetUnique(This_Unique_Values);
@@ -843,13 +849,13 @@ begin
 
    if pgTabs.ActivePageIndex <> TAB_UPGRADE then begin
 
-      lvAlpha.Clear();
-      lvNumeric.Clear();
-      lvExclude.Clear();
-      edtFolder.Clear();
-      edtRoot.Clear();
-      edtSubkey.Clear();
-      edtSetupLoc.Clear();
+      lvAlpha.Clear;
+      lvNumeric.Clear;
+      lvExclude.Clear;
+      edtFolder.Clear;
+      edtRoot.Clear;
+      edtSubkey.Clear;
+      edtSetupLoc.Clear;
 
       LockU_State       := True;
       rbSilent.Checked  := False;
@@ -1061,6 +1067,7 @@ begin
          edtRoot.Enabled     := False;
          edtSubkey.Enabled   := False;
          edtSetupLoc.Enabled := False;
+         edtGUID.Enabled     := False;
 
          btnUpgradeU.Enabled := False;
          btnUpgradeU.Default := False;
@@ -1085,6 +1092,7 @@ begin
          edtRoot.Enabled     := True;
          edtSubkey.Enabled   := True;
          edtSetupLoc.Enabled := True;
+         edtGUID.Enabled     := True;
 
          btnUpgradeU.Default := True;
          btnCancelU.Caption  := 'Cancel';
@@ -1110,6 +1118,8 @@ begin
 {$ELSE}
          edtRoot.Text   := 'LPMS 3.ini';
 {$ENDIF}
+
+         rbSave.Checked := True;
 
       end;
 
@@ -2043,7 +2053,7 @@ end;
 procedure TFLPMS_UtilityApp.btnProcessCClick(Sender: TObject);
 var
    idx1, Len        : integer;
-   S1, S2, CurrDate, ThisStr : string;
+   S1, S2, CurrDate : string;
    ThisList         : TStringList;
 
 begin
@@ -3847,19 +3857,60 @@ end;
 {--- Upgrade Tab functions                                                  ---}
 {==============================================================================}
 
-//------------------------------------------------------------------------------
-// Parameters to perform a silent upgrade of LPMS were passed to LPMS_Utility
-//------------------------------------------------------------------------------
-procedure TFLPMS_UtilityApp.SilentUpgrade();
+//---------------------------------------------------------------------------
+// User clicked on the Lock button on the Upgrade page
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnUnlockUClick(Sender: TObject);
 var
-   idx      : integer;
-   Process  : TProcess;
+   Passwd : string;
 
 begin
 
-   Process := TProcess.Create(nil);
+   if LockU_State = True then begin
+
+      Passwd := InputQueryM('LPMS Utility','Pass phrase:',ord(TYPE_PASSWORD));
+
+      if Passwd = PassPhrase then
+         LockU_State    := False;
+
+   end else begin
+
+      LockU_State       := True;
+      rbSilent.Checked  := False;
+      rbSave.Checked    := False;
+      rbRestore.Checked := False;
+      cbPersist.Checked := False;
+      cbIgnore.Checked  := False;
+      cbDebug.Checked   := False;
+      lvAlpha.Clear;
+      lvNumeric.Clear;
+      lvExclude.Clear;
+      edtFolder.Clear;
+      edtRoot.Clear;
+      edtSubkey.Clear;
+      edtSetupLoc.Clear;
+
+   end;
+
+   pgTabsChange(Sender);
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the Upgrade button on the Upgrade page
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.btnUpgradeUClick(Sender: TObject);
+var
+   idx         : integer;
+   Process     : TProcess;
+
+begin
+
+//   ThisGUID := '{47A47B9B-8562-4A31-B06E-806D9E26A148}';
 
    try
+
+      Process := TProcess.Create(nil);
 
       Process.InheritHandles := False;
       Process.Options        := [poWaitOnExit];
@@ -3872,7 +3923,195 @@ begin
          Process.Environment.Add(GetEnvironmentString(idx));
 
       Process.Executable := LPMSUpgrade;
-//      Process.Parameters.Add('--args');
+
+      if rbSave.Checked = True then
+         Process.Parameters.Add('-TStart')
+      else if rbRestore.Checked = True then
+         Process.Parameters.Add('-TEnd')
+      else begin
+
+         if Trim(edtSetupLoc.Text) = '' then begin
+
+            Application.MessageBox('"Setup Location" must be specified when "Silent" is selected','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            edtSetupLoc.SetFocus;
+            Exit;
+
+         end;
+
+         if Length(edtGUID.Text) <> 38 then begin
+
+            Application.MessageBox('"GUID" appears to be invalid - please provide a valid "GUID"','LPMS Utility',(MB_OK + MB_ICONSTOP));
+            edtGUID.SetFocus;
+            Exit;
+
+         end;
+
+         Process.Parameters.Add('-TFull -G' + edtGUID.Text + ' -M' + AnsiReplaceStr(AnsiReplaceStr(edtSetupLoc.Text,':','~'),' ','#'));
+
+      end;
+
+      for idx := 0 to lvAlpha.Items.Count - 1 do begin
+
+         if Trim(lvAlpha.Items.Item[idx].Caption) <> '' then
+            Process.Parameters.Add('-K' + lvAlpha.Items.Item[idx].Caption);
+
+      end;
+
+      for idx := 0 to lvNumeric.Items.Count - 1 do begin
+
+         if Trim(lvNumeric.Items.Item[idx].Caption) <> '' then
+            Process.Parameters.Add('-I' + lvNumeric.Items.Item[idx].Caption);
+
+      end;
+
+      for idx := 0 to lvExclude.Items.Count - 1 do begin
+
+         if Trim(lvExclude.Items.Item[idx].Caption) <> '' then
+            Process.Parameters.Add('-X' + lvExclude.Items.Item[idx].Caption);
+
+      end;
+
+      if cbPersist.Checked = True then
+         Process.Parameters.Add('-p');
+
+      if cbIgnore.Checked = True then
+         Process.Parameters.Add('-z');
+
+      if cbDebug.Checked = True then
+         Process.Parameters.Add('-d');
+
+      if Trim(edtFolder.Text) <> '' then
+         Process.Parameters.Add('-F' + AnsiReplaceStr(AnsiReplaceStr(edtFolder.Text,':','~'),' ','#'));
+
+      if Trim(edtRoot.Text) <> '' then
+         Process.Parameters.Add('-R' + AnsiReplaceStr(AnsiReplaceStr(edtRoot.Text,':','~'),' ','#'));
+
+      if Trim(edtSubkey.Text) <> '' then
+         Process.Parameters.Add('-S' + AnsiReplaceStr(AnsiReplaceStr(edtSubkey.Text,':','~'),' ','#'));
+
+      FLPMS_UtilityApp.Hide();
+      Process.Execute;
+
+   finally
+
+      Process.Destroy;
+      FLPMS_UtilityApp.Show();
+
+   end;
+
+//--- If silent mode was requested then LPMS_FirstRun is terminated
+//--- automatically since it cannot be active when LPMS is uninstalled
+
+   if rbSilent.Checked = True then begin
+
+      Application.Terminate;
+      Exit;
+
+   end;
+
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button to do a Silent (Full) upgrade
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.rbSilentClick(Sender: TObject);
+begin
+
+   lvAlpha.Enabled   := True;
+   lvNumeric.Enabled := True;
+   lvExclude.Enabled := True;
+   cbIgnore.Enabled  := True;
+
+   btnUpgradeU.Enabled := True;
+   edtFolder.SetFocus;
+
+end;
+
+//---------------------------------------------------------------------------
+// User selected Save Mode
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.rbSaveClick(Sender: TObject);
+begin
+
+   lvAlpha.Enabled   := True;
+   lvNumeric.Enabled := True;
+   lvExclude.Enabled := True;
+   cbIgnore.Enabled  := True;
+
+   btnUpgradeU.Enabled := True;
+   edtFolder.SetFocus;
+
+end;
+
+//---------------------------------------------------------------------------
+// User selected Restore Mode
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.rbRestoreClick(Sender: TObject);
+begin
+
+   lvAlpha.Enabled   := False;
+   lvNumeric.Enabled := False;
+   lvExclude.Enabled := False;
+   cbIgnore.Enabled  := False;
+
+   btnUpgradeU.Enabled := True;
+   edtFolder.SetFocus;
+
+end;
+
+//------------------------------------------------------------------------------
+// User selected a directory for 'Folder:'
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtFolderAcceptDirectory(Sender: TObject; var Value: String);
+begin
+   //
+end;
+
+//---------------------------------------------------------------------------
+// User clicked on the button embedded in the Setup Location field
+//---------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.edtSetupLocButtonClick(Sender: TObject);
+begin
+
+{$IFDEF WINDOWS}
+   edtSetupLoc.Filter      := 'Executable Files (*.exe)|*.exe|All Files (*.*)|*.*';
+   edtSetupLoc.DefaultExt  := '.exe';
+{$ELSE}
+   edtSetupLoc.Filter      := 'Executable Files (*)|*|All Files (*.*)|*.*';
+   edtSetupLoc.DefaultExt  := '';
+{$ENDIF}
+   edtSetupLoc.FilterIndex := 1;
+
+   if Trim(edtSetupLoc.Text) <> '' then
+      edtSetupLoc.InitialDir := ExtractFilePath(edtSetupLoc.Text);
+
+end;
+
+//------------------------------------------------------------------------------
+// Parameters to perform a silent upgrade of LPMS were passed to LPMS_Utility
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.SilentUpgrade();
+var
+   idx      : integer;
+   Process  : TProcess;
+
+begin
+
+   try
+
+      Process := TProcess.Create(nil);
+
+      Process.InheritHandles := False;
+      Process.Options        := [poWaitOnExit];
+      Process.ShowWindow     := swoShow;
+
+//--- Copy default environment variables including DISPLAY variable for GUI
+//--- application to work
+
+      for idx := 1 to GetEnvironmentVariableCount do
+         Process.Environment.Add(GetEnvironmentString(idx));
+
+      Process.Executable := LPMSUpgrade;
       Process.Parameters.Add('-TFull');
       Process.Parameters.Add('-G' + ThisGUID);
       Process.Parameters.Add('-M' + AnsiReplaceStr(AnsiReplaceStr(ThisInstall,':','~'),' ','#'));
@@ -3885,7 +4124,7 @@ begin
       FLPMS_UtilityApp.Show();
 
    finally
-      Process.Free;
+      Process.Destroy;
    end;
 
 end;
@@ -4058,7 +4297,7 @@ begin
    if RestoreActive = True then
       Exit;
 
-   edtBackupFile.Filter      := 'LPMS Backup Files (*.lpb)|*.lpb|All Files (*.*)|*.*';
+   edtBackupFile.Filter      := 'LPMS Backup Files (*.lpb;*.zip)|*.lpb;*.zip|All Files (*.*)|*.*';
    edtBackupFile.DefaultExt  := '.lpb';
    edtBackupFile.FilterIndex := 1;
 
@@ -4069,8 +4308,10 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.edtBackupFileChange(Sender: TObject);
 var
-   idx1     : integer;
-   ThisList : TListItem;
+   idx1       : integer;
+   BackupFile : string;
+   ThisList   : TListItem;
+   ThisUnzip  : TUnZipper;
 
 begin
 
@@ -4084,7 +4325,25 @@ begin
    if FileExists(edtBackupFile.Text) = False then
       Exit;
 
-   GetList(edtBackupFile.Text);
+//--- If the user selected a Zip archive then extract the bckup file from the
+//--- archive
+
+   if ExtractFileExt(edtBackupFile.Text) = '.zip' then begin
+
+      ThisUnzip := TUnZipper.Create;
+
+      ThisUnzip.FileName   := edtBackupFile.Text;
+      ThisUnzip.OutputPath := ExtractFilePath(edtBackupFile.Text);
+      ThisUnzip.Examine;
+      BackupFile := ThisUnzip.OutputPath + ThisUnzip.Entries.Entries[0].ArchiveFileName;
+      ThisUnzip.UnZipAllFiles;
+
+      ThisUnzip.Free;
+
+   end else
+      BackupFile := edtBackupFile.Text;
+
+   GetList(BackupFile);
 
 //--- Check whether the Backup is a valid backup file
 
@@ -4231,7 +4490,7 @@ begin
 
 //--- Select the MySQL server on which the information will be restored
 
-   DoRestore := False;
+   DoRest := False;
 
    FLPMS_UtilityApp.Hide;
    FLPMS_UtilitySelDB := TFLPMS_UtilitySelDB.Create(Application);
@@ -4239,7 +4498,7 @@ begin
    FLPMS_UtilitySelDB.Destroy;
    FLPMS_UtilityApp.Show;
 
-   if DoRestore = False then
+   if DoRest = False then
       Exit;
 
 //--- If we get here we can proceed with the Restore. Connect to the Database
@@ -4638,8 +4897,8 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.MoveItems();
 var
-   idx, idx2, Dummy : integer;
-   ThisItem         : TListItem;
+//   idx2, Dummy : integer;
+   ThisItem    : TListItem;
 
 begin
 
@@ -4798,8 +5057,8 @@ end;
 // User clicked on the button to load the current log
 //---------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnOpenLogClick(Sender: TObject);
-var
-   S1 : string;
+//var
+//   S1 : string;
 
 begin
 
@@ -5355,11 +5614,11 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnArchiveClick(Sender: TObject);
 var
-   idx1, SaveIdx          : integer;
-   ThisSel                : boolean = False;
-   LogFile                : TextFile;
-   S1, ThisLine, FileName : string;
-   SaveList               : TStringList;
+   idx1, SaveIdx      : integer;
+   ThisSel            : boolean = False;
+   LogFile            : TextFile;
+   FileName, ThisLine : string;
+   SaveList           : TStringList;
 begin
 
 //--- We cannot do an archive if the ListView contains the contents of an Archive
@@ -5644,9 +5903,9 @@ end;
 //------------------------------------------------------------------------------
 function TFLPMS_UtilityApp.SetDateTimeDef(ThisType: integer) : boolean;
 var
-   NumLines              : integer = 0;
-   LogLine, S1, FileName : string;
-   LogFile               : TextFile;
+   NumLines   : integer = 0;
+   LogLine, S1: string;
+   LogFile    : TextFile;
 
 begin
 
@@ -5904,12 +6163,12 @@ end;
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.ProcessResponse(Response: string);
 var
-   idx1, MsgType      : integer;
-   ThisPrefix, T1, T2 : string;
+   idx1, MsgType  : integer;
+   ThisPrefix     : string;
 {$IFDEF WINDOWS}
-   RegIni             : TRegistryIniFile;
+   RegIni         : TRegistryIniFile;
 {$ELSE}
-   RegIni             : TINIFile;
+   RegIni         : TINIFile;
 {$ENDIF}
 
 begin
