@@ -23,7 +23,7 @@ uses
    Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
    ExtCtrls, Buttons, DBGrids, DBCtrls, EditBtn, Spin, usplashabout, Zipper,
    IdTCPClient, StrUtils, DateTimePicker, LazFileUtils, sqldb, db, LCLType,
-   Process,
+   Process, FileInfo,
 
 {$IFDEF WINDOWS}                     // Target is Winblows
    Registry, Windows, mysql56conn;
@@ -385,9 +385,12 @@ private  { Private Declarations }
    SearchUser     : boolean;       // Used on the Log Tab to search onlu User
    Selected       : boolean;       // Used as a semaphore on the Restore tab to toggle selection of tables to be restored
    Sema           : boolean;       // Used as a semaphore to toggel select/deselect of Log entries on the Log Tab
+   Build          : string;        // Build portion of the Version Number
    ErrMsg         : string;        // Last error message
    FilesDir       : string;        // Used by Upgrade function to store the name of variable tables such as Default Interest Rates ans Party-and-Party Fees
    LPMSUpgrade    : string;        // Path to the LPMS_Upgrade utility
+   Major          : string;        // Major portion of the Version Number
+   Minor          : string;        // Minor portion of the Version Number
    OSName         : string;        // Name of the OS we are running on
    OSShort        : string;        // Short name of the OS we are running on
    Prefix         : string;        // Used by the Setup funtion as a working field to hold the DBPrefix
@@ -400,6 +403,7 @@ private  { Private Declarations }
    UserKey        : string;        // The LPMS Key stored in the Registry
    LogList        : TStringList;   // Used as a string list to get the results of the Dissassemble function and by the RedAllLogRecords function
    RespList       : TStringList;   // Holds the components of the response from the Server
+   VerRelease     : string;      // Release portion of the Version Number
 
 {$IFDEF WINDOWS}                   // Target is Winblows
    SQLCon  : TMySQL56Connection;
@@ -440,6 +444,7 @@ private  { Private Declarations }
    function  ReplaceQuote(S1: string; ThisType: integer) : string;
    function  Assemble(List: TStringList) : string;
    function  Disassemble(Str: string; ThisType: integer) : TStringList;
+   procedure GetVersion();
 
 public   { Publlic Declartions}
    DoRest         : boolean;       // Used as a semaphore by the Restore function
@@ -455,6 +460,7 @@ public   { Publlic Declartions}
    ThisDBPrefix   : string;        // Contains the DBPrefix that was selected during start-up
    ThisPass       : string;        // Used by 'OLD_ENCODING' to hold the Pass phrase
    ThisRes        : string;        // Result from InputQuery
+   Version        : string;        // String containing the full version
 
    function  InputQueryM(ThisCap, Question: string; DispType: integer) : string;
 
@@ -716,6 +722,14 @@ begin
 {$IFDEF WINDOWS}
    CallHWND := 0;
    LPMS_Upgrade := LPMS_Upgrade + '.exe';
+{$ENDIF}
+
+   GetVersion();
+
+{$IFOPT D+}
+   Version := 'Version ' + Major + '.' + Minor + '.' + VerRelease + ' [DEBUG]';
+{$ELSE}
+   Version := 'Version ' + Major + '.' + Minor + '.' + VerRelease + ' [' + Build + ']';
 {$ENDIF}
 
 //--- Check whether any paramters were passed and retrieve if so
@@ -6607,6 +6621,101 @@ begin
    Tokens := TStringList.Create;
    ExtractStrings(['|'], [], PChar(ThisStr),Tokens);
    Result := Tokens;
+
+end;
+
+//------------------------------------------------------------------------------
+// Procedure to extract the version info from the Application
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.GetVersion();
+var
+
+{$IFDEF DARWIN}
+   BundleRef     : CFBundleRef;
+   KeyRef        : CFStringRef;
+   ValueRef      : CFTypeRef;
+{$ENDIF}
+
+   idx           : integer;
+   VersionString : string;
+   VersionTokens : TStringList;
+   FileVerInfo   : TFileVersionInfo;
+
+begin
+
+{$IFDEF DARWIN}
+
+   try
+
+      BundleRef := CFBundleGetMainBundle;
+
+      if BundleRef = nil then
+         Exit;
+
+      KeyRef   := CFStringCreateWithPascalString(nil,'CFBundleVersion',kCFStringEncodingUTF8);
+      ValueRef := CFBundleGetValueForInfoDictionaryKey(BundleRef, KeyRef);
+
+      if ValueRef = nil then
+         Exit;
+
+      if CFGetTypeID(ValueRef) <> CFStringGetTypeID then
+         Exit;
+
+      VersionString := CFStringToStr(ValueRef);
+
+   except on E : Exception do
+      ShowMessage(E.Message);
+
+   end;
+
+   FreeCFString(KeyRef);
+
+   VersionTokens := TStringList.Create;
+   FileVerInfo   := TFileVersionInfo.Create(nil);
+
+   ExtractStrings(['.'], [], PChar(VersionString), VersionTokens);
+
+   Major      := Copy(VersionTokens[0],13,99);
+   Minor      := VersionTokens[1];
+   VerRelease := VersionTokens[2];
+   Build      := VersionTokens[3];
+
+   VersionTokens.Free;
+   FileVerInfo.Free;
+
+{$ELSE}
+
+   VersionTokens := TStringList.Create;
+   FileVerInfo   := TFileVersionInfo.Create(nil);
+
+   try
+
+     FileVerInfo.ReadFileInfo;
+
+     for idx := 0 to FileVerInfo.VersionStrings.Count -1 do begin
+
+        VersionString := FileVerInfo.VersionStrings[idx];
+
+        if Copy(VersionString,1,12) = 'FileVersion=' then
+           break;
+
+     end;
+
+     ExtractStrings(['.'], [], PChar(VersionString), VersionTokens);
+
+     Major      := Copy(VersionTokens[0],13,99);
+     Minor      := VersionTokens[1];
+     VerRelease := VersionTokens[2];
+     Build      := VersionTokens[3];
+
+   finally
+
+     VersionTokens.Free;
+     FileVerInfo.Free;
+
+   end;
+
+{$ENDIF}
 
 end;
 
