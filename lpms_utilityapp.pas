@@ -55,6 +55,7 @@ type
    { TFLPMS_UtilityApp }
 
    TFLPMS_UtilityApp = class(TForm)
+   cbLPMSDB: TCheckBox;
    DBGridK: TListView;
       Bevel1: TBevel;
       Bevel2: TBevel;
@@ -132,6 +133,7 @@ type
       edtPortK: TEdit;
       edtPrefixK: TEdit;
       edtSetupLoc: TFileNameEdit;
+      edtPrefixB: TEdit;
       edtUserNameK: TEdit;
       imgBackup: TImage;
       Label44: TLabel;
@@ -145,6 +147,7 @@ type
       Label52: TLabel;
       Label53: TLabel;
       Label54: TLabel;
+      lblTitle1: TLabel;
       stMsgK: TLabel;
       stMsgL: TLabel;
       sdArchive: TSaveDialog;
@@ -329,6 +332,8 @@ type
       procedure btnUnlockLClick(Sender: TObject);
       procedure btnUnlockUClick(Sender: TObject);
       procedure btnUpgradeUClick(Sender: TObject);
+      procedure cbLPMSDBChange(Sender: TObject);
+      procedure cbLPMSDBDChange(Sender: TObject);
       procedure cbLPMSDBKChange(Sender: TObject);
       procedure chkAutoRefreshClick(Sender: TObject);
       procedure edtArchiveAcceptFileName(Sender: TObject; var Value: String);
@@ -455,7 +460,9 @@ public   { Publlic Declartions}
    RegPath        : string;        // Path to the local INI file - Not used on Winblows
    RestoreHost    : string;        // Used by the Restore function to indicate the Host to which the Resotre must be done
    RestorePass    : string;        // Used by the Restore function to hold the Password of the Restore Host
-   RestoreUser    : string;        // Used by the Restore function to hold the UserID of the Restore Host//   Result         : string;        //
+   RestoreUser    : string;        // Used by the Restore function to hold the UserID of the Restore Host
+   RestorePort    : string;        // Used by the Restore function to hold the Port on which the MySQL database is listening
+   //Result         : string;        //
    SecretPhrase   : string;        // Used by Vignere
    ThisDBPrefix   : string;        // Contains the DBPrefix that was selected during start-up
    ThisPass       : string;        // Used by 'OLD_ENCODING' to hold the Pass phrase
@@ -983,12 +990,14 @@ begin
       edtVersion.Clear;
       edtTime.Clear;
       edtType.Clear;
+      edtPrefixB.Text := ThisDBPrefix;
 
       LockB_State            := True;
       edtBackupFile.Enabled  := False;
       rbFull.Checked         := False;
       rbPartial.Checked      := False;
       cbType.Checked         := False;
+      cbLPMSDB.Checked       := False;
       stMsgB.Caption         := 'LPMS Utility: Enter or select the backup file to restore then select the required options before clicking on "Restore".';
 
    end;
@@ -1299,6 +1308,7 @@ begin
 
       rbFull.Checked      := True;
       cbType.Checked      := False;
+      cbLPMSDB.Checked    := True;
       btnProcessB.Enabled := False;
       btnAllB.Enabled     := False;
       lvTables.Enabled    := False;
@@ -1320,6 +1330,8 @@ begin
          edtVersion.Enabled    := False;
          edtMode.Enabled       := False;
          edtType.Enabled       := False;
+         edtPrefixB.Enabled    := False;
+         cbLPMSDB.Enabled      := False;;
          rbFull.Enabled        := False;
          rbPartial.Enabled     := False;
          cbType.Enabled        := False;
@@ -4293,6 +4305,19 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// User restricted/granted access to LPMS only/All databases
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.cbLPMSDBDChange(Sender: TObject);
+begin
+
+   if cbLPMSDBD.Checked = True then
+      edtPrefixD.MaxLength := 6
+   else
+      edtPrefixD.MaxLength := 0;
+
+end;
+
+//------------------------------------------------------------------------------
 // User clicked on the Lock/Unlock button on the SQL Tab
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.btnLockDClick(Sender: TObject);
@@ -4594,6 +4619,19 @@ end;
 {==============================================================================}
 
 //------------------------------------------------------------------------------
+// User restricted/granted access to LPMS only/All databases
+//------------------------------------------------------------------------------
+procedure TFLPMS_UtilityApp.cbLPMSDBChange(Sender: TObject);
+begin
+
+   if cbLPMSDB.Checked = True then
+      edtPrefixB.MaxLength := 6
+   else
+      edtPrefixB.MaxLength := 0;
+
+end;
+
+//------------------------------------------------------------------------------
 // User clicked on the button embedded in the Backup File field
 //------------------------------------------------------------------------------
 procedure TFLPMS_UtilityApp.edtBackupFileButtonClick(Sender: TObject);
@@ -4680,6 +4718,8 @@ begin
    edtVersion.Enabled := True;
    edtMode.Enabled    := True;
    edtType.Enabled    := True;
+   edtPrefixB.Enabled := True;
+   cbLPMSDB.Enabled   := True;
 
 //--- Extract the tables that are in scope
 
@@ -4811,10 +4851,16 @@ begin
 //--- If we get here we can proceed with the Restore. Connect to the Database
 //--- using the credentials provided by the user.
 
+   if cbLPMSDB.Checked = True then
+      S1 := '_LPMS'
+   else
+      S1 := '';
+
    SQLCon.HostName     := RestoreHost;
    SQLCon.UserName     := RestoreUser;
    SQLCon.Password     := RestorePass;
-   SQLCon.DatabaseName := ThisDBPrefix + '_LPMS';
+   SQLCon.Port         := StrToInt(RestorePort);
+   SQLCon.DatabaseName := edtPrefixB.Text + S1;
    SQLTran.DataBase    := SQLCon;
    SQLQry1.Transaction := SQLTran;
    SQLDs1.DataSet      := SQLQry1;

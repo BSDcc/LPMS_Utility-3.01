@@ -37,12 +37,15 @@ type
    btnReturn: TBitBtn;
    edtHostname: TEdit;
    edtPassword: TEdit;
+   edtPort: TEdit;
    edtUsername: TEdit;
    imgSmall: TImageList;
    Label1: TLabel;
    Label12: TLabel;
    Label2: TLabel;
    Label3: TLabel;
+   Label4: TLabel;
+   Label5: TLabel;
    procedure btnConnectClick(Sender: TObject);
    procedure btnReturnClick(Sender: TObject);
    procedure edtHostnameChange(Sender: TObject);
@@ -95,13 +98,18 @@ end;
 procedure TFLPMS_UtilitySelDB.btnConnectClick(Sender: TObject);
 begin
 
-  FLPMS_UtilityApp.RestoreHost := edtHostname.Text;
-  FLPMS_UtilityApp.RestoreUser := edtUsername.Text;
-  FLPMS_UtilityApp.RestorePass := edtPassword.Text;
+   FLPMS_UtilityApp.RestoreHost := edtHostname.Text;
+   FLPMS_UtilityApp.RestoreUser := edtUsername.Text;
+   FLPMS_UtilityApp.RestorePass := edtPassword.Text;
 
-  FLPMS_UtilityApp.DoRest   := True;
+   if Trim(edtPort.Text) = '' then
+      FLPMS_UtilityApp.RestorePort := '3306'
+   else
+      FLPMS_UtilityApp.RestorePort := edtPort.Text;
 
-  Close;
+   FLPMS_UtilityApp.DoRest   := True;
+
+   Close;
 
 end;
 

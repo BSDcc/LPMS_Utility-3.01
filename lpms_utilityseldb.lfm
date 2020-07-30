@@ -1,17 +1,17 @@
 object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   Left = 782
-  Height = 220
+  Height = 235
   Top = 182
-  Width = 434
+  Width = 480
   Caption = 'LPMS UTILITY - SELECT HOST'
-  ClientHeight = 220
-  ClientWidth = 434
+  ClientHeight = 235
+  ClientWidth = 480
   Position = poScreenCenter
   LCLVersion = '2.0.8.0'
   object Label12: TLabel
     Left = 12
     Height = 17
-    Top = 94
+    Top = 79
     Width = 66
     Caption = 'Host Name:'
     ParentColor = False
@@ -20,8 +20,8 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object edtHostname: TEdit
     Left = 108
     Height = 27
-    Top = 90
-    Width = 312
+    Top = 75
+    Width = 358
     Anchors = [akTop, akLeft, akRight]
     OnChange = edtHostnameChange
     TabOrder = 0
@@ -29,8 +29,8 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object edtUsername: TEdit
     Left = 108
     Height = 27
-    Top = 120
-    Width = 312
+    Top = 105
+    Width = 358
     Anchors = [akTop, akLeft, akRight]
     OnChange = edtHostnameChange
     TabOrder = 1
@@ -38,7 +38,7 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object Label1: TLabel
     Left = 12
     Height = 17
-    Top = 124
+    Top = 109
     Width = 46
     Caption = 'User ID:'
     ParentColor = False
@@ -46,7 +46,7 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object Label2: TLabel
     Left = 12
     Height = 17
-    Top = 154
+    Top = 139
     Width = 57
     Caption = 'Password:'
     ParentColor = False
@@ -54,8 +54,8 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object edtPassword: TEdit
     Left = 108
     Height = 27
-    Top = 150
-    Width = 312
+    Top = 135
+    Width = 358
     Anchors = [akTop, akLeft, akRight]
     EchoMode = emPassword
     OnChange = edtHostnameChange
@@ -65,13 +65,13 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
   object Bevel1: TBevel
     Left = 0
     Height = 2
-    Top = 82
+    Top = 67
     Width = 423
   end
   object btnConnect: TBitBtn
-    Left = 263
+    Left = 309
     Height = 25
-    Top = 185
+    Top = 200
     Width = 75
     Anchors = [akRight, akBottom]
     Caption = 'Restore'
@@ -80,12 +80,12 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
     Images = imgSmall
     ImageIndex = 0
     OnClick = btnConnectClick
-    TabOrder = 3
+    TabOrder = 4
   end
   object btnReturn: TBitBtn
-    Left = 345
+    Left = 391
     Height = 25
-    Top = 185
+    Top = 200
     Width = 75
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
@@ -93,13 +93,13 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
     Images = imgSmall
     ImageIndex = 3
     OnClick = btnReturnClick
-    TabOrder = 4
+    TabOrder = 5
   end
   object Label3: TLabel
     Left = 10
-    Height = 74
+    Height = 54
     Top = 8
-    Width = 408
+    Width = 454
     Anchors = [akTop, akLeft, akRight]
     AutoSize = False
     Caption = 'Enter the name of the Host where the backup data must be restored to and a User-ID and Password with sufficient  access privileges to create the Database and Tables  required by LPMS on this Host'
@@ -108,6 +108,33 @@ object FLPMS_UtilitySelDB: TFLPMS_UtilitySelDB
     ParentColor = False
     ParentFont = False
     WordWrap = True
+  end
+  object Label4: TLabel
+    Left = 12
+    Height = 17
+    Top = 169
+    Width = 26
+    Caption = 'Port:'
+    ParentColor = False
+  end
+  object edtPort: TEdit
+    Left = 108
+    Height = 27
+    Top = 165
+    Width = 92
+    Anchors = [akTop, akLeft, akRight]
+    EchoMode = emPassword
+    OnChange = edtHostnameChange
+    PasswordChar = '*'
+    TabOrder = 3
+  end
+  object Label5: TLabel
+    Left = 210
+    Height = 17
+    Top = 169
+    Width = 153
+    Caption = 'Leave blank for default Port'
+    ParentColor = False
   end
   object imgSmall: TImageList
     left = 68

@@ -1,7 +1,7 @@
 object FLPMS_UtilityApp: TFLPMS_UtilityApp
-  Left = 474
+  Left = 582
   Height = 570
-  Top = 150
+  Top = 224
   Width = 890
   ActiveControl = pgTabs
   Caption = 'FLPMS_UtilityApp'
@@ -24,15 +24,15 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     Height = 570
     Top = 0
     Width = 890
-    ActivePage = Convert
+    ActivePage = Log
     Align = alClient
-    TabIndex = 3
+    TabIndex = 8
     TabOrder = 1
     OnChange = pgTabsChange
     object Register: TTabSheet
       Caption = 'Register'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 0
       object Label16: TLabel
         Left = 12
@@ -83,7 +83,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object imgRegister: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -308,7 +308,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Enter the information below then click ''Register'' to register this copy of LPMS.'
         Font.Color = clBlue
@@ -322,13 +322,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 52
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtNameChange
         TabOrder = 1
       end
       object btnCancelR: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -338,7 +338,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 8
       end
       object btnRegister: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -351,7 +351,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 82
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtNameChange
         TabOrder = 2
@@ -376,7 +376,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 202
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         ReadOnly = True
         TabOrder = 6
@@ -393,7 +393,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 142
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtNameChange
         TabOrder = 4
@@ -402,14 +402,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
     end
     object Setup: TTabSheet
       Caption = 'Set-up'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 1
       object Label1: TLabel
         Left = 12
@@ -452,7 +452,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object imgSetup: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 9
         Width = 32
@@ -676,7 +676,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockS: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -785,7 +785,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnLockS: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -892,7 +892,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         OnClick = btnLockSClick
       end
       object btnCancelF: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -902,7 +902,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 7
       end
       object btnProcessF: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -915,7 +915,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 52
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         OnChange = edtHostNameChange
@@ -954,7 +954,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Enter the information below then click "Process" to set up a new environment for LPMS.'
         Font.Color = clBlue
@@ -968,7 +968,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 172
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         OnChange = edtHostNameChange
@@ -978,7 +978,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 142
-        Width = 752
+        Width = 756
         FilterIndex = 0
         HideDirectories = False
         ButtonWidth = 23
@@ -1021,14 +1021,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
     end
     object Maintenance: TTabSheet
       Caption = 'Maintenance'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 2
       object Label6: TLabel
         Left = 12
@@ -1047,7 +1047,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object imgMaintenance: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -1264,7 +1264,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Provide or Change the "Prefix" and or "Key" below then click on "Update" to update.'
         Font.Color = clBlue
@@ -1284,7 +1284,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 1
       end
       object btnCancelM: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -1294,7 +1294,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 3
       end
       object btnProcessM: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -1307,7 +1307,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 82
-        Width = 752
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         ButtonWidth = 25
         CharCase = ecUppercase
@@ -1351,19 +1351,19 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
     end
     object Convert: TTabSheet
       Caption = 'Convert'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 3
       object btnLockC: TSpeedButton
         Left = 12
         Height = 32
-        Top = 492
+        Top = 498
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -1472,7 +1472,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockC: TSpeedButton
         Left = 12
         Height = 32
-        Top = 492
+        Top = 498
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -1580,54 +1580,54 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label9: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 56
-        Width = 59
+        Width = 66
         Caption = 'Host Name:'
         ParentColor = False
       end
       object Label10: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 86
-        Width = 58
+        Width = 67
         Caption = 'User Name:'
         ParentColor = False
       end
       object Label11: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 116
-        Width = 51
+        Width = 57
         Caption = 'Password:'
         ParentColor = False
       end
       object Label12: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 206
-        Width = 65
+        Width = 73
         Caption = 'New Version:'
         ParentColor = False
       end
       object Label13: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 146
-        Width = 30
+        Width = 35
         Caption = 'Prefix:'
         ParentColor = False
       end
       object Label15: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 176
-        Width = 80
+        Width = 91
         Caption = 'Current Version:'
         ParentColor = False
       end
       object imgConvert: TImage
-        Left = 836
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -1842,16 +1842,16 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label31: TLabel
         Left = 12
-        Height = 15
+        Height = 17
         Top = 236
-        Width = 55
+        Width = 63
         Caption = 'New Prefix:'
         ParentColor = False
       end
       object btnProcessC: TButton
-        Left = 793
+        Left = 801
         Height = 25
-        Top = 498
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Process'
@@ -1859,9 +1859,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 13
       end
       object btnCancelC: TButton
-        Left = 711
+        Left = 719
         Height = 25
-        Top = 498
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
@@ -1870,16 +1870,16 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtHostNameC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 52
-        Width = 748
+        Width = 756
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtHostNameCChange
         TabOrder = 1
       end
       object edtUserNameC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 82
         Width = 100
         OnChange = edtHostNameCChange
@@ -1887,7 +1887,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPasswordC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 112
         Width = 100
         EchoMode = emPassword
@@ -1897,7 +1897,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtNewVersionC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 202
         Width = 100
         ReadOnly = True
@@ -1907,7 +1907,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 817
+        Width = 821
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Enter the information below then click on the [Get] button to retrieve the current Data Base version.'
         Font.Color = clBlue
@@ -1919,7 +1919,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPrefixC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 142
         Width = 100
         MaxLength = 6
@@ -1927,7 +1927,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtCurrVersion: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 172
         Width = 100
         OnChange = edtHostNameCChange
@@ -1945,33 +1945,33 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object stProgress: TStaticText
         Left = 120
-        Height = 17
+        Height = 21
         Top = 262
-        Width = 2
+        Width = 4
         AutoSize = True
         TabOrder = 11
       end
       object cbMultiCpy: TCheckBox
         Left = 226
-        Height = 25
+        Height = 21
         Top = 234
-        Width = 148
+        Width = 157
         Caption = ' Multi Company Support'
         TabOrder = 10
         Visible = False
       end
       object edtNewPrefixC: TEdit
         Left = 120
-        Height = 25
+        Height = 27
         Top = 232
         Width = 100
         TabOrder = 9
       end
       object cbNewPass: TCheckBox
         Left = 226
-        Height = 25
+        Height = 21
         Top = 204
-        Width = 139
+        Width = 144
         Caption = ' New Style Passwords'
         TabOrder = 8
         Visible = False
@@ -1980,17 +1980,17 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 886
+        Width = 890
         Anchors = [akTop, akLeft, akRight]
       end
     end
     object Upgrade: TTabSheet
       Caption = 'Upgrade'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 4
       object imgUpgrade: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -2230,7 +2230,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnLockU: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -2339,7 +2339,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockU: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -2454,9 +2454,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnCancelU: TButton
-        Left = 715
+        Left = 719
         Height = 25
-        Top = 505
+        Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
@@ -2464,7 +2464,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 14
       end
       object btnUpgradeU: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -2477,7 +2477,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Select the desired options below then click on "Process" to Store/Restore upgrade information.'
         Font.Color = clBlue
@@ -2496,7 +2496,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Alpha Keys'
-            Width = 205
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2512,7 +2512,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Numeric Keys'
-            Width = 205
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2572,7 +2572,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Exclude List'
-            Width = 205
+            Width = 203
           end>
         GridLines = True
         RowSelect = True
@@ -2583,7 +2583,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 441
         Height = 27
         Top = 196
-        Width = 431
+        Width = 435
         Anchors = [akTop, akLeft, akRight]
         TabOrder = 12
       end
@@ -2607,7 +2607,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
       object Label44: TLabel
@@ -2622,7 +2622,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 256
-        Width = 752
+        Width = 756
         TabOrder = 13
         Text = '{47A47B9B-8562-4A31-B06E-806D9E26A148}'
       end
@@ -2630,7 +2630,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 166
-        Width = 752
+        Width = 756
         ShowHidden = False
         ButtonWidth = 23
         NumGlyphs = 1
@@ -2642,7 +2642,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 226
-        Width = 752
+        Width = 756
         FilterIndex = 0
         HideDirectories = False
         ButtonWidth = 23
@@ -2683,8 +2683,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     end
     object SQL: TTabSheet
       Caption = 'SQL'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 5
       object Label25: TLabel
         Left = 12
@@ -2697,7 +2697,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockD: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -2804,7 +2804,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         OnClick = btnLockDClick
       end
       object imgSQL: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -3044,7 +3044,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnLockD: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -3162,7 +3162,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 29
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         Caption = 'LPMS Utility: Enter the database information below together with a valid SQL statement then click on ''Process''.'
         Font.Color = clBlue
@@ -3176,13 +3176,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 52
-        Width = 460
+        Width = 464
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtHostNameDChange
         TabOrder = 1
       end
       object btnCancelD: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -3192,7 +3192,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 10
       end
       object btnProcessD: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -3221,7 +3221,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 4
       end
       object edtPrefixD: TEdit
-        Left = 660
+        Left = 664
         Height = 27
         Top = 82
         Width = 100
@@ -3233,7 +3233,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 112
-        Width = 751
+        Width = 755
         Anchors = [akTop, akLeft, akRight]
         ItemHeight = 0
         OnChange = edtHostNameDChange
@@ -3241,9 +3241,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object DBGridD: TDBGrid
         Left = 12
-        Height = 350
+        Height = 354
         Top = 144
-        Width = 859
+        Width = 863
         Anchors = [akTop, akLeft, akRight, akBottom]
         Color = clWindow
         Columns = <>
@@ -3255,7 +3255,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 8
       end
       object DBNavigatorD: TDBNavigator
-        Left = 540
+        Left = 544
         Height = 25
         Top = 504
         Width = 168
@@ -3278,11 +3278,11 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 45
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
       object Label45: TLabel
-        Left = 592
+        Left = 596
         Height = 17
         Top = 56
         Width = 26
@@ -3291,7 +3291,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object edtPortD: TEdit
-        Left = 660
+        Left = 664
         Height = 27
         Top = 52
         Width = 100
@@ -3301,7 +3301,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 2
       end
       object Label46: TLabel
-        Left = 774
+        Left = 778
         Height = 17
         Top = 56
         Width = 94
@@ -3315,22 +3315,23 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Top = 84
         Width = 111
         Caption = 'LPMS Database'
+        OnChange = cbLPMSDBDChange
         TabOrder = 5
       end
     end
     object Backup: TTabSheet
       Caption = 'Backup'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       object Bevel9: TBevel
         Left = 0
         Height = 2
         Top = 64
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
       object imgBackup: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -3544,7 +3545,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         }
       end
       object btnCancelK: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -3554,7 +3555,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 11
       end
       object btnProcessK: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -3566,8 +3567,8 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object stProgressK: TStaticText
         Left = 56
         Height = 21
-        Top = 504
-        Width = 653
+        Top = 510
+        Width = 657
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = True
         TabOrder = 10
@@ -3584,13 +3585,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 71
-        Width = 460
+        Width = 464
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtHostNameKChange
         TabOrder = 0
       end
       object Label48: TLabel
-        Left = 592
+        Left = 596
         Height = 17
         Top = 75
         Width = 26
@@ -3599,7 +3600,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object edtPortK: TEdit
-        Left = 660
+        Left = 664
         Height = 27
         Top = 71
         Width = 100
@@ -3609,7 +3610,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 1
       end
       object Label49: TLabel
-        Left = 774
+        Left = 778
         Height = 17
         Top = 75
         Width = 94
@@ -3670,7 +3671,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object edtPrefixK: TEdit
-        Left = 660
+        Left = 664
         Height = 27
         Top = 101
         Width = 100
@@ -3689,7 +3690,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockK: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -3798,7 +3799,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnLockK: TSpeedButton
         Left = 12
         Height = 32
-        Top = 496
+        Top = 502
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -3908,7 +3909,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 12
         Height = 48
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         Caption = 'LPMS Utility: Enter the database information below together with a valid Backup File name and Location then click on "Backup" to do the backup.'
@@ -3922,7 +3923,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 131
-        Width = 656
+        Width = 660
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtHostNameKChange
         TabOrder = 6
@@ -3939,7 +3940,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 120
         Height = 27
         Top = 161
-        Width = 751
+        Width = 755
         OnAcceptDirectory = edtLocationKAcceptDirectory
         ShowHidden = False
         ButtonWidth = 23
@@ -3950,7 +3951,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         OnChange = edtHostNameKChange
       end
       object cbCompressK: TCheckBox
-        Left = 788
+        Left = 792
         Height = 21
         Top = 132
         Width = 80
@@ -3960,9 +3961,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object DBGridK: TListView
         Left = 12
-        Height = 301
+        Height = 307
         Top = 192
-        Width = 859
+        Width = 863
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSort = False
         Columns = <        
@@ -3976,7 +3977,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           end        
           item
             Caption = 'Message'
-            Width = 684
+            Width = 686
           end>
         GridLines = True
         ReadOnly = True
@@ -3986,13 +3987,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     end
     object Restore: TTabSheet
       Caption = 'Restore'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 6
       object btnLockB: TSpeedButton
         Left = 12
         Height = 32
-        Top = 496
+        Top = 502
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4107,7 +4108,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object imgRestore: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -4323,7 +4324,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockB: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4456,7 +4457,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object lblVersion: TLabel
         Left = 425
         Height = 17
-        Top = 104
+        Top = 106
         Width = 45
         Caption = 'Version:'
         ParentColor = False
@@ -4478,7 +4479,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnAllB: TSpeedButton
-        Left = 849
+        Left = 853
         Height = 22
         Hint = 'Click to Select/Deselect all Tables'
         Top = 192
@@ -4517,24 +4518,24 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnCancelB: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
         OnClick = btnCancelRClick
-        TabOrder = 12
+        TabOrder = 14
       end
       object btnProcessB: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Restore'
         OnClick = btnProcessBClick
-        TabOrder = 13
+        TabOrder = 15
       end
       object rbFull: TRadioButton
         Left = 12
@@ -4615,39 +4616,39 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object lvTables: TListView
         Left = 12
-        Height = 304
+        Height = 306
         Top = 192
-        Width = 834
+        Width = 838
         Anchors = [akTop, akLeft, akRight, akBottom]
         Checkboxes = True
         Columns = <        
           item
             AutoSize = True
             Caption = 'Table'
-            Width = 819
+            Width = 821
           end>
         ColumnClick = False
         GridLines = True
         RowSelect = True
         SortType = stData
-        TabOrder = 10
+        TabOrder = 12
         ViewStyle = vsReport
         OnItemChecked = lvTablesItemChecked
       end
       object stProgressB: TStaticText
         Left = 56
         Height = 21
-        Top = 504
-        Width = 653
+        Top = 510
+        Width = 657
         Anchors = [akLeft, akRight, akBottom]
         AutoSize = True
-        TabOrder = 11
+        TabOrder = 13
       end
       object edtBackupFile: TFileNameEdit
         Left = 100
         Height = 27
         Top = 72
-        Width = 772
+        Width = 776
         FilterIndex = 0
         HideDirectories = False
         ButtonWidth = 23
@@ -4690,14 +4691,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 64
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
       object stMsgB: TLabel
         Left = 12
         Height = 48
         Top = 8
-        Width = 821
+        Width = 825
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         Caption = 'LPMS Utility: Enter or select the backup file to restore then select the required options before clicking on ''Restore''.'
@@ -4707,16 +4708,41 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentFont = False
         WordWrap = True
       end
+      object lblTitle1: TLabel
+        Left = 660
+        Height = 17
+        Top = 106
+        Width = 57
+        Caption = 'Database:'
+        ParentColor = False
+      end
+      object edtPrefixB: TEdit
+        Left = 728
+        Height = 27
+        Top = 102
+        Width = 148
+        MaxLength = 6
+        TabOrder = 10
+      end
+      object cbLPMSDB: TCheckBox
+        Left = 658
+        Height = 21
+        Top = 134
+        Width = 111
+        Caption = 'LPMS Database'
+        OnChange = cbLPMSDBChange
+        TabOrder = 11
+      end
     end
     object Log: TTabSheet
       Caption = 'Log Display'
-      ClientHeight = 529
-      ClientWidth = 880
+      ClientHeight = 535
+      ClientWidth = 884
       ImageIndex = 7
       object btnLockL: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4825,7 +4851,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockL: TSpeedButton
         Left = 12
         Height = 32
-        Top = 498
+        Top = 504
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4932,7 +4958,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         OnClick = btnUnlockLClick
       end
       object imgLog: TImage
-        Left = 840
+        Left = 844
         Height = 32
         Top = 8
         Width = 32
@@ -5170,7 +5196,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object Label34: TLabel
-        Left = 646
+        Left = 649
         Height = 17
         Top = 136
         Width = 55
@@ -5178,7 +5204,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnReload: TSpeedButton
-        Left = 849
+        Left = 853
         Height = 25
         Hint = 'Click to set a date and time range for the Log records to be displayed'
         Top = 132
@@ -5270,7 +5296,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnSearchDesc: TSpeedButton
-        Left = 689
+        Left = 693
         Height = 22
         Hint = 'Click to filter the displayed Log records by the value in ''Description:'''
         Top = 164
@@ -5309,7 +5335,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnSearchBoth: TSpeedButton
-        Left = 715
+        Left = 719
         Height = 22
         Hint = 'Click to filter the displayed Log records by the values in ''Search User:'' and ''Description:'''
         Top = 164
@@ -5356,10 +5382,10 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnFirst: TSpeedButton
-        Left = 772
+        Left = 749
         Height = 22
         Hint = 'Click to display first Attorney'
-        Top = 196
+        Top = 194
         Width = 23
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -5394,10 +5420,10 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnPrev: TSpeedButton
-        Left = 799
+        Left = 776
         Height = 22
         Hint = 'Click to display previous Attorney'
-        Top = 196
+        Top = 194
         Width = 23
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -5432,10 +5458,10 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnNext: TSpeedButton
-        Left = 824
+        Left = 803
         Height = 22
         Hint = 'Click to display next Attorney'
-        Top = 196
+        Top = 194
         Width = 23
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -5470,10 +5496,10 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnLast: TSpeedButton
-        Left = 849
+        Left = 830
         Height = 22
         Hint = 'Click to display last Attorney'
-        Top = 196
+        Top = 194
         Width = 23
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -5516,7 +5542,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object Label37: TLabel
-        Left = 270
+        Left = 266
         Height = 17
         Top = 196
         Width = 31
@@ -5532,7 +5558,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnAll: TSpeedButton
-        Left = 849
+        Left = 853
         Height = 22
         Hint = 'Click to Select/Deselect all Log records'
         Top = 252
@@ -5571,7 +5597,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnArchive: TSpeedButton
-        Left = 849
+        Left = 853
         Height = 22
         Hint = 'Click to Archive the selected Log records'
         Top = 282
@@ -5642,7 +5668,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentColor = False
       end
       object btnCancelL: TButton
-        Left = 715
+        Left = 719
         Height = 25
         Top = 504
         Width = 75
@@ -5652,7 +5678,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 20
       end
       object btnProcessL: TButton
-        Left = 797
+        Left = 801
         Height = 25
         Top = 504
         Width = 75
@@ -5710,7 +5736,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MonthNames = 'Long'
       end
       object dtpEDate: TDateTimePicker
-        Left = 522
+        Left = 525
         Height = 25
         Top = 132
         Width = 110
@@ -5734,7 +5760,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         MonthNames = 'Long'
       end
       object dtpETime: TDateTimePicker
-        Left = 734
+        Left = 737
         Height = 25
         Top = 132
         Width = 110
@@ -5767,12 +5793,12 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 340
         Height = 27
         Top = 162
-        Width = 345
+        Width = 349
         Anchors = [akTop, akLeft, akRight]
         TabOrder = 10
       end
       object chkMatchAny: TCheckBox
-        Left = 745
+        Left = 749
         Height = 21
         Hint = 'Click to filter the displayed Log records by the values in either ''Search User:'' or ''Description:'' or both'
         Top = 166
@@ -5785,7 +5811,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 588
         Height = 27
         Top = 192
-        Width = 176
+        Width = 154
         ReadOnly = True
         TabOrder = 14
       end
@@ -5793,12 +5819,12 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 100
         Height = 27
         Top = 192
-        Width = 160
+        Width = 147
         ReadOnly = True
         TabOrder = 12
       end
       object edtTimeL: TEdit
-        Left = 344
+        Left = 340
         Height = 27
         Top = 192
         Width = 160
@@ -5809,16 +5835,16 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 100
         Height = 27
         Top = 222
-        Width = 772
+        Width = 776
         Anchors = [akTop, akLeft, akRight]
         ReadOnly = True
         TabOrder = 15
       end
       object lvLog: TListView
         Left = 100
-        Height = 230
+        Height = 234
         Top = 252
-        Width = 748
+        Width = 752
         Anchors = [akTop, akLeft, akRight, akBottom]
         Checkboxes = True
         Columns = <        
@@ -5837,7 +5863,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Description'
-            Width = 65
+            Width = 72
           end        
           item
             Caption = 'Created By'
@@ -5870,7 +5896,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object stMsg: TStaticText
         Left = 100
         Height = 21
-        Top = 484
+        Top = 488
         Width = 85
         Anchors = [akLeft, akBottom]
         AutoSize = True
@@ -5890,7 +5916,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 100
         Height = 21
         Hint = 'Select to set an interval for automatically refreshing the Log display'
-        Top = 506
+        Top = 508
         Width = 136
         Anchors = [akLeft, akBottom]
         Caption = ' Auto refresh every  '
@@ -5919,7 +5945,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 525
         Height = 27
         Top = 72
-        Width = 347
+        Width = 351
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtUserLChange
         TabOrder = 2
@@ -5928,7 +5954,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 310
         Height = 27
         Top = 102
-        Width = 562
+        Width = 566
         OnAcceptFileName = edtArchiveAcceptFileName
         FilterIndex = 0
         HideDirectories = False
@@ -5971,7 +5997,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object speInterval: TSpinEdit
         Left = 236
         Height = 25
-        Top = 504
+        Top = 506
         Width = 72
         Alignment = taRightJustify
         Anchors = [akLeft, akBottom]
@@ -5983,7 +6009,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object Label43: TLabel
         Left = 316
         Height = 17
-        Top = 508
+        Top = 510
         Width = 46
         Anchors = [akLeft, akBottom]
         Caption = 'seconds'
@@ -5993,14 +6019,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 64
-        Width = 890
+        Width = 894
         Anchors = [akTop, akLeft, akRight]
       end
       object stMsgL: TLabel
         Left = 12
         Height = 48
         Top = 8
-        Width = 826
+        Width = 830
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         Caption = 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents.'
@@ -6033,7 +6059,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
