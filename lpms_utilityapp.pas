@@ -728,7 +728,7 @@ begin
 
 {$IFDEF WINDOWS}
    CallHWND := 0;
-   LPMS_Upgrade := LPMS_Upgrade + '.exe';
+   LPMSUpgrade := LPMSUpgrade + '.exe';
 {$ENDIF}
 
    GetVersion();

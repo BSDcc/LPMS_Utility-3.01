@@ -10,7 +10,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
   OnClose = FormClose
   OnCreate = FormCreate
   Position = poScreenCenter
-  LCLVersion = '2.0.8.0'
+  LCLVersion = '2.0.6.0'
   object PageControl1: TPageControl
     Left = 0
     Height = 570
@@ -2496,7 +2496,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Alpha Keys'
-            Width = 203
+            Width = 73
           end>
         GridLines = True
         RowSelect = True
@@ -2512,7 +2512,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Numeric Keys'
-            Width = 203
+            Width = 88
           end>
         GridLines = True
         RowSelect = True
@@ -2572,7 +2572,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Exclude List'
-            Width = 203
+            Width = 76
           end>
         GridLines = True
         RowSelect = True
@@ -3231,11 +3231,11 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtSQLD: TComboBox
         Left = 120
-        Height = 27
+        Height = 23
         Top = 112
         Width = 755
         Anchors = [akTop, akLeft, akRight]
-        ItemHeight = 0
+        ItemHeight = 15
         OnChange = edtHostNameDChange
         TabOrder = 7
       end
@@ -3253,6 +3253,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Font.Name = 'Tahoma'
         ParentFont = False
         TabOrder = 8
+        TitleFont.Color = clWindowText
+        TitleFont.Height = -11
+        TitleFont.Name = 'Tahoma'
       end
       object DBNavigatorD: TDBNavigator
         Left = 544
@@ -4625,7 +4628,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Table'
-            Width = 821
+            Width = 44
           end>
         ColumnClick = False
         GridLines = True
@@ -4736,13 +4739,13 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     end
     object Log: TTabSheet
       Caption = 'Log Display'
-      ClientHeight = 535
-      ClientWidth = 884
+      ClientHeight = 542
+      ClientWidth = 882
       ImageIndex = 7
       object btnLockL: TSpeedButton
         Left = 12
         Height = 32
-        Top = 504
+        Top = 511
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4851,7 +4854,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object btnUnlockL: TSpeedButton
         Left = 12
         Height = 32
-        Top = 504
+        Top = 511
         Width = 32
         Anchors = [akLeft, akBottom]
         Flat = True
@@ -4958,7 +4961,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         OnClick = btnUnlockLClick
       end
       object imgLog: TImage
-        Left = 844
+        Left = 842
         Height = 32
         Top = 8
         Width = 32
@@ -5173,33 +5176,33 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label76: TLabel
         Left = 12
-        Height = 17
+        Height = 15
         Top = 136
-        Width = 60
+        Width = 54
         Caption = 'Start Date:'
         ParentColor = False
       end
       object Label79: TLabel
         Left = 224
-        Height = 17
+        Height = 15
         Top = 136
-        Width = 61
+        Width = 57
         Caption = 'Start Time:'
         ParentColor = False
       end
       object Label33: TLabel
         Left = 434
-        Height = 17
+        Height = 15
         Top = 136
-        Width = 54
+        Width = 50
         Caption = 'End Date:'
         ParentColor = False
       end
       object Label34: TLabel
         Left = 649
-        Height = 17
+        Height = 15
         Top = 136
-        Width = 55
+        Width = 53
         Caption = 'End Time:'
         ParentColor = False
       end
@@ -5243,9 +5246,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label56: TLabel
         Left = 12
-        Height = 17
+        Height = 15
         Top = 166
-        Width = 72
+        Width = 64
         Caption = 'Search User:'
         ParentColor = False
       end
@@ -5289,14 +5292,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label57: TLabel
         Left = 266
-        Height = 17
+        Height = 15
         Top = 166
-        Width = 67
+        Width = 63
         Caption = 'Description:'
         ParentColor = False
       end
       object btnSearchDesc: TSpeedButton
-        Left = 693
+        Left = 691
         Height = 22
         Hint = 'Click to filter the displayed Log records by the value in ''Description:'''
         Top = 164
@@ -5335,7 +5338,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnSearchBoth: TSpeedButton
-        Left = 719
+        Left = 717
         Height = 22
         Hint = 'Click to filter the displayed Log records by the values in ''Search User:'' and ''Description:'''
         Top = 164
@@ -5375,9 +5378,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label35: TLabel
         Left = 514
-        Height = 17
+        Height = 15
         Top = 196
-        Width = 30
+        Width = 26
         Caption = 'User:'
         ParentColor = False
       end
@@ -5535,30 +5538,30 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label36: TLabel
         Left = 12
-        Height = 17
+        Height = 15
         Top = 196
-        Width = 30
+        Width = 27
         Caption = 'Date:'
         ParentColor = False
       end
       object Label37: TLabel
         Left = 266
-        Height = 17
+        Height = 15
         Top = 196
-        Width = 31
+        Width = 30
         Caption = 'Time:'
         ParentColor = False
       end
       object Label38: TLabel
         Left = 12
-        Height = 17
+        Height = 15
         Top = 226
-        Width = 67
+        Width = 63
         Caption = 'Description:'
         ParentColor = False
       end
       object btnAll: TSpeedButton
-        Left = 853
+        Left = 851
         Height = 22
         Hint = 'Click to Select/Deselect all Log records'
         Top = 252
@@ -5597,7 +5600,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         ParentShowHint = False
       end
       object btnArchive: TSpeedButton
-        Left = 853
+        Left = 851
         Height = 22
         Hint = 'Click to Archive the selected Log records'
         Top = 282
@@ -5637,40 +5640,40 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label39: TLabel
         Left = 224
-        Height = 17
+        Height = 15
         Top = 106
-        Width = 67
+        Width = 64
         Caption = 'Archive File:'
         ParentColor = False
       end
       object Label40: TLabel
         Left = 12
-        Height = 17
+        Height = 15
         Top = 76
-        Width = 30
+        Width = 26
         Caption = 'User:'
         ParentColor = False
       end
       object Label41: TLabel
         Left = 224
-        Height = 17
+        Height = 15
         Top = 76
-        Width = 57
+        Width = 53
         Caption = 'Password:'
         ParentColor = False
       end
       object Label42: TLabel
         Left = 472
-        Height = 17
+        Height = 15
         Top = 76
-        Width = 29
+        Width = 28
         Caption = 'Host:'
         ParentColor = False
       end
       object btnCancelL: TButton
-        Left = 719
+        Left = 717
         Height = 25
-        Top = 504
+        Top = 511
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Cancel'
@@ -5678,9 +5681,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         TabOrder = 20
       end
       object btnProcessL: TButton
-        Left = 801
+        Left = 799
         Height = 25
-        Top = 504
+        Top = 511
         Width = 75
         Anchors = [akRight, akBottom]
         Caption = 'Load'
@@ -5784,32 +5787,32 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtSearchUser: TEdit
         Left = 100
-        Height = 27
+        Height = 23
         Top = 162
         Width = 114
         TabOrder = 9
       end
       object edtSearchDesc: TEdit
         Left = 340
-        Height = 27
+        Height = 23
         Top = 162
-        Width = 349
+        Width = 347
         Anchors = [akTop, akLeft, akRight]
         TabOrder = 10
       end
       object chkMatchAny: TCheckBox
-        Left = 749
-        Height = 21
+        Left = 755
+        Height = 19
         Hint = 'Click to filter the displayed Log records by the values in either ''Search User:'' or ''Description:'' or both'
         Top = 166
-        Width = 127
+        Width = 119
         Anchors = [akTop, akRight]
         Caption = 'Match Any Criteria'
         TabOrder = 11
       end
       object edtUser: TEdit
         Left = 588
-        Height = 27
+        Height = 23
         Top = 192
         Width = 154
         ReadOnly = True
@@ -5817,7 +5820,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtDateL: TEdit
         Left = 100
-        Height = 27
+        Height = 23
         Top = 192
         Width = 147
         ReadOnly = True
@@ -5825,7 +5828,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtTimeL: TEdit
         Left = 340
-        Height = 27
+        Height = 23
         Top = 192
         Width = 160
         ReadOnly = True
@@ -5833,18 +5836,18 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtDescriptionL: TEdit
         Left = 100
-        Height = 27
+        Height = 23
         Top = 222
-        Width = 776
+        Width = 774
         Anchors = [akTop, akLeft, akRight]
         ReadOnly = True
         TabOrder = 15
       end
       object lvLog: TListView
         Left = 100
-        Height = 234
+        Height = 241
         Top = 252
-        Width = 752
+        Width = 750
         Anchors = [akTop, akLeft, akRight, akBottom]
         Checkboxes = True
         Columns = <        
@@ -5863,7 +5866,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
           item
             AutoSize = True
             Caption = 'Description'
-            Width = 72
+            Width = 75
           end        
           item
             Caption = 'Created By'
@@ -5895,9 +5898,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object stMsg: TStaticText
         Left = 100
-        Height = 21
-        Top = 488
-        Width = 85
+        Height = 16
+        Top = 500
+        Width = 77
         Anchors = [akLeft, akBottom]
         AutoSize = True
         Caption = ' 0 Log Records'
@@ -5914,10 +5917,10 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object chkAutoRefresh: TCheckBox
         Left = 100
-        Height = 21
+        Height = 19
         Hint = 'Select to set an interval for automatically refreshing the Log display'
-        Top = 508
-        Width = 136
+        Top = 517
+        Width = 125
         Anchors = [akLeft, akBottom]
         Caption = ' Auto refresh every  '
         OnClick = chkAutoRefreshClick
@@ -5925,7 +5928,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtUserL: TEdit
         Left = 100
-        Height = 27
+        Height = 23
         Top = 72
         Width = 114
         OnChange = edtUserLChange
@@ -5933,7 +5936,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtPasswordL: TEdit
         Left = 310
-        Height = 27
+        Height = 23
         Top = 72
         Width = 150
         EchoMode = emPassword
@@ -5943,18 +5946,18 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object edtHostL: TEdit
         Left = 525
-        Height = 27
+        Height = 23
         Top = 72
-        Width = 351
+        Width = 349
         Anchors = [akTop, akLeft, akRight]
         OnChange = edtUserLChange
         TabOrder = 2
       end
       object edtArchive: TFileNameEdit
         Left = 310
-        Height = 27
+        Height = 23
         Top = 102
-        Width = 566
+        Width = 564
         OnAcceptFileName = edtArchiveAcceptFileName
         FilterIndex = 0
         HideDirectories = False
@@ -5997,7 +6000,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       object speInterval: TSpinEdit
         Left = 236
         Height = 25
-        Top = 506
+        Top = 513
         Width = 72
         Alignment = taRightJustify
         Anchors = [akLeft, akBottom]
@@ -6008,9 +6011,9 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
       end
       object Label43: TLabel
         Left = 316
-        Height = 17
-        Top = 510
-        Width = 46
+        Height = 15
+        Top = 519
+        Width = 43
         Anchors = [akLeft, akBottom]
         Caption = 'seconds'
         ParentColor = False
@@ -6019,14 +6022,14 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
         Left = 0
         Height = 2
         Top = 64
-        Width = 894
+        Width = 892
         Anchors = [akTop, akLeft, akRight]
       end
       object stMsgL: TLabel
         Left = 12
         Height = 48
         Top = 8
-        Width = 830
+        Width = 828
         Anchors = [akTop, akLeft, akRight]
         AutoSize = False
         Caption = 'LPMS Utility: Provide a valid ''User'', ''Password'' and ''Host'' then click on ''Current Log'' or select a Log Archive then click on ''Load'' to display the contents.'
@@ -6059,7 +6062,7 @@ object FLPMS_UtilityApp: TFLPMS_UtilityApp
     PoweredBy.About.Description.Strings = (
       'Component that shows a Powered By graphic.'#10'Use method ShowPoweredByForm in your form.create()'#10'to use the component'
     )
-    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About About About About About About PoweredBy component'
+    PoweredBy.About.Title = 'About About About About About About About About About About About About About About About About About About About About About About About About PoweredBy component'
     PoweredBy.About.Height = 280
     PoweredBy.About.Width = 400
     PoweredBy.About.Font.Color = clNavy
